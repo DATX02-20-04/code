@@ -49,6 +49,19 @@
   project is very open and at a slightly more advanced level than common for
   bachelor theses.
 
+** Project so far
+   The project plan is complete. Some initial trial and error has been
+   performed, though generating anything close to music is far off. According to
+   the timeplan, we are now in the phase of generating a musical note using
+   machine learning.
+
+   A issue we currently face seems to be storage space. Datasets take a fair
+   amount of space, yet have to be loaded when training. We're currently waiting
+   for a reply regarding using Chalmers computing clusters but other options are
+   available at a price. The canvas page does not specify whether pricing for
+   such clusters are included in the 3000kr budget (as they don't fall under
+   components or software), so that will have to be investigated.
+
 ** Summary of each member
    We will use this section to detail problemsolving/tasks delegated to members.
    Besides everyone working on the project plan, here are some tasks solved by each member
@@ -59,7 +72,7 @@
    - Carl: Ensured our latex documents have proper systems for commenting and change requesting, which helped writing the plan immensely.
    - Lovisa: Contacted AIVA (AI music company) for info on how their product worked but didn't get much back from them. Also went through tensorflow guides.
    - Cao: Research autoencoders and attempted implementing and training basic models using Keras and tensorflow
-   - Elias: Made an architecture proposal (show below), which we will look into more next week.
+   - Elias: Made an architecture proposal (shown below), which we will look into more next week.
 
      #+CAPTION: Architecture proposal by Elias
      #+LABEL: fig:week3_prop
