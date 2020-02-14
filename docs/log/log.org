@@ -1,0 +1,147 @@
+#+TITLE: Project Log
+
+#+OPTIONS: toc:nil
+#+OPTIONS: num:nil
+#+OPTIONS: html-postamble:nil
+
+* Introduction
+  This page is a shared log detailing the work the group has done and what
+  challenges and problems it has encountered. For the most part, it's updated
+  weekly unless some big change happens.
+
+  A time log can be found at Google Sheets: https://bit.ly/2tEy9OZ
+
+  The time log has exact tasks worked on each entry, for each member.
+
+* Week 4
+  Most of this weeks time was spent on planning and writing the project plan.
+
+** Time log warning
+  Apparently the expected work amount up to (and including) week 3 was an average of
+  72 hours (according to mail sent to supervisor). Unless this is an error, that
+  would mean 24 hours worked per week on average. The information we received
+  was that it's expected to work 20 hours a week, but that initially that is
+  hard to achieve. In case it's not an error, we are aware of it but it doesn't
+  match information we've gotten earlier.
+
+** Regarding project log feedback
+   I appreciate the feedback regarding the project log but want to explain something.
+   So far, most of the work that has been done is either research (paper and
+   presentation for group), writing contract/plan or minor implementation.
+
+   I mention this because so far, there's very little to talk about regarding
+   individual performance here. We could spend a lot of time detailing
+   everything done, but that is much better done in the time log above. The
+   point is, up to this point there has been a lot of shared work.
+
+   Now that the planning stage is over (which is a very shared job), this part
+   should be easier to write as more individual tasks will be delegated.
+
+** Meetings and workshops
+  A meeting with chalmers writing was booked, but since that required two groups
+  to sign up, the meeting never went through. We will try to book another one,
+  but since the plan now is delivered, getting feedback for it seems unneccesary.
+
+  On wednesday, the first draft was sent to the supervisor, with feedback
+  presented to the group on friday morning. The meeting and workshop held on
+  friday was primarily spent on refining the plan after the feedback received.
+  All in all, the group is happy with how the plan turned out considering the
+  project is very open and at a slightly more advanced level than common for
+  bachelor theses.
+
+** Summary of each member
+   We will use this section to detail problemsolving/tasks delegated to members.
+   Besides everyone working on the project plan, here are some tasks solved by each member
+   - Christoffer: So far been tasked with documentation, project log writing and generally being the secretary. Otherwise been learning tensorflow
+   - Eric: Took on the challenge of creating a gantt chart, which he completed by
+     writing his own javascript script. Also have been very active in initial
+     development and testing of ideas using google colab.
+   - Carl: Ensured our latex documents have proper systems for commenting and change requesting, which helped writing the plan immensely.
+   - Lovisa: Contacted AIVA (AI music company) for info on how their product worked but didn't get much back from them. Also went through tensorflow guides.
+   - Cao: Research autoencoders and attempted implementing and training basic models using Keras and tensorflow
+   - Elias: Made an architecture proposal (show below), which we will look into more next week.
+
+     #+CAPTION: Architecture proposal by Elias
+     #+LABEL: fig:week3_prop
+     #+NAME: fig:week3_prop
+   [[./img/week3proposal.png]]
+
+* Week 3
+  As per usual, the week began with a meeting on Tuesday followed by a longer
+  workshop. During the meeting, the members went through what they had worked on
+  since last friday. For the most part, that was research on tensorflow and a
+  paper published by Spotify creator group.
+
+  For the workshop, it was decided that the majority of time
+  would be spent on writing the project plan. Basic outlining was conducted to
+  ensure everyone was on the same page regarding the content.
+
+  On friday, there was a meeting with the supervisor where the group quickly
+  went through some research notes they had taken from the presentations held
+  last week. Additionally the focus of this meeting was on the project plan.
+  There were a fair amount of criticism of the current rough draft.
+
+  After this meeting, the rest of the day involved a long workshop on writing
+  the plan according to the criticism received earlier. A lot was changed and
+  this brought the draft much closer to the final writeup.
+
+  There is still work to be done on the plan. The deadline is next friday with
+  the groups' deadline being set to Wednesday. Therefore, the next week will
+  primarily deal with finishing the project plan.
+
+** Problems encountered
+   Because the group is not used to writing a research project plan but rather a
+   product project plan, one of the greatest obstacles have been defining what
+   will be done. Combined with the wide field, it is difficult to estimate how
+   much time each task takes.
+
+   The project task has therefore been simplified a fair bit, but it is still in the
+   groups ambition to incorporate the more complex features of the project given
+   that there is available time later on.
+
+
+* Week 2
+  The week began with a meeting on tuesday, during which a number of points were brought up
+  - Decide report language and register that on canvas
+  - Began talk about the project report
+  - Discussions on the current writeup of the contract
+
+  The meeting was immediately followed by a workshop, where how to efficiently
+  structure out research was determined. we concluded that the
+  group would divide into subgroups with the intent of each reading and
+  summarizing papers. Machine learning is a wide field, beyond basic concepts,
+  learning everything will take away too much time from the actual project.
+
+  After a meeting with the supervisor on friday, a research meeting was held.
+  The idea was to take the subgroups determined earlier and have them present
+  their findings for the group. This process will be evaluated for future
+  research meetings, but we felt it was a good start. If anything, the primary
+  goal of them is to spark discussions, which it was very effective at.
+
+  Because Cao only returned on thursday, the contract wasn't sent to our
+  supervisor until Friday evening, after the meeting. The contract is now
+  considered finished.
+
+  Though stated in last weeks log that we would begin work on the project plan
+  this week, small strides were made in that direction. This has a lot to do
+  with the very open project description. The primary hurdle is to decide on a
+  goal that is not too easy, but realistic enough to achieve. With such a wide
+  field and different ways of doing things, we have given that part a bit more time.
+
+  Next week will be focused on the project plan and another research meeting.
+
+* Week 1
+  Since this is the first week of the project, the majority of it has been
+  discussing the project and reading up on research papers. We started the week
+  by attending the introductory seminars.
+
+  During the three meetings, we set up a slack group, had our first meeting with the supervisor and
+  started writing the group contract.
+
+  Alone, most of us studied research papers. Since some of the members lacked
+  experience in the field, Elias set up a notebook intended for teaching the
+  basics.
+
+  For personal reasons, Cao was absent for part of the week, but this was notified well in advance.
+
+  For next week, we are looking to finish the group contract, continue researching and starting work on the project plan.
