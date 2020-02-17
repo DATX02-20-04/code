@@ -7,8 +7,10 @@ import random as rng
 vol = 0.1
 sr = 44100  # in hz
 dur = 1
+freq0 = 16.35  # note of c0
+const = pow(2, (1/12))  # distance of one semitone
 
-f = rng.random() * 20000
+f = freq0 * pow(const, rng.randrange(96))
 
 samples = np.sin(2*np.pi*np.arange(sr*dur)*f/sr).astype(np.float32)
 
