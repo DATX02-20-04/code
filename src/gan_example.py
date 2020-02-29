@@ -2,11 +2,12 @@ import tensorflow as tf
 import preprocess
 from losses import create_simple_gan_loss
 from training import create_train_loop, create_gan_train_step
-from nsynth import nsynth_from_tfrecord
+from datasets.nsynth import nsynth_from_tfrecord
 from models.simple_gan import create_generator, create_discriminator
+
+# Some compatability options for some graphics cards
 from tensorflow.compat.v1 import ConfigProto
 from tensorflow.compat.v1 import InteractiveSession
-
 config = ConfigProto()
 config.gpu_options.allow_growth = True
 session = InteractiveSession(config=config)
@@ -41,7 +42,11 @@ for e in dataset.take(1):
     print(f'Spectogram shape: {spec_shape}')
 
 # Make sure we got a shape before continuing
-assert spec_shape is not None
+assert spec_shape is not None, "Could not get spectogram shape"
+
+# Make sure the dimensions of spectogram is divisible by 4.
+# This is because the generator is going to upscale it's state twice with a factor of 2.
+assert spec_shape[0] % 4 == 0 and spec_shape[1] % 4 == 0, "Spectogram dimensions is not divisible by 4"
 
 # Create preprocessing pipeline for shuffling and batching
 dataset = preprocess.pipeline(dataset, [

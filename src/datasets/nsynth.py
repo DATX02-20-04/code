@@ -1,9 +1,5 @@
 import tensorflow as tf
-import matplotlib.pyplot as plt
 import preprocess
-
-plt.ion()
-plt.show()
 
 def nsynth_from_tfrecord(nsynth_tfrecord_path):
     dataset = tf.data.TFRecordDataset([nsynth_tfrecord_path])
