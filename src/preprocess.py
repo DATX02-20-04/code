@@ -46,8 +46,26 @@ def one_hot(depth):
 def filter(predicate):
     return filter_transform(predicate)
 
-def extract(keys):
-    return map_transform(lambda x: [x[key] for key in keys])
+def extract(key):
+    return map_transform(lambda x: x[key])
+
+def reshape(shape):
+    return map_transform(lambda x: tf.reshape(x, shape))
+
+def set_channels(channels):
+    return map_transform(lambda x: tf.reshape(x, [*x.shape, channels]))
+
+def batch(batch_size):
+    return lambda dataset, index_map: dataset.batch(batch_size)
+
+def unbatch():
+    return lambda dataset, index_map: dataset.unbatch()
+
+def shuffle(buffer_size):
+    return lambda dataset, index_map: dataset.shuffle(buffer_size)
+
+def prefetch():
+    return lambda dataset, index_map: dataset.prefetch(tf.data.experimental.AUTOTUNE)
 
 def pad(paddings, mode, constant_values=0, name=None):
     return map_transform(lambda x: tf.pad(x, paddings, mode, constant_values, name))
@@ -74,6 +92,9 @@ def abs():
 
 def amp_to_log(amin=1e-5):
     return map_transform(lambda x: tf.math.log(tf.maximum(amin, x)))
+
+def log_to_amp():
+    return map_transform(lambda x: tf.math.exp(x))
 
 def log_to_amp():
     return map_transform(lambda x: tf.math.exp(x))
