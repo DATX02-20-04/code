@@ -4,6 +4,9 @@
 #+OPTIONS: num:nil
 #+OPTIONS: html-postamble:nil
 
+#+LATEX_HEADER: \usepackage[margin=3cm]{geometry}
+#+LATEX_CLASS: article
+
 * Introduction
   This page is a shared log detailing the work the group has done and what
   challenges and problems it has encountered. For the most part, it's updated
@@ -12,6 +15,79 @@
   A time log can be found at Google Sheets: https://bit.ly/2tEy9OZ
 
   The time log has exact tasks worked on each entry, for each member.
+
+* Week 5
+  We spent this week working on implementing two kinds of models:
+  1. WaveNet - a raw audio generative model mainly used for speech synthesis
+  2. SpecGAN - a model using generative adversarial networks for training by converting audio into spectrographs.
+
+  The main purpose of this was to generate a note using the NSynth dataset
+  (dataset consisting of different notes played on different instruments.
+
+** Project plan review
+   After a meeting with our examiner, there were a fair amount of things that
+   needed to be changed in the plan.
+
+   Most of the feedback applies to the entire plan, but here are some key points:
+   - *Background*: Does not explain or motivate the problem well enough. It is meant to capture the reader but our background lacks a lot of passion required for that.
+   - *Aim*: Same here generally, does not explain why this is an important and interesting field.
+   - *Timeplan*: Does not tell a story, how will we accomplish these things. Try and detail every week and what happens if we discover hurdles. It also has to detail consistent deliveries, ie if the project suddenly had to stop for whatever reason, what do we have to show for our work?
+
+   Deadline for the rewritten plan is Wednesday, <2020-02-26 Wed> at 12:00. We
+   will also try to send it to our supervisor by Monday/Tuesday.
+
+** Project so far
+   So far, a lot of work has been going on using colab, a notebook editor in
+   Google drive. It allows limited access to GPUs which makes it great for
+   smaller experimentation of models. In the future, we'll want to either pay
+   for access to GPUs, or try and use Chalmers GPU clusters.
+
+*** WaveNet
+    WaveNet requires the amplitudes to be encoded to something that is easier
+    for the network to work with. This is done using mu_law encoding, which is
+    basically just bucketing the amplitudes, but where is gives mode detail to
+    small amplitudes than large ones.
+
+*** SpecGAN
+    We were originally going to implement GAN-TTS, but because of its
+    complexity, we decided to implement something simpler first. As mentioned,
+    most guides on GANs are for images, so it seemed fitting to start with a
+    model using images (spectrographs).
+
+    #+CAPTION: Spectrographs for 10 different notes generated
+    #+LABEL: fig:week5_
+    #+NAME: fig:week5_spec
+    [[./img/week5specs.png]]
+
+    This model requires processing the audio waveform into images using digital
+    signal processing. This did not have to be done manually, as there are
+    plenty of libraries to use, but the challenge is to ensure all images of the
+    entire dataset represent the same thing and have the same format and size.
+    As such, the data preprocessing has been one of the subtasks for this.
+
+    The other task is to implement the actual model. There are many guides on
+    implementing a GAN using the MNIST dataset (dataset consisting of
+    handwritten letters in image form), but some slight modifications are
+    required to suit our needs.
+
+** Meetings and workshops
+   Meetings and workshops were spent working on the two models in groups of
+   three people. Working in groups ensures everyone is learning and are helping
+   eachother.
+
+** Summary of each member
+   - Christoffer: Work on the SpecGAN model, specifically the part of converting the entire NSynth dataset into spectrograph images
+   - Eric: Work on preprocessing of data, like using the mu-law algorithm. Also been trying to implement a smaller version of wavenet and learning how to do custom training loops.
+   - Carl: Work on implementing wavenet and rendering the model
+   - Lovisa: Researched and presented sparse transformers. Also worked on the model implementation parts of SpecGAN
+   - Cao: Worked on implementation of the model part of GAN
+   - Elias: Research reformer (efficient transformer) and work a lot on wavenet implementation
+
+** Next week
+   1. Complete the project plan
+   2. Start basic work on project report
+   3. Hopefully generate notes with either of the two models being worked on
+   4. If time, start investigating using transformers for the structure part of music generation
 
 * Week 4
   Most of this weeks time was spent on planning and writing the project plan.
@@ -75,8 +151,8 @@
    - Elias: Made an architecture proposal (shown below), which we will look into more next week.
 
      #+CAPTION: Architecture proposal by Elias
-     #+LABEL: fig:week3_prop
-     #+NAME: fig:week3_prop
+     #+LABEL: fig:week4_prop
+     #+NAME: fig:week4_prop
    [[./img/week3proposal.png]]
 
 * Week 3
