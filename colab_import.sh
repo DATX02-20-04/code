@@ -1,4 +1,8 @@
 #!/bin/sh
 
-cp DATX02-20-04/src/* .
+set -e
 
+cd DATX02-20-04
+git pull
+cp src/* ../
+cd..
