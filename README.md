@@ -13,5 +13,9 @@ Now run the `colab_import.sh` script like this:
 ! DATX02-20-04/colab_import.sh
 ```
 
+Now it is possible to import modules from our repo:
+```python
+from datasets.nsynth import nsynth_from_tfrecord
+```
 
 
