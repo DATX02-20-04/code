@@ -128,6 +128,6 @@ def melspec(sr, fft_length=2048, frame_step=512, frame_length=None, **kwargs):
     return composition_transform([
         stft(frame_length, frame_step, fft_length),
         abs(),
-        mels(sr, fft_length//2+1, **kwargs),
+        mels(sr, fft_length, **kwargs),
         transpose2d()
     ])
