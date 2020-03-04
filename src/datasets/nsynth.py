@@ -14,3 +14,17 @@ def nsynth_from_tfrecord(nsynth_tfrecord_path):
             "instrument_family": tf.io.FixedLenFeature([1], dtype=tf.int64),
         }),
     ])
+
+instruments = {
+    'bass': 0,
+    'brass': 1,
+    'flute': 2,
+    'guitar': 3,
+    'keyboard': 4,
+    'mallet': 5,
+    'organ': 6,
+    'reed': 7,
+    'string': 8,
+    'synth_lead': 9,
+    'vocal': 10
+}
