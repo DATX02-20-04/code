@@ -1,5 +1,6 @@
 import tensorflow as tf
 import librosa
+import mido
 
 def index_map(index):
     def map_index(fn):
@@ -139,3 +140,40 @@ def melspec(sr, fft_length=2048, frame_step=512, frame_length=None, **kwargs):
         mels(sr, fft_length//2+1, **kwargs),
         transpose2d()
     ])
+
+
+def load_midi():
+    return map_transform(lambda x: mido.MidiFile(x))
+
+def encode_midi(note_count=128, max_time_shift=100, time_shift_m=10):
+    return map_transform(_encode_midi(note_count, max_time_shift, time_shift_m))
+
+def _encode_midi(note_count, max_time_shift, time_shift_m):
+    def _midi(x):
+        midi = []
+        for msg in x:
+            if not msg.is_meta:
+                time_shift = min(int(msg.time*1000) // time_shift_ms, max_time_shift)-1
+                time_enc = tf.reshape(tf.one_hot(np.array([time_shift]), max_time_shift), [-1])
+                note = None
+                etype = None
+
+            if msg.type == 'note_on':
+                note = tf.reshape(tf.one_hot(np.array([msg.note]), note_count), [-1])
+                etype = [1]
+            elif msg.type == 'note_off':
+                note = tf.zeros((note_count,))
+                etype = [0]
+
+            if note is not None:
+                midi.append(tf.concat([etype, note, time_enc], axis=0))
+        return tf.stack(midi)
+    return _midi
+
+def midi(note_count=128, max_time_shift=100, time_shift_m=10):
+    return composition_transform([
+        load_midi(),
+        encode_midi(note_count, max_time_shift, time_shift_m)
+    ])
+
+
