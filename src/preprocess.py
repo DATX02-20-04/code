@@ -91,8 +91,8 @@ def abs():
     return map_transform(lambda x: tf.abs(x))
 
 def _normalize(x):
-    _max = tf.max(x)
-    _min = tf.min(x)
+    _max = tf.reduce_max(x)
+    _min = tf.reduce_min(x)
     return ((x - _min) / (_max - _min)) * 2 - 1
 
 def normalize():
