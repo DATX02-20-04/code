@@ -16,6 +16,87 @@
 
   The time log has exact tasks worked on each entry, for each member.
 
+* Week 6
+  We spent parts of the week revising the project plan, which is now accepted.
+** Project so far
+   The goal for the past two weeks have been generating a note. There has been a
+   considerable amount of effort put towards this. Below some results are shown
+   (hard to show audio, we should try hosting those results somewhere and
+   linking to them)
+
+*** WaveRNN
+    #+CAPTION: WaveRNN by Deepmind
+    #+DOWNLOADED: https://raw.githubusercontent.com/fatchord/WaveRNN/master/assets/tacotron_wavernn.png @ 2020-02-29 11:20:30
+    [[file:Week%206/tacotron_wavernn_2020-02-29_11-20-30.png]]
+
+
+    Eric managed to generate something loosely sounding like a flute using this
+    model. Loosely as in it's clearly a wind instrument and it is a recognizable
+    note with overtones but it still needs some work/training.
+
+*** SpecGAN
+    Unfortuneately, the results from this model look decent, but sound terrible.
+    It doesn't quite follow the implementation specGAN used, so that is an area we could improve.
+
+    #+CAPTION: First specGAN generation using 2dConvTranspose layers and 20 epochs with the NSynth dataset.
+    #+DOWNLOADED: ~/Projects/course/kandidat/DATX02-20-04/docs/log/Week 6/iVBORw0KGg_2020-02-29_11-15-02.png @ 2020-02-29 11:15:02
+    [[file:Week%206/iVBORw0KGg_2020-02-29_11-15-02.png]]
+
+*** WaveNet
+    Carl attempted training WaveNet, which when listening could produce both
+    sine and square waves.
+
+    #+CAPTION: Example of different wave shapes for reference
+    #+DOWNLOADED: https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Waveforms.svg/1280px-Waveforms.svg.png @ 2020-02-29 11:23:23
+[[file:Week%206/1280px-Waveforms.svg_2020-02-29_11-23-23.png]]
+
+
+*** Problems
+    *Too ambitions*: The project is very ambitious. The workflow of starting on
+    simple tasks (generating a note etc) and building on those with sprints
+    remedies that somewhat. Still, we want to spend some time exactly defining
+    what the end product will be.
+
+    *Better planning*: We've realised we need a better system for distributing
+    tasks to the members. Right now you could easily not know what to work. Our
+    idea is to use Trello for this, but that requires setup and splitting tasks
+    into even smaller tasks.
+
+    *Resources*: We need better resources for training. We've started asking about
+    these things. Hopefully we will get an answer next week.
+
+** Meetings and workshops
+   Nothing special, most meetings regarded the project plan, the first
+   presentation or just working on the two models explained last week.
+
+** Summary of each member
+   - Christoffer: Mostly worked on plan and the specGAN model. Also started a
+     bit on final report and helped with presentation. Also been handling
+     communication wih examiner and sent mails about computing resources
+   - Eric: I started with training an existing model called WaveRNN where I
+     managed to generate something that sounds like a flute note. I did the
+     training on my personal computer at home which is not optimal. We need
+     better computing resources. I then went on to try a model called MelNet,
+     which is similar to WaveRNN but it uses melspectograms instead of waveforms
+     which might be more promising.
+   - Carl: Some work on report; successfully training a WaveNet on sine and
+     square waves
+   - Lovisa: Project plan work, as well as some on the specGAN
+   - Cao: Worked on the presentation, reading about GANSynth, trying out
+     different discriminator/ generator for the simple GAN model that I
+     implemented last week.
+   - Elias: Spent the first half of the week rewriting the project plan.
+     Afterwards I primarily worked on getting a 1d convolutional autoencoder
+     working. I kind of succeeded, but it is very computationally heavy at the
+     moment and the loss doesn’t really decrease. The output is just noise so
+     far.
+
+** Next week
+   - Presentation on tuesday
+   - Tweak/train note generation models
+   - Start work on structure models (melody)
+   - Begin writing parts of report (note generation)
+
 * Week 5
   We spent this week working on implementing two kinds of models:
   1. WaveNet - a raw audio generative model mainly used for speech synthesis
