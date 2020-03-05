@@ -100,15 +100,6 @@ class GANExample():
             disc_optimizer=self.discriminator_optimizer,
         )
 
-        self.manager = tf.train.CheckpointManager(self.ckpt, os.path.join(self.save_dir, 'ckpts'), max_to_keep=3)
-
-        self.ckpt.restore(self.manager.latest_checkpoint)
-        if self.manager.latest_checkpoint:
-            print("Restored from {}".format(self.manager.latest_checkpoint))
-        else:
-            print("Initializing from scratch.")
-
-
         try:
             os.mkdir(os.path.join(self.save_dir, 'images/'))
         except:
@@ -118,10 +109,14 @@ class GANExample():
 
         # Create the training loop
         self.train = create_train_loop(self.dataset,
-                                self.train_step,
-                                on_epoch_start=self.on_epoch_start,
-                                on_step=self.on_step,
-                                on_epoch_complete=self.on_epoch_complete)
+                                       self.train_step,
+                                       epochs=hparams['epochs'],
+                                       steps=hparams['steps_per_epoch'],
+                                       ckpt=self.ckpt,
+                                       save_dir=os.path.join(self.save_dir, 'ckpts'),
+                                       on_epoch_start=self.on_epoch_start,
+                                       on_step=self.on_step,
+                                       on_epoch_complete=self.on_epoch_complete)
 
 
 
@@ -138,7 +133,6 @@ class GANExample():
 
     # This runs at the end of every epoch and is used to display metrics
     def on_epoch_complete(self, epoch, step):
-        self.manager.save()
         display.clear_output(wait=True)
         print(f"Epoch: {epoch}, Step: {step}, Gen Loss: {self.gen_loss_avg.result()}, Disc Loss: {self.disc_loss_avg.result()}")
         self.generate_and_save_images_epoch(epoch)

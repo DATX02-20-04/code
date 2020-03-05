@@ -1,7 +1,14 @@
 import tensorflow as tf
 
-def create_train_loop(dataset, train_step, on_epoch_start=None, on_step=None, on_epoch_complete=None):
-    def train(epochs, steps):
+def create_train_loop(dataset, train_step, epochs, steps, ckpt, save_dir, on_epoch_start=None, on_step=None, on_epoch_complete=None):
+    manager = tf.train.CheckpointManager(ckpt, save_dir, max_to_keep=3)
+    ckpt.restore(manager.latest_checkpoint)
+    if manager.latest_checkpoint:
+        print("Restored from {}".format(manager.latest_checkpoint))
+    else:
+        print("Initializing from scratch.")
+
+    def train():
         step = 0
         for epoch in range(1, epochs+1):
             if on_epoch_start is not None:
@@ -13,6 +20,7 @@ def create_train_loop(dataset, train_step, on_epoch_start=None, on_step=None, on
                 if on_step is not None:
                     on_step(step, stats)
 
+            self.manager.save()
             if on_epoch_complete is not None:
                 on_epoch_complete(epoch, step)
 
