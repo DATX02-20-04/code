@@ -35,16 +35,16 @@ class GANExample():
         # Create preprocessing pipeline for the melspectograms
         self.dataset = preprocess.pipeline(self.dataset, [
             preprocess.extract('audio'),
-            preprocess.melspec(sr=hparams['sample_rate']),
-            preprocess.pad([[0, 0], [0, 4]], 'CONSTANT', constant_values=hparams['log_amin']),
-            preprocess.amp_to_log(amin=hparams['log_amin']),
+            preprocess.melspec(sr=self.hparams['sample_rate']),
+            preprocess.pad([[0, 0], [0, 4]], 'CONSTANT', constant_values=self.hparams['log_amin']),
+            preprocess.amp_to_log(amin=self.hparams['log_amin']),
         ])
 
         # Determine shape of the spectograms in the dataset
         self.spec_shape = None
         for e in self.dataset.take(1):
             self.spec_shape = e.shape
-            print(f'Spectogram shape: {spec_shape}')
+            print(f'Spectogram shape: {self.spec_shape}')
 
         # Make sure we got a shape before continuing
         assert self.spec_shape is not None, "Could not get spectogram shape"
@@ -56,8 +56,8 @@ class GANExample():
         # Create preprocessing pipeline for shuffling and batching
         self.dataset = preprocess.pipeline(self.dataset, [
             preprocess.set_channels(1),
-            preprocess.shuffle(hparams['buffer_size']),
-            preprocess.batch(hparams['batch_size']),
+            preprocess.shuffle(self.hparams['buffer_size']),
+            preprocess.batch(self.hparams['batch_size']),
             preprocess.prefetch()
         ])
 
@@ -65,22 +65,22 @@ class GANExample():
         self.generator_loss, self.discriminator_loss = create_simple_gan_loss(tf.keras.losses.BinaryCrossentropy(from_logits=True))
 
         # Define the optimizers
-        self.generator_optimizer = tf.keras.optimizers.Adam(hparams['gen_lr'])
-        self.discriminator_optimizer = tf.keras.optimizers.Adam(hparams['disc_lr'])
+        self.generator_optimizer = tf.keras.optimizers.Adam(self.hparams['gen_lr'])
+        self.discriminator_optimizer = tf.keras.optimizers.Adam(self.hparams['disc_lr'])
 
         # Create the actual models for the generator and discriminator
-        self.generator = create_generator(hparams['latent_size'], hparams['batch_size'], spec_shape)
-        self.discriminator = create_discriminator(spec_shape)
+        self.generator = create_generator(self.hparams['latent_size'], self.hparams['batch_size'], self.spec_shape)
+        self.discriminator = create_discriminator(self.spec_shape)
 
         # Create the GAN train step
-        self.train_step = create_gan_train_step(generator,
-                                        discriminator,
-                                        generator_loss,
-                                        discriminator_loss,
-                                        generator_optimizer,
-                                        discriminator_optimizer,
-                                        hparams['batch_size'],
-                                        hparams['latent_size'])
+        self.train_step = create_gan_train_step(self.generator,
+                                        self.discriminator,
+                                        self.generator_loss,
+                                        self.discriminator_loss,
+                                        self.generator_optimizer,
+                                        self.discriminator_optimizer,
+                                        self.hparams['batch_size'],
+                                        self.hparams['latent_size'])
 
         # Define some metrics to be used in the training
         self.gen_loss_avg = tf.keras.metrics.Mean()
