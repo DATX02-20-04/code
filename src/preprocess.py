@@ -17,12 +17,12 @@ def pipeline(dataset, transforms, index_map=None):
 
 def map_transform(fn):
     def transform(dataset, index_map):
-        fn = fn if index_map is None else index_map(fn)
+        map_fn = fn if index_map is None else index_map(fn)
         if isinstance(dataset, tf.data.Dataset):
-            return dataset.map(fn,
+            return dataset.map(map_fn,
                             num_parallel_calls=tf.data.experimental.AUTOTUNE)
         else:
-            return map(fn, dataset)
+            return map(map_fn, dataset)
     return transform
 
 def composition_transform(transforms):
@@ -33,12 +33,12 @@ def composition_transform(transforms):
     return transform
 
 def filter_transform(fn):
-    fn = fn if index_map is None else index_map(fn)
     def transform(dataset, index_map):
+        filter_fn = fn if index_map is None else index_map(fn)
         if isinstance(dataset, tf.data.Dataset):
-            return dataset.filter(fn)
+            return dataset.filter(filter_fn)
         else:
-            return filter(fn, dataset)
+            return filter(filter_fn, dataset)
     return transform
 
 
