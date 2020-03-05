@@ -99,13 +99,10 @@ def normalize():
     return map_transform(_normalize)
 
 def amp_to_log(amin=1e-5):
-    return map_transform(lambda x: tf.math.log(tf.maximum(amin, x)))
+    return map_transform(lambda x: tf.math.log(x + amin))
 
-def log_to_amp():
-    return map_transform(lambda x: tf.math.exp(x))
-
-def log_to_amp():
-    return map_transform(lambda x: tf.math.exp(x))
+def log_to_amp(amin=1e-5):
+    return map_transform(lambda x: tf.math.exp(x) - amin)
 
 def mels(sr, n_fft, n_mels=128, fmin=0.0, fmax=None):
     if fmax is None:
