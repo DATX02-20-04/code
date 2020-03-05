@@ -17,8 +17,12 @@ def pipeline(dataset, transforms, index_map=None):
 
 def map_transform(fn):
     def transform(dataset, index_map):
-        return dataset.map(fn if index_map is None else index_map(fn),
-                           num_parallel_calls=tf.data.experimental.AUTOTUNE)
+        fn = fn if index_map is None else index_map(fn)
+        if isinstance(dataset, tf.data.Dataset):
+            return dataset.map(fn,
+                            num_parallel_calls=tf.data.experimental.AUTOTUNE)
+        else:
+            return map(fn, dataset)
     return transform
 
 def composition_transform(transforms):
@@ -28,9 +32,13 @@ def composition_transform(transforms):
         return dataset
     return transform
 
-def filter_transform(predicate):
+def filter_transform(fn):
+    fn = fn if index_map is None else index_map(fn)
     def transform(dataset, index_map):
-        return dataset.filter(predicate if index_map is None else index_map(predicate))
+        if isinstance(dataset, tf.data.Dataset):
+            return dataset.filter(fn)
+        else:
+            return filter(fn, dataset)
     return transform
 
 
@@ -137,10 +145,16 @@ def melspec(sr, fft_length=1024, frame_step=512, frame_length=None, **kwargs):
         transpose2d()
     ])
 
-def invert_log_melspec(melspec, sr, fft_length=1024, frame_step=512, frame_length=None):
+def invert_melspec(melspec, sr, fft_length=1024, frame_step=512, frame_length=None):
     if frame_length is None:
         frame_length = fft_length
     return librosa.feature.inverse.mel_to_audio(melspec, sr=sr, n_fft=fft_length, hop_length=frame_step, win_length=frame_length)
+
+def invert_log_melspec(melspec, sr, fft_length=1024, frame_step=512, frame_length=None, amin=1e-5):
+    return composition_transform([
+        log_to_amp(amin),
+        invert_log_melspec(melspec, sr, fft_length, frame_step, frame_length)
+    ])
 
 def load_midi():
     return map_transform(lambda x: mido.MidiFile(x))
