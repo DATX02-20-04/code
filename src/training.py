@@ -20,7 +20,7 @@ def create_train_loop(dataset, train_step, epochs, steps, ckpt, save_dir, on_epo
                 if on_step is not None:
                     on_step(step, stats)
 
-            self.manager.save()
+            manager.save()
             if on_epoch_complete is not None:
                 on_epoch_complete(epoch, step)
 
