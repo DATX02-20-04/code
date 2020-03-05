@@ -30,8 +30,7 @@ def composition_transform(transforms):
 
 def filter_transform(predicate):
     def transform(dataset, index_map):
-        return dataset.filter(fn if index_map is None else index_map(fn),
-                              num_parallel_calls=tf.data.experimental.AUTOTUNE)
+        return dataset.filter(predicate if index_map is None else index_map(predicate))
     return transform
 
 
