@@ -1,14 +1,14 @@
 import tensorflow as tf
 from tensorflow.keras import layers
 
-def create_generator(latent_size, batch_size, shape):
+def create_generator(latent_size, scale, shape):
     i = layers.Input(shape=(latent_size,))
 
-    o = layers.Dense((shape[0]//4)*(shape[1]//4)*batch_size)(i)
+    o = layers.Dense((shape[0]//4)*(shape[1]//4)*scale)(i)
     o = layers.BatchNormalization()(o)
     o = layers.LeakyReLU()(o)
 
-    o = layers.Reshape((shape[0]//4, shape[1]//4, batch_size))(o)
+    o = layers.Reshape((shape[0]//4, shape[1]//4, scale))(o)
 
     o = layers.Conv2D(128, (5, 5), strides=(1, 1), padding='same', use_bias=False)(o)
     o = layers.BatchNormalization()(o)

@@ -23,6 +23,7 @@ hparams = {
     'batch_size': 64,
     'buffer_size': 1000,
     'latent_size': 100,
+    'generator_scale': 256,
     'gen_lr': 0.0001,
     'disc_lr': 0.0004,
     'log_amin': 1e-5,
@@ -76,7 +77,7 @@ class GANExample():
         self.discriminator_optimizer = tf.keras.optimizers.Adam(self.hparams['disc_lr'])
 
         # Create the actual models for the generator and discriminator
-        self.generator = create_generator(self.hparams['latent_size'], self.hparams['batch_size'], self.spec_shape)
+        self.generator = create_generator(self.hparams['latent_size'], self.hparams['generator_scale'], self.spec_shape)
         self.discriminator = create_discriminator(self.spec_shape)
 
         # Create the GAN train step
