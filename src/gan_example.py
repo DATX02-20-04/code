@@ -126,7 +126,7 @@ class GANExample():
         print(f"Epoch: {epoch}, Step: {step}, Gen Loss: {self.gen_loss_avg.result()}, Disc Loss: {self.disc_loss_avg.result()}")
         self.generate_and_save_images_epoch(epoch)
 
-    def generate_and_save_images_epoch(epoch):
+    def generate_and_save_images_epoch(self, epoch):
         generated = self.generator(self.seed, training=False)
 
         fig = plt.figure(figsize=(4,4))
