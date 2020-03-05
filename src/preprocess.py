@@ -118,7 +118,7 @@ def mels(sr, n_fft, n_mels=128, fmin=0.0, fmax=None):
 def transpose2d():
     return map_transform(lambda x: tf.transpose(x, [1, 0]))
 
-def spec(fft_length=2048, frame_step=512, frame_length=None, **kwargs):
+def spec(fft_length=1024, frame_step=512, frame_length=None, **kwargs):
     if frame_length is None:
         frame_length = fft_length
     return composition_transform([
@@ -127,7 +127,7 @@ def spec(fft_length=2048, frame_step=512, frame_length=None, **kwargs):
         transpose2d()
     ])
 
-def melspec(sr, fft_length=2048, frame_step=512, frame_length=None, **kwargs):
+def melspec(sr, fft_length=1024, frame_step=512, frame_length=None, **kwargs):
     if frame_length is None:
         frame_length = fft_length
     return composition_transform([
@@ -137,6 +137,10 @@ def melspec(sr, fft_length=2048, frame_step=512, frame_length=None, **kwargs):
         transpose2d()
     ])
 
+def invert_log_melspec(melspec, sr, fft_length=1024, frame_step=512, frame_length=None):
+    if frame_length is None:
+        frame_length = fft_length
+    return librosa.feature.inverse.mel_to_audio(melspec, sr=sr, n_fft=fft_length, hop_length=frame_step, win_length=frame_length)
 
 def load_midi():
     return map_transform(lambda x: mido.MidiFile(x))
