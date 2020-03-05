@@ -1,9 +1,12 @@
 import tensorflow as tf
 import preprocess
+import os
 from losses import create_simple_gan_loss
 from training import create_train_loop, create_gan_train_step
 from datasets.nsynth import nsynth_from_tfrecord
 from models.simple_gan import create_generator, create_discriminator
+import matplotlib.pyplot as plt
+import IPython.display as display
 
 # Some compatability options for some graphics cards
 # from tensorflow.compat.v1 import ConfigProto
@@ -22,16 +25,20 @@ hparams = {
     'latent_size': 100,
     'gen_lr': 0.0001,
     'disc_lr': 0.0004,
-    'log_amin': 1e-5
+    'log_amin': 1e-5,
+    'num_examples': 16
 }
 
 # Load nsynth dataset from a tfrecord
 dataset = nsynth_from_tfrecord('/home/big/datasets/nsynth/nsynth-train.tfrecord')
 
 class GANExample():
-    def __init__(self, dataset=dataset, hparams=hparams):
+    def __init__(self, dataset=dataset, hparams=hparams, save_dir='', save_images=False):
         self.dataset = dataset
         self.hparams = hparams
+        self.save_dir = save_dir
+        self.save_images = save_images
+
         # Create preprocessing pipeline for the melspectograms
         self.dataset = preprocess.pipeline(self.dataset, [
             preprocess.extract('audio'),
@@ -86,12 +93,20 @@ class GANExample():
         self.gen_loss_avg = tf.keras.metrics.Mean()
         self.disc_loss_avg = tf.keras.metrics.Mean()
 
+        try:
+            os.mkdir(os.path.join(self.save_dir, 'images/'))
+        except:
+            pass
+
+        self.seed = tf.random.normal([self.hparams['num_examples'], self.hparams['latent_size']])
+
         # Create the training loop
         self.train = create_train_loop(self.dataset,
                                 self.train_step,
                                 on_epoch_start=self.on_epoch_start,
                                 on_step=self.on_step,
                                 on_epoch_complete=self.on_epoch_complete)
+
 
 
     # This runs at the start of every epoch
@@ -107,4 +122,21 @@ class GANExample():
 
     # This runs at the end of every epoch and is used to display metrics
     def on_epoch_complete(self, epoch, step):
+        display.clear_output(wait=True)
         print(f"Epoch: {epoch}, Step: {step}, Gen Loss: {self.gen_loss_avg.result()}, Disc Loss: {self.disc_loss_avg.result()}")
+        self.generate_and_save_images_epoch(epoch)
+
+    def generate_and_save_images_epoch(epoch):
+        generated = self.generator(self.seed, training=False)
+
+        fig = plt.figure(figsize=(4,4))
+
+        for i in range(generated.shape[0]):
+            plt.subplot(4, 4, i+1)
+            plt.imshow(generated[i, :, :, 0])
+            plt.axis('off')
+
+        if self.save_images:
+            plt.savefig('{}/images/image_at_epoch_{:04d}.png'.format(self.save_dir, epoch))
+
+        plt.show()
