@@ -6,34 +6,25 @@ def create_generator(latent_size, batch_size, shape):
 
     o = layers.Dense((shape[0]//4)*(shape[1]//4)*batch_size)(i)
     o = layers.BatchNormalization()(o)
-    # o = layers.LeakyReLU()(o)
+    o = layers.LeakyReLU()(o)
 
     o = layers.Reshape((shape[0]//4, shape[1]//4, batch_size))(o)
 
-    o = layers.UpSampling2D(size=(2, 2))(o)
-    o = layers.Conv2D(16, (5, 5), strides=(1, 1), padding='same', use_bias=False)(o)
+    o = layers.Conv2D(128, (5, 5), strides=(1, 1), padding='same', use_bias=False)(o)
     o = layers.BatchNormalization()(o)
     o = layers.LeakyReLU()(o)
 
     o = layers.UpSampling2D(size=(2, 2))(o)
-    o = layers.Conv2D(16, (5, 5), strides=(1, 1), padding='same', use_bias=False)(o)
+    o = layers.Conv2D(64, (5, 5), strides=(1, 1), padding='same', use_bias=False)(o)
     o = layers.BatchNormalization()(o)
     o = layers.LeakyReLU()(o)
 
+    o = layers.UpSampling2D(size=(2, 2))(o)
     o = layers.Conv2D(32, (5, 5), strides=(1, 1), padding='same', use_bias=False)(o)
     o = layers.BatchNormalization()(o)
     o = layers.LeakyReLU()(o)
 
-    # o = layers.UpSampling2D(size=(2, 2))(o)
-    # o = layers.Conv2D(8, (5, 5), strides=(1, 1), padding='same', use_bias=False)(o)
-    # o = layers.BatchNormalization()(o)
-    # o = layers.LeakyReLU()(o)
-
-    # o = layers.Conv2D(128, (5, 5), strides=(1, 1), padding='same', use_bias=False)(o)
-    # o = layers.BatchNormalization()(o)
-    # o = layers.LeakyReLU()(o)
-
-    o = layers.Conv2D(1, (5, 5), strides=(1, 1), padding='same', use_bias=False, activation='sigmoid')(o)
+    o = layers.Conv2D(1, (5, 5), strides=(1, 1), padding='same', use_bias=False, activation='tanh')(o)
 
     return tf.keras.Model(inputs=i, outputs=o)
 
