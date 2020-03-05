@@ -103,8 +103,8 @@ class GANExample():
         self.manager = tf.train.CheckpointManager(self.ckpt, os.path.join(self.save_dir, 'ckpts'), max_to_keep=3)
 
         self.ckpt.restore(self.manager.latest_checkpoint)
-        if manager.latest_checkpoint:
-            print("Restored from {}".format(manager.latest_checkpoint))
+        if self.manager.latest_checkpoint:
+            print("Restored from {}".format(self.manager.latest_checkpoint))
         else:
             print("Initializing from scratch.")
 
