@@ -1,0 +1,1012 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-03-06 Fri 16:08 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Project Log</title>
+<meta name="generator" content="Org mode" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .equation-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+  }
+  .equation {
+    vertical-align: middle;
+  }
+  .equation-label {
+    display: table-cell;
+    text-align: right;
+    vertical-align: middle;
+  }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { width: 90%; }
+  /*]]>*/-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://gongzhitaao.org/orgcss/org.css"/>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2019 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Project Log</h1>
+
+<div id="outline-container-org6fb0cb1" class="outline-2">
+<h2 id="org6fb0cb1">Introduction</h2>
+<div class="outline-text-2" id="text-org6fb0cb1">
+<p>
+This page is a shared log detailing the work the group has done and what
+challenges and problems it has encountered. For the most part, it's updated
+weekly unless some big change happens.
+</p>
+
+<p>
+A time log can be found at Google Sheets: <a href="https://bit.ly/2PRKRl8">https://bit.ly/2PRKRl8</a>
+</p>
+
+<p>
+The time log has exact tasks worked on each entry, for each member.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgd1b23a6" class="outline-2">
+<h2 id="orgd1b23a6">Week 7</h2>
+<div class="outline-text-2" id="text-orgd1b23a6">
+</div>
+<div id="outline-container-org9e91c61" class="outline-3">
+<h3 id="org9e91c61">Important info</h3>
+<div class="outline-text-3" id="text-org9e91c61">
+<p>
+We've migrated to a new drive, which means larger storage capacity but also
+means the timelog link has been updated to a new link. Our progress will not
+be updated on the old link so make sure you check the new one!
+</p>
+
+<p>
+Also regarding the time log feedback about members not putting in enough
+time, due to the IT part of our group having more work to do regarding other
+courses, we've opted for them to only work 16h a week until next week. They
+will account for this by working 24h later. We also update the time log every
+Friday so if a week is missing
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgfde5c2b" class="outline-3">
+<h3 id="orgfde5c2b">Progress</h3>
+<div class="outline-text-3" id="text-orgfde5c2b">
+</div>
+<div id="outline-container-org191df27" class="outline-4">
+<h4 id="org191df27">Presentation</h4>
+<div class="outline-text-4" id="text-org191df27">
+<p>
+We held the half time presentation and were satisfied with it, though we
+still have some problems we want to work out regarding the scope of the
+project.
+</p>
+</div>
+</div>
+<div id="outline-container-orgb3b2ec6" class="outline-4">
+<h4 id="orgb3b2ec6">SpecGAN</h4>
+<div class="outline-text-4" id="text-orgb3b2ec6">
+<p>
+All we've done on specGAN this week is to setup training environment and
+checkpointing so that we can train it for a longer period of time.
+</p>
+
+<p>
+Below are some results of training the model on all kinds of guitar sounds
+in the NSynth dataset. Note that this set includes both acoustic and
+electric guitar, which sound very different.
+</p>
+
+
+<div class="figure">
+<p><img src="Week 7/result_2020-03-06_12-41-39.gif" alt="result_2020-03-06_12-41-39.gif" />
+</p>
+</div>
+
+<p>
+This is a GIF of the training from epoch 0 to epoch ~140. Not much to say other than it looks decent.
+</p>
+
+
+<div class="figure">
+<p><img src="Week 7/image_2020-03-06_12-43-03.png" alt="image_2020-03-06_12-43-03.png" />
+</p>
+</div>
+
+<p>
+This image show a longer training period, epoch ~640 of a different seed. As you
+can see, the spectrograms here resemble the real ones calculated in week 5. I
+realised I haven't explained how a spectrogram works:
+</p>
+
+<ul class="org-ul">
+<li>X axis is the sample (time in discrete sense)</li>
+<li>Y is the frequency, or tone if you will</li>
+<li>Color is the magnitude of the short-term fourier transform</li>
+</ul>
+
+<p>
+The straight horizontal lines indicate a frequency or note was played for a long
+time. The reason for many horizontal lines are overtones of the note. These
+overtones should be evenly spaced, if we are trying to simulate a note from an
+instrument. As you can see, the model has far to go in that regard.
+</p>
+
+<p>
+Also note the purple part to the right. The sound samples are 4 seconds long,
+with 64000 samples each but almost all sounds cut out at around 3.2s. That is
+way the purple area exists in each spectrogram.
+</p>
+
+<p>
+I should also mention that this is trained on the valid set of NSynth, meaning
+instead of ~280k samples that the training set has, we are only working with
+~12k. This is very bad, but the reason has to do with us not being able to load
+in the larger dataset into colab due to some bug that is extremely hard to
+troubleshoot. (Input/output error if you are curious). There is very little info
+online so either we try solving it on our own (no good error log of it) or we
+use other training resources.
+</p>
+
+<p>
+We also have to work on inverting this; there are a lot of parameters that need
+to be specified for this inversion to be done correctly and sound okay.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org3594a09" class="outline-4">
+<h4 id="org3594a09">New model proposal by Elias</h4>
+<div class="outline-text-4" id="text-org3594a09">
+
+<div class="figure">
+<p><img src="Week 7/MVIMG_20200306_125637_2020-03-06_13-00-04.jpg" alt="MVIMG_20200306_125637_2020-03-06_13-00-04.jpg" />
+</p>
+</div>
+
+<p>
+While SpecGan is good at generating notes, it is not easy to convert an existing note to a latent vector which can be fed to the generator.  This would be useful if we want to train a network to generate melodies as a sequence of latent space vectors.
+</p>
+
+<p>
+The solution proposed here is to make a hybrid of variational autoencoders and gans, such that crisp images can still be generated, but it also becomes possible to encode them.
+</p>
+
+<p>
+The idea is to first train a variational autoencoder, and then train a gan to generate realistic images when given the encoding and some noise as input.
+In order to ensure that the generated images look similar to the input, the GAN generated image is also encoded, and the generator
+gets an additional loss that ensures that the new encoding is similar to the encoding of the original image.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org0af8b9c" class="outline-4">
+<h4 id="org0af8b9c">Transformer and MIDI</h4>
+<div class="outline-text-4" id="text-org0af8b9c">
+<p>
+In the transoformer regard, we are working on getting the MIDI pipeline done
+so that we can train the transformers on midi data. The dataset for this is
+MAESTRO, which includes both raw audio and MIDI of recordings.
+</p>
+
+<p>
+MIDI is great at structure, and the goal of the transformers are to get long
+term structure. Further ahead in the project, we want to combine note
+generation with structure of transformers to hopefully generate music with
+details of raw audio and structure of MIDI.
+</p>
+
+<p>
+So far, there's a lot of research about transformers and how other models
+have encoded MIDI for use with machine learning.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org255e8d8" class="outline-4">
+<h4 id="org255e8d8">Problems</h4>
+<div class="outline-text-4" id="text-org255e8d8">
+<ul class="org-ul">
+<li><b>Resources</b>: Still no reply about resources for training on chalmers. Sent
+another mail asking for a response since it has been a week.</li>
+<li><b>Ambitions and scope of project</b>: We will discuss this more in the next
+meeting.</li>
+<li><b>Low hours carl</b>: He has 3 other courses that take his time, which makes
+distributing the hours difficult.</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org84bcb12" class="outline-3">
+<h3 id="org84bcb12">Summary of each member</h3>
+<div class="outline-text-3" id="text-org84bcb12">
+<ul class="org-ul">
+<li><b>Christoffer</b>: Helped with structuring the presentation. Trained a specGAN to
+generate nice looking images (lots of bug testing and hyperparameter tuning
+in this task). Minor work on transformers (mostly reading about existing
+implementations and how to encode MIDI).</li>
+<li><b>Eric</b>: Looked at the MIDI format and created a MIDI encoder function that
+can later be used in the dataset preprocessing pipelines. Read about GAN
+training techniques like label smoothing. Read about the MIDI format and
+created a function to encode MIDI files to a format that can be used to
+train a network.</li>
+<li><b>Carl</b>: Gave up on wavenet (at least for now), currently working on
+preprocessing the MAESTRO dataset)</li>
+<li><b>Lovisa</b>: Helped a bit with preparing presentation (along with the rest of
+the group), continued work on spectrogram GAN, started working on
+transformers with Elias and Christoffer. Mainly tried to get the Music
+Transformer by Magenta on github to work, as well as collected some
+research relevant to the subject.</li>
+<li><b>Cao</b>: Worked on the presentation with the group and presented it with Elias.
+Did some light reading about wave2midi2wave.</li>
+<li><b>Elias</b>: This week I worked on, and presented the half-time presentation with
+cao. Also came up with a new model for encoding and synthesis of high
+quality data samples with untangled, normally distributed, latent
+representations.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgedda176" class="outline-3">
+<h3 id="orgedda176">Next week</h3>
+<div class="outline-text-3" id="text-orgedda176">
+<ul class="org-ul">
+<li>We got the recommendation to just work on implementation, but we have quite
+a bit of things we could add to the report already.</li>
+<li>Finish encoding MIDI and start experimenting with transformers for structure.</li>
+<li>Explore the idea described by Elias above</li>
+<li>Hopefully solve the resource problem</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org92ee9b2" class="outline-2">
+<h2 id="org92ee9b2">Week 6</h2>
+<div class="outline-text-2" id="text-org92ee9b2">
+<p>
+We spent parts of the week revising the project plan, which is now accepted.
+</p>
+</div>
+<div id="outline-container-org4092566" class="outline-3">
+<h3 id="org4092566">Project so far</h3>
+<div class="outline-text-3" id="text-org4092566">
+<p>
+The goal for the past two weeks have been generating a note. There has been a
+considerable amount of effort put towards this. Below some results are shown
+(hard to show audio, we should try hosting those results somewhere and
+linking to them)
+</p>
+</div>
+
+<div id="outline-container-org21c8ebc" class="outline-4">
+<h4 id="org21c8ebc">WaveRNN</h4>
+<div class="outline-text-4" id="text-org21c8ebc">
+
+<div class="figure">
+<p><img src="Week 6/tacotron_wavernn_2020-02-29_11-20-30.png" alt="tacotron_wavernn_2020-02-29_11-20-30.png" />
+</p>
+</div>
+
+
+<p>
+Eric managed to generate something loosely sounding like a flute using this
+model. Loosely as in it's clearly a wind instrument and it is a recognizable
+note with overtones but it still needs some work/training.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org9ee33bc" class="outline-4">
+<h4 id="org9ee33bc">SpecGAN</h4>
+<div class="outline-text-4" id="text-org9ee33bc">
+<p>
+Unfortuneately, the results from this model look decent, but sound terrible.
+It doesn't quite follow the implementation specGAN used, so that is an area we could improve.
+</p>
+
+
+<div class="figure">
+<p><img src="Week 6/iVBORw0KGg_2020-02-29_11-15-02.png" alt="iVBORw0KGg_2020-02-29_11-15-02.png" />
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org4f9b98f" class="outline-4">
+<h4 id="org4f9b98f">WaveNet</h4>
+<div class="outline-text-4" id="text-org4f9b98f">
+<p>
+Carl attempted training WaveNet, which when listening could produce both
+sine and square waves.
+</p>
+
+
+<div class="figure">
+<p><img src="Week 6/1280px-Waveforms.svg_2020-02-29_11-23-23.png" alt="1280px-Waveforms.svg_2020-02-29_11-23-23.png" />
+</p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org7eaa9e0" class="outline-4">
+<h4 id="org7eaa9e0">Problems</h4>
+<div class="outline-text-4" id="text-org7eaa9e0">
+<p>
+<b>Too ambitions</b>: The project is very ambitious. The workflow of starting on
+simple tasks (generating a note etc) and building on those with sprints
+remedies that somewhat. Still, we want to spend some time exactly defining
+what the end product will be.
+</p>
+
+<p>
+<b>Better planning</b>: We've realised we need a better system for distributing
+tasks to the members. Right now you could easily not know what to work. Our
+idea is to use Trello for this, but that requires setup and splitting tasks
+into even smaller tasks.
+</p>
+
+<p>
+<b>Resources</b>: We need better resources for training. We've started asking about
+these things. Hopefully we will get an answer next week.
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org3538581" class="outline-3">
+<h3 id="org3538581">Meetings and workshops</h3>
+<div class="outline-text-3" id="text-org3538581">
+<p>
+Nothing special, most meetings regarded the project plan, the first
+presentation or just working on the two models explained last week.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org72ea306" class="outline-3">
+<h3 id="org72ea306">Summary of each member</h3>
+<div class="outline-text-3" id="text-org72ea306">
+<ul class="org-ul">
+<li>Christoffer: Mostly worked on plan and the specGAN model. Also started a
+bit on final report and helped with presentation. Also been handling
+communication wih examiner and sent mails about computing resources</li>
+<li>Eric: I started with training an existing model called WaveRNN where I
+managed to generate something that sounds like a flute note. I did the
+training on my personal computer at home which is not optimal. We need
+better computing resources. I then went on to try a model called MelNet,
+which is similar to WaveRNN but it uses melspectograms instead of waveforms
+which might be more promising.</li>
+<li>Carl: Some work on report; successfully training a WaveNet on sine and
+square waves</li>
+<li>Lovisa: Project plan work, as well as some on the specGAN</li>
+<li>Cao: Worked on the presentation, reading about GANSynth, trying out
+different discriminator/ generator for the simple GAN model that I
+implemented last week.</li>
+<li>Elias: Spent the first half of the week rewriting the project plan.
+Afterwards I primarily worked on getting a 1d convolutional autoencoder
+working. I kind of succeeded, but it is very computationally heavy at the
+moment and the loss doesn’t really decrease. The output is just noise so
+far.</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org48c9d3a" class="outline-3">
+<h3 id="org48c9d3a">Next week</h3>
+<div class="outline-text-3" id="text-org48c9d3a">
+<ul class="org-ul">
+<li>Presentation on tuesday</li>
+<li>Tweak/train note generation models</li>
+<li>Start work on structure models (melody)</li>
+<li>Begin writing parts of report (note generation)</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org0a7e784" class="outline-2">
+<h2 id="org0a7e784">Week 5</h2>
+<div class="outline-text-2" id="text-org0a7e784">
+<p>
+We spent this week working on implementing two kinds of models:
+</p>
+<ol class="org-ol">
+<li>WaveNet - a raw audio generative model mainly used for speech synthesis</li>
+<li>SpecGAN - a model using generative adversarial networks for training by converting audio into spectrographs.</li>
+</ol>
+
+<p>
+The main purpose of this was to generate a note using the NSynth dataset
+(dataset consisting of different notes played on different instruments.
+</p>
+</div>
+
+<div id="outline-container-org9b0e3a3" class="outline-3">
+<h3 id="org9b0e3a3">Project plan review</h3>
+<div class="outline-text-3" id="text-org9b0e3a3">
+<p>
+After a meeting with our examiner, there were a fair amount of things that
+needed to be changed in the plan.
+</p>
+
+<p>
+Most of the feedback applies to the entire plan, but here are some key points:
+</p>
+<ul class="org-ul">
+<li><b>Background</b>: Does not explain or motivate the problem well enough. It is meant to capture the reader but our background lacks a lot of passion required for that.</li>
+<li><b>Aim</b>: Same here generally, does not explain why this is an important and interesting field.</li>
+<li><b>Timeplan</b>: Does not tell a story, how will we accomplish these things. Try and detail every week and what happens if we discover hurdles. It also has to detail consistent deliveries, ie if the project suddenly had to stop for whatever reason, what do we have to show for our work?</li>
+</ul>
+
+<p>
+Deadline for the rewritten plan is Wednesday, <span class="timestamp-wrapper"><span class="timestamp">&lt;2020-02-26 Wed&gt; </span></span> at 12:00. We
+will also try to send it to our supervisor by Monday/Tuesday.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orga51c455" class="outline-3">
+<h3 id="orga51c455">Project so far</h3>
+<div class="outline-text-3" id="text-orga51c455">
+<p>
+So far, a lot of work has been going on using colab, a notebook editor in
+Google drive. It allows limited access to GPUs which makes it great for
+smaller experimentation of models. In the future, we'll want to either pay
+for access to GPUs, or try and use Chalmers GPU clusters.
+</p>
+</div>
+
+<div id="outline-container-org08079f1" class="outline-4">
+<h4 id="org08079f1">WaveNet</h4>
+<div class="outline-text-4" id="text-org08079f1">
+<p>
+WaveNet requires the amplitudes to be encoded to something that is easier
+for the network to work with. This is done using mu<sub>law</sub> encoding, which is
+basically just bucketing the amplitudes, but where is gives mode detail to
+small amplitudes than large ones.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org9b302ce" class="outline-4">
+<h4 id="org9b302ce">SpecGAN</h4>
+<div class="outline-text-4" id="text-org9b302ce">
+<p>
+We were originally going to implement GAN-TTS, but because of its
+complexity, we decided to implement something simpler first. As mentioned,
+most guides on GANs are for images, so it seemed fitting to start with a
+model using images (spectrographs).
+</p>
+
+
+<div id="orgb357282" class="figure">
+<p><img src="./img/week5specs.png" alt="week5specs.png" />
+</p>
+<p><span class="figure-number">Figure 7: </span>Spectrographs for 10 different notes generated</p>
+</div>
+
+<p>
+This model requires processing the audio waveform into images using digital
+signal processing. This did not have to be done manually, as there are
+plenty of libraries to use, but the challenge is to ensure all images of the
+entire dataset represent the same thing and have the same format and size.
+As such, the data preprocessing has been one of the subtasks for this.
+</p>
+
+<p>
+The other task is to implement the actual model. There are many guides on
+implementing a GAN using the MNIST dataset (dataset consisting of
+handwritten letters in image form), but some slight modifications are
+required to suit our needs.
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org850029a" class="outline-3">
+<h3 id="org850029a">Meetings and workshops</h3>
+<div class="outline-text-3" id="text-org850029a">
+<p>
+Meetings and workshops were spent working on the two models in groups of
+three people. Working in groups ensures everyone is learning and are helping
+eachother.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgc8d3172" class="outline-3">
+<h3 id="orgc8d3172">Summary of each member</h3>
+<div class="outline-text-3" id="text-orgc8d3172">
+<ul class="org-ul">
+<li>Christoffer: Work on the SpecGAN model, specifically the part of converting the entire NSynth dataset into spectrograph images</li>
+<li>Eric: Work on preprocessing of data, like using the mu-law algorithm. Also been trying to implement a smaller version of wavenet and learning how to do custom training loops.</li>
+<li>Carl: Work on implementing wavenet and rendering the model</li>
+<li>Lovisa: Researched and presented sparse transformers. Also worked on the model implementation parts of SpecGAN</li>
+<li>Cao: Worked on implementation of the model part of GAN</li>
+<li>Elias: Research reformer (efficient transformer) and work a lot on wavenet implementation</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org5d103b6" class="outline-3">
+<h3 id="org5d103b6">Next week</h3>
+<div class="outline-text-3" id="text-org5d103b6">
+<ol class="org-ol">
+<li>Complete the project plan</li>
+<li>Start basic work on project report</li>
+<li>Hopefully generate notes with either of the two models being worked on</li>
+<li>If time, start investigating using transformers for the structure part of music generation</li>
+</ol>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgbc199b9" class="outline-2">
+<h2 id="orgbc199b9">Week 4</h2>
+<div class="outline-text-2" id="text-orgbc199b9">
+<p>
+Most of this weeks time was spent on planning and writing the project plan.
+</p>
+</div>
+
+<div id="outline-container-orgf74b073" class="outline-3">
+<h3 id="orgf74b073">Time log warning</h3>
+<div class="outline-text-3" id="text-orgf74b073">
+<p>
+Apparently the expected work amount up to (and including) week 3 was an average of
+72 hours (according to mail sent to supervisor). Unless this is an error, that
+would mean 24 hours worked per week on average. The information we received
+was that it's expected to work 20 hours a week, but that initially that is
+hard to achieve. In case it's not an error, we are aware of it but it doesn't
+match information we've gotten earlier.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org6d14163" class="outline-3">
+<h3 id="org6d14163">Regarding project log feedback</h3>
+<div class="outline-text-3" id="text-org6d14163">
+<p>
+I appreciate the feedback regarding the project log but want to explain something.
+So far, most of the work that has been done is either research (paper and
+presentation for group), writing contract/plan or minor implementation.
+</p>
+
+<p>
+I mention this because so far, there's very little to talk about regarding
+individual performance here. We could spend a lot of time detailing
+everything done, but that is much better done in the time log above. The
+point is, up to this point there has been a lot of shared work.
+</p>
+
+<p>
+Now that the planning stage is over (which is a very shared job), this part
+should be easier to write as more individual tasks will be delegated.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgf92b9cb" class="outline-3">
+<h3 id="orgf92b9cb">Meetings and workshops</h3>
+<div class="outline-text-3" id="text-orgf92b9cb">
+<p>
+A meeting with chalmers writing was booked, but since that required two groups
+to sign up, the meeting never went through. We will try to book another one,
+but since the plan now is delivered, getting feedback for it seems unneccesary.
+</p>
+
+<p>
+On wednesday, the first draft was sent to the supervisor, with feedback
+presented to the group on friday morning. The meeting and workshop held on
+friday was primarily spent on refining the plan after the feedback received.
+All in all, the group is happy with how the plan turned out considering the
+project is very open and at a slightly more advanced level than common for
+bachelor theses.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org4cac55a" class="outline-3">
+<h3 id="org4cac55a">Project so far</h3>
+<div class="outline-text-3" id="text-org4cac55a">
+<p>
+The project plan is complete. Some initial trial and error has been
+performed, though generating anything close to music is far off. According to
+the timeplan, we are now in the phase of generating a musical note using
+machine learning.
+</p>
+
+<p>
+A issue we currently face seems to be storage space. Datasets take a fair
+amount of space, yet have to be loaded when training. We're currently waiting
+for a reply regarding using Chalmers computing clusters but other options are
+available at a price. The canvas page does not specify whether pricing for
+such clusters are included in the 3000kr budget (as they don't fall under
+components or software), so that will have to be investigated.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org86f7ff5" class="outline-3">
+<h3 id="org86f7ff5">Summary of each member</h3>
+<div class="outline-text-3" id="text-org86f7ff5">
+<p>
+We will use this section to detail problemsolving/tasks delegated to members.
+Besides everyone working on the project plan, here are some tasks solved by each member
+</p>
+<ul class="org-ul">
+<li>Christoffer: So far been tasked with documentation, project log writing and generally being the secretary. Otherwise been learning tensorflow</li>
+<li>Eric: Took on the challenge of creating a gantt chart, which he completed by
+writing his own javascript script. Also have been very active in initial
+development and testing of ideas using google colab.</li>
+<li>Carl: Ensured our latex documents have proper systems for commenting and change requesting, which helped writing the plan immensely.</li>
+<li>Lovisa: Contacted AIVA (AI music company) for info on how their product worked but didn't get much back from them. Also went through tensorflow guides.</li>
+<li>Cao: Research autoencoders and attempted implementing and training basic models using Keras and tensorflow</li>
+<li><p>
+Elias: Made an architecture proposal (shown below), which we will look into more next week.
+</p></li>
+</ul>
+
+<div class="figure">
+<p><img src="./img/week3proposal.png" alt="week3proposal.png" />
+</p>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org1be2e93" class="outline-2">
+<h2 id="org1be2e93">Week 3</h2>
+<div class="outline-text-2" id="text-org1be2e93">
+<p>
+As per usual, the week began with a meeting on Tuesday followed by a longer
+workshop. During the meeting, the members went through what they had worked on
+since last friday. For the most part, that was research on tensorflow and a
+paper published by Spotify creator group.
+</p>
+
+<p>
+For the workshop, it was decided that the majority of time
+would be spent on writing the project plan. Basic outlining was conducted to
+ensure everyone was on the same page regarding the content.
+</p>
+
+<p>
+On friday, there was a meeting with the supervisor where the group quickly
+went through some research notes they had taken from the presentations held
+last week. Additionally the focus of this meeting was on the project plan.
+There were a fair amount of criticism of the current rough draft.
+</p>
+
+<p>
+After this meeting, the rest of the day involved a long workshop on writing
+the plan according to the criticism received earlier. A lot was changed and
+this brought the draft much closer to the final writeup.
+</p>
+
+<p>
+There is still work to be done on the plan. The deadline is next friday with
+the groups' deadline being set to Wednesday. Therefore, the next week will
+primarily deal with finishing the project plan.
+</p>
+</div>
+
+<div id="outline-container-org57cf7ed" class="outline-3">
+<h3 id="org57cf7ed">Problems encountered</h3>
+<div class="outline-text-3" id="text-org57cf7ed">
+<p>
+Because the group is not used to writing a research project plan but rather a
+product project plan, one of the greatest obstacles have been defining what
+will be done. Combined with the wide field, it is difficult to estimate how
+much time each task takes.
+</p>
+
+<p>
+The project task has therefore been simplified a fair bit, but it is still in the
+groups ambition to incorporate the more complex features of the project given
+that there is available time later on.
+</p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org5d82597" class="outline-2">
+<h2 id="org5d82597">Week 2</h2>
+<div class="outline-text-2" id="text-org5d82597">
+<p>
+The week began with a meeting on tuesday, during which a number of points were brought up
+</p>
+<ul class="org-ul">
+<li>Decide report language and register that on canvas</li>
+<li>Began talk about the project report</li>
+<li>Discussions on the current writeup of the contract</li>
+</ul>
+
+<p>
+The meeting was immediately followed by a workshop, where how to efficiently
+structure out research was determined. we concluded that the
+group would divide into subgroups with the intent of each reading and
+summarizing papers. Machine learning is a wide field, beyond basic concepts,
+learning everything will take away too much time from the actual project.
+</p>
+
+<p>
+After a meeting with the supervisor on friday, a research meeting was held.
+The idea was to take the subgroups determined earlier and have them present
+their findings for the group. This process will be evaluated for future
+research meetings, but we felt it was a good start. If anything, the primary
+goal of them is to spark discussions, which it was very effective at.
+</p>
+
+<p>
+Because Cao only returned on thursday, the contract wasn't sent to our
+supervisor until Friday evening, after the meeting. The contract is now
+considered finished.
+</p>
+
+<p>
+Though stated in last weeks log that we would begin work on the project plan
+this week, small strides were made in that direction. This has a lot to do
+with the very open project description. The primary hurdle is to decide on a
+goal that is not too easy, but realistic enough to achieve. With such a wide
+field and different ways of doing things, we have given that part a bit more time.
+</p>
+
+<p>
+Next week will be focused on the project plan and another research meeting.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org09e60f9" class="outline-2">
+<h2 id="org09e60f9">Week 1</h2>
+<div class="outline-text-2" id="text-org09e60f9">
+<p>
+Since this is the first week of the project, the majority of it has been
+discussing the project and reading up on research papers. We started the week
+by attending the introductory seminars.
+</p>
+
+<p>
+During the three meetings, we set up a slack group, had our first meeting with the supervisor and
+started writing the group contract.
+</p>
+
+<p>
+Alone, most of us studied research papers. Since some of the members lacked
+experience in the field, Elias set up a notebook intended for teaching the
+basics.
+</p>
+
+<p>
+For personal reasons, Cao was absent for part of the week, but this was notified well in advance.
+</p>
+
+<p>
+For next week, we are looking to finish the group contract, continue researching and starting work on the project plan.
+</p>
+</div>
+</div>
+</div>
+</body>
+</html>
