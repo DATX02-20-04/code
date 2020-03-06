@@ -20,7 +20,7 @@ class Trainer():
     def set_train_step(self, train_step):
         self.train_step = train_step
 
-    def run():
+    def run(self):
         steps_per_epoch = self.hparams['steps_per_epoch'] if 'steps_per_epoch' in self.hparams else None
 
         for epoch in range(1, self.epochs+1):
