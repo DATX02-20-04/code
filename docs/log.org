@@ -28,8 +28,7 @@
    Also regarding the time log feedback about members not putting in enough
    time, due to the IT part of our group having more work to do regarding other
    courses, we've opted for them to only work 16h a week until next week. They
-   will account for this by working 24h later. We also update the time log every
-   Friday so if a week is missing
+   will account for this by working 24h later.
 
 ** Progress
 *** Presentation
