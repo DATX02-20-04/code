@@ -108,6 +108,9 @@ class GANExample():
                                                           self.discriminator_optimizer,
                                                           self.hparams['batch_size'],
                                                           self.hparams['latent_size']))
+        self.trainer.on_epoch_start = self.on_epoch_start
+        self.trainer.on_step = self.on_step
+        self.trainer.on_epoch_complete = self.on_epoch_complete
 
 
     # This runs at the start of every epoch
