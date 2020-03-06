@@ -1,4 +1,5 @@
 import tensorflow as tf
+import time
 
 def create_train_loop(dataset, train_step, epochs, steps, ckpt, save_dir, on_epoch_start=None, on_step=None, on_epoch_complete=None):
     manager = tf.train.CheckpointManager(ckpt, save_dir, max_to_keep=3)
@@ -11,6 +12,7 @@ def create_train_loop(dataset, train_step, epochs, steps, ckpt, save_dir, on_epo
     def train():
         step = 0
         for epoch in range(1, epochs+1):
+            start = time.time()
             if on_epoch_start is not None:
                 on_epoch_start(epoch, step)
 
@@ -21,8 +23,10 @@ def create_train_loop(dataset, train_step, epochs, steps, ckpt, save_dir, on_epo
                     on_step(step, stats)
 
             manager.save()
+            end = time.time()
+            duration = end - start
             if on_epoch_complete is not None:
-                on_epoch_complete(epoch, step)
+                on_epoch_complete(epoch, step, duration)
 
     return train
 
