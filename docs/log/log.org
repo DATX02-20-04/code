@@ -12,7 +12,7 @@
   challenges and problems it has encountered. For the most part, it's updated
   weekly unless some big change happens.
 
-  A time log can be found at Google Sheets: https://bit.ly/2tEy9OZ
+  A time log can be found at Google Sheets: https://bit.ly/2PRKRl8
 
   The time log has exact tasks worked on each entry, for each member.
 
