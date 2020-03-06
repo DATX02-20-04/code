@@ -20,10 +20,6 @@ def create_generator(latent_size, scale, shape):
     o = layers.LeakyReLU()(o)
 
     o = layers.UpSampling2D(size=(2, 2))(o)
-    o = layers.Conv2D(32, (5, 5), strides=(1, 1), padding='same', use_bias=False)(o)
-    o = layers.BatchNormalization()(o)
-    o = layers.LeakyReLU()(o)
-
     o = layers.Conv2D(1, (5, 5), strides=(1, 1), padding='same', use_bias=False, activation='tanh')(o)
 
     return tf.keras.Model(inputs=i, outputs=o)
