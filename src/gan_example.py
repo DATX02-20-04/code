@@ -156,7 +156,7 @@ class GANExample():
 
         plt.show()
 
-    def sample_sound(self, seed):
+    def sample_sound(self, seed, pipeline):
         generated = self.generator(seed, training=False)
 
         print("Generated melspec samples:")
@@ -169,5 +169,4 @@ class GANExample():
 
         plt.show()
 
-        return preprocess.invert_log_melspec(sr=self.hparams['sample_rate'])(tf.unstack(generated))
-
+        return pipeline(tf.unstack(generated))
