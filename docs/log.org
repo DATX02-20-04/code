@@ -1,6 +1,5 @@
 #+TITLE: Project Log
 
-#+OPTIONS: toc:nil
 #+OPTIONS: num:nil
 #+OPTIONS: html-postamble:nil
 
