@@ -28,7 +28,7 @@ class Trainer():
             if self.on_epoch_start is not None:
                 self.on_epoch_start(epoch, self.step)
 
-            d = dataset.take(steps_per_epoch) if steps_per_epoch is not None else dataset
+            d = self.dataset.take(steps_per_epoch) if steps_per_epoch is not None else self.dataset
 
             for batch in d:
                 self.step.assign_add(1)
