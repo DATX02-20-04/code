@@ -82,13 +82,6 @@ class GANExample():
         self.gen_loss_avg = tf.keras.metrics.Mean()
         self.disc_loss_avg = tf.keras.metrics.Mean()
 
-        self.ckpt = tf.train.Checkpoint(
-            generator=self.generator,
-            discriminator=self.discriminator,
-            gen_optimizer=self.generator_optimizer,
-            disc_optimizer=self.discriminator_optimizer,
-        )
-
         if 'save_dir' in self.hparams:
             self.image_save_dir = os.path.join(self.hparams['save_dir'], 'images/')
             try:
@@ -99,6 +92,15 @@ class GANExample():
         self.seed = tf.random.normal([self.hparams['num_examples'], self.hparams['latent_size']])
 
         self.trainer = Trainer(self.dataset, self.hparams)
+
+        self.ckpt = tf.train.Checkpoint(
+            step=self.trainer.step,
+            generator=self.generator,
+            discriminator=self.discriminator,
+            gen_optimizer=self.generator_optimizer,
+            disc_optimizer=self.discriminator_optimizer,
+        )
+
         self.trainer.init_checkpoint(self.ckpt)
         self.trainer.set_train_step(create_gan_train_step(self.generator,
                                                           self.discriminator,
