@@ -47,6 +47,7 @@ class GANExample():
             preprocess.melspec(sr=self.hparams['sample_rate']),
             preprocess.pad([[0, 0], [0, 4]], 'CONSTANT', constant_values=self.hparams['log_amin']),
             preprocess.amp_to_log(amin=self.hparams['log_amin']),
+            preprocess.normalize(),
         ])
 
         # Determine shape of the spectograms in the dataset
