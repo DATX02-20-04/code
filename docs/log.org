@@ -85,13 +85,13 @@
 #+DOWNLOADED: file:///home/eethern/Downloads/MVIMG_20200306_125637.jpg @ 2020-03-06 13:00:04
 [[file:Week%207/MVIMG_20200306_125637_2020-03-06_13-00-04.jpg]]
 
-    While SpecGan is good at generating notes, it is not easy to convert an existing note to a latent vector which can be fed to the generator.  This would be useful if we want to train a network to generate melodies as a sequence of latent space vectors. 
-    
-    The solution proposed here is to make a hybrid of variational autoencoders and gans, such that crisp images can still be generated, but it also becomes possible to encode them. 
-    
-    The idea is to first train a variational autoencoder, and then train a gan to generate realistic images when given the encoding and some noise as input. 
+    While SpecGan is good at generating notes, it is not easy to convert an existing note to a latent vector which can be fed to the generator.  This would be useful if we want to train a network to generate melodies as a sequence of latent space vectors.
+
+    The solution proposed here is to make a hybrid of variational autoencoders and gans, such that crisp images can still be generated, but it also becomes possible to encode them.
+
+    The idea is to first train a variational autoencoder, and then train a gan to generate realistic images when given the encoding and some noise as input.
     In order to ensure that the generated images look similar to the input, the GAN generated image is also encoded, and the generator
-    gets an additional loss that ensures that the new encoding is similar to the encoding of the original image. 
+    gets an additional loss that ensures that the new encoding is similar to the encoding of the original image.
 
 *** Transformer and MIDI
     In the transoformer regard, we are working on getting the MIDI pipeline done
@@ -362,7 +362,7 @@
      #+CAPTION: Architecture proposal by Elias
      #+LABEL: fig:week4_prop
      #+NAME: fig:week4_prop
-   [[./img/week3proposal.png]]
+   [[./img/weekproposal.png]]
 
 * Week 3
   As per usual, the week began with a meeting on Tuesday followed by a longer
