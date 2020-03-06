@@ -1,7 +1,10 @@
 #+TITLE: Project Log
 
+#+OPTIONS: toc:nil
 #+OPTIONS: num:nil
 #+OPTIONS: html-postamble:nil
+
+#+EXPORT_FILE_NAME: index
 
 #+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://gongzhitaao.org/orgcss/org.css"/>
 
@@ -28,7 +31,8 @@
    Also regarding the time log feedback about members not putting in enough
    time, due to the IT part of our group having more work to do regarding other
    courses, we've opted for them to only work 16h a week until next week. They
-   will account for this by working 24h later.
+   will account for this by working 24h later. We also update the time log every
+   Friday so if a week is missing
 
 ** Progress
 *** Presentation
