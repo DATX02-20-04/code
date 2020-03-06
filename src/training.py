@@ -1,13 +1,14 @@
 import tensorflow as tf
 import time
 
-def create_train_loop(dataset, train_step, epochs, steps, ckpt, save_dir, on_epoch_start=None, on_step=None, on_epoch_complete=None):
-    manager = tf.train.CheckpointManager(ckpt, save_dir, max_to_keep=3)
-    ckpt.restore(manager.latest_checkpoint)
-    if manager.latest_checkpoint:
-        print("Restored from {}".format(manager.latest_checkpoint))
-    else:
-        print("Initializing from scratch.")
+def create_train_loop(dataset, train_step, epochs, ckpt=None, save_dir=None, steps=None, on_epoch_start=None, on_step=None, on_epoch_complete=None):
+    if ckpt is not None:
+        manager = tf.train.CheckpointManager(ckpt, save_dir, max_to_keep=3)
+        ckpt.restore(manager.latest_checkpoint)
+        if manager.latest_checkpoint:
+            print("Restored from {}".format(manager.latest_checkpoint))
+        else:
+            print("Initializing from scratch.")
 
     def train():
         step = 0
@@ -16,13 +17,17 @@ def create_train_loop(dataset, train_step, epochs, steps, ckpt, save_dir, on_epo
             if on_epoch_start is not None:
                 on_epoch_start(epoch, step)
 
-            for batch in dataset.take(steps):
+            d = dataset.take(steps) if steps is not None else dataset
+
+            for batch in d:
                 step += 1
                 stats = train_step(batch)
                 if on_step is not None:
                     on_step(step, stats)
 
-            manager.save()
+            if ckpt is not None:
+                manager.save()
+
             end = time.time()
             duration = end - start
             if on_epoch_complete is not None:
