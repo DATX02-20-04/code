@@ -21,6 +21,9 @@ class Trainer():
         self.train_step = train_step
 
     def run(self):
+        if self.train_step is None:
+            raise Exception("No train_step specified, call set_train_step on the trainer with your training step.")
+
         steps_per_epoch = self.hparams['steps_per_epoch'] if 'steps_per_epoch' in self.hparams else None
 
         for epoch in range(1, self.hparams['epochs']+1):
@@ -32,7 +35,7 @@ class Trainer():
 
             for batch in d:
                 self.step.assign_add(1)
-                stats = train_step(batch)
+                stats = self.train_step(batch)
                 if self.on_step is not None:
                     self.on_step(self.step, stats)
 
