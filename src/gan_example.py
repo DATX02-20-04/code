@@ -155,3 +155,19 @@ class GANExample():
             plt.savefig(os.path.join(self.image_save_dir, 'image_at_epoch_{:04d}_step_{}.png'.format(epoch, step)))
 
         plt.show()
+
+    def sample_sound(self, seed):
+        generated = self.generator(seed, training=False)
+
+        print("Generated melspec samples:")
+        fig = plt.figure(figsize=(4,4))
+
+        for i in range(generated.shape[0]):
+            plt.subplot(4, 4, i+1)
+            plt.imshow(generated[i, :, :, 0])
+            plt.axis('off')
+
+        plt.show()
+
+        return preprocess.invert_log_melspec(sr=self.hparams['sample_rate'])(tf.unstack(generated))
+
