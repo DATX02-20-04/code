@@ -3,7 +3,7 @@ import preprocess
 import os
 from losses import create_simple_gan_loss
 from training import Trainer, create_gan_train_step
-from datasets.nsynth import nsynth_from_tfrecord
+from datasets.nsynth import nsynth_from_tfrecord, instruments
 from models.simple_gan import create_generator, create_discriminator
 import matplotlib.pyplot as plt
 import IPython.display as display
@@ -37,6 +37,9 @@ class GANExample():
     def __init__(self, dataset=dataset, hparams=hparams):
         self.dataset = dataset
         self.hparams = hparams
+
+        if 'instrument' in self.hparams:
+            self.dataset = preprocess.filter_transform(self.instrument_filter)(dataset)
 
         # Create preprocessing pipeline for the melspectograms
         self.dataset = preprocess.pipeline(self.dataset, [
@@ -114,6 +117,8 @@ class GANExample():
         self.trainer.on_step = self.on_step
         self.trainer.on_epoch_complete = self.on_epoch_complete
 
+    def instrument_filter(self, x):
+        return tf.reshape(tf.math.equal(x['instrument_family'], instruments[self.hparams['instrument']]), [])
 
     # This runs at the start of every epoch
     def on_epoch_start(self, epoch, step):

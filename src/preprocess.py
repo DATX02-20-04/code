@@ -26,14 +26,14 @@ def map_transform(fn):
     return transform
 
 def composition_transform(transforms):
-    def transform(dataset, index_map):
+    def transform(dataset, index_map=None):
         for trns in transforms:
             dataset = trns(dataset, index_map)
         return dataset
     return transform
 
 def filter_transform(fn):
-    def transform(dataset, index_map):
+    def transform(dataset, index_map=None):
         filter_fn = fn if index_map is None else index_map(fn)
         if isinstance(dataset, tf.data.Dataset):
             return dataset.filter(filter_fn)
