@@ -23,7 +23,7 @@ class Trainer():
     def run(self):
         steps_per_epoch = self.hparams['steps_per_epoch'] if 'steps_per_epoch' in self.hparams else None
 
-        for epoch in range(1, self.epochs+1):
+        for epoch in range(1, self.hparams['epochs']+1):
             start = time.time()
             if on_epoch_start is not None:
                 on_epoch_start(epoch, self.step)

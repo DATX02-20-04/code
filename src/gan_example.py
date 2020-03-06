@@ -34,11 +34,9 @@ hparams = {
 dataset = nsynth_from_tfrecord('/home/big/datasets/nsynth/nsynth-train.tfrecord')
 
 class GANExample():
-    def __init__(self, dataset=dataset, hparams=hparams, save_dir='', save_images=False):
+    def __init__(self, dataset=dataset, hparams=hparams):
         self.dataset = dataset
         self.hparams = hparams
-        self.save_dir = save_dir
-        self.save_images = save_images
 
         # Create preprocessing pipeline for the melspectograms
         self.dataset = preprocess.pipeline(self.dataset, [
@@ -91,10 +89,12 @@ class GANExample():
             disc_optimizer=self.discriminator_optimizer,
         )
 
-        try:
-            os.mkdir(os.path.join(self.save_dir, 'images/'))
-        except:
-            pass
+        if 'save_dir' in self.hparams:
+            self.image_save_dir = os.path.join(self.hparams['save_dir'], 'images/')
+            try:
+                os.mkdir(self.image_save_dir)
+            except:
+                pass
 
         self.seed = tf.random.normal([self.hparams['num_examples'], self.hparams['latent_size']])
 
@@ -126,9 +126,9 @@ class GANExample():
     def on_epoch_complete(self, epoch, step, duration):
         display.clear_output(wait=True)
         print(f"Epoch: {epoch}, Step: {step}, Gen Loss: {self.gen_loss_avg.result()}, Disc Loss: {self.disc_loss_avg.result()}, Duration: {duration} s")
-        self.generate_and_save_images_epoch(epoch)
+        self.generate_and_save_images_epoch(epoch, step)
 
-    def generate_and_save_images_epoch(self, epoch):
+    def generate_and_save_images_epoch(self, epoch, step):
         generated = self.generator(self.seed, training=False)
 
         fig = plt.figure(figsize=(4,4))
@@ -138,7 +138,9 @@ class GANExample():
             plt.imshow(generated[i, :, :, 0])
             plt.axis('off')
 
-        if self.save_images:
-            plt.savefig('{}/images/image_at_epoch_{:04d}.png'.format(self.save_dir, epoch))
+        if 'save_images' in self.hparams and self.hparams['save_images']:
+            if self.image_save_dir is not None:
+                raise Exception("Could not save image, no save_dir was specified in hparams.")
+            plt.savefig(os.path.join(self.image_save_dir, 'image_at_epoch_{:04d}_step_{}.png'.format(epoch, step)))
 
         plt.show()
