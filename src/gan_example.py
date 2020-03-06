@@ -2,7 +2,7 @@ import tensorflow as tf
 import preprocess
 import os
 from losses import create_simple_gan_loss
-from training import create_train_loop, create_gan_train_step
+from training import Trainer, create_gan_train_step
 from datasets.nsynth import nsynth_from_tfrecord
 from models.simple_gan import create_generator, create_discriminator
 import matplotlib.pyplot as plt
@@ -80,16 +80,6 @@ class GANExample():
         self.generator = create_generator(self.hparams['latent_size'], self.hparams['generator_scale'], self.spec_shape)
         self.discriminator = create_discriminator(self.spec_shape)
 
-        # Create the GAN train step
-        self.train_step = create_gan_train_step(self.generator,
-                                        self.discriminator,
-                                        self.generator_loss,
-                                        self.discriminator_loss,
-                                        self.generator_optimizer,
-                                        self.discriminator_optimizer,
-                                        self.hparams['batch_size'],
-                                        self.hparams['latent_size'])
-
         # Define some metrics to be used in the training
         self.gen_loss_avg = tf.keras.metrics.Mean()
         self.disc_loss_avg = tf.keras.metrics.Mean()
@@ -108,17 +98,16 @@ class GANExample():
 
         self.seed = tf.random.normal([self.hparams['num_examples'], self.hparams['latent_size']])
 
-        # Create the training loop
-        self.train = create_train_loop(self.dataset,
-                                       self.train_step,
-                                       epochs=hparams['epochs'],
-                                       steps=hparams['steps_per_epoch'],
-                                       ckpt=self.ckpt,
-                                       save_dir=os.path.join(self.save_dir, 'ckpts'),
-                                       on_epoch_start=self.on_epoch_start,
-                                       on_step=self.on_step,
-                                       on_epoch_complete=self.on_epoch_complete)
-
+        self.trainer = Trainer(self.dataset, self.hparams)
+        self.trainer.init_checkpoint(self.ckpt)
+        self.trainer.set_train_step(create_gan_train_step(self.generator,
+                                                          self.discriminator,
+                                                          self.generator_loss,
+                                                          self.discriminator_loss,
+                                                          self.generator_optimizer,
+                                                          self.discriminator_optimizer,
+                                                          self.hparams['batch_size'],
+                                                          self.hparams['latent_size']))
 
 
     # This runs at the start of every epoch
