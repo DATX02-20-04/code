@@ -131,11 +131,12 @@ class GANExample():
         gen_loss, disc_loss = stats
         self.gen_loss_avg(gen_loss)
         self.disc_loss_avg(disc_loss)
+        print(f"Step: {step}, Gen Loss: {self.gen_loss_avg.result()}, Disc Loss: {self.disc_loss_avg.result()}", end='\r')
 
     # This runs at the end of every epoch and is used to display metrics
-    def on_epoch_complete(self, epoch, step):
+    def on_epoch_complete(self, epoch, step, duration):
         display.clear_output(wait=True)
-        print(f"Epoch: {epoch}, Step: {step}, Gen Loss: {self.gen_loss_avg.result()}, Disc Loss: {self.disc_loss_avg.result()}")
+        print(f"Epoch: {epoch}, Step: {step}, Gen Loss: {self.gen_loss_avg.result()}, Disc Loss: {self.disc_loss_avg.result()}, Duration: {duration} s")
         self.generate_and_save_images_epoch(epoch)
 
     def generate_and_save_images_epoch(self, epoch):
