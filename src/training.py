@@ -29,7 +29,7 @@ class Trainer():
         for epoch in range(1, self.hparams['epochs']+1):
             start = time.time()
             if self.on_epoch_start is not None:
-                self.on_epoch_start(epoch, self.step)
+                self.on_epoch_start(epoch, self.step.numpy())
 
             d = self.dataset.take(steps_per_epoch) if steps_per_epoch is not None else self.dataset
 
@@ -37,7 +37,7 @@ class Trainer():
                 self.step.assign_add(1)
                 stats = self.train_step(batch)
                 if self.on_step is not None:
-                    self.on_step(self.step, stats)
+                    self.on_step(self.step.numpy(), stats)
 
             if self.ckpt is not None:
                 self.manager.save()
@@ -45,7 +45,7 @@ class Trainer():
             end = time.time()
             duration = end - start
             if self.on_epoch_complete is not None:
-                self.on_epoch_complete(epoch, self.step, duration)
+                self.on_epoch_complete(epoch, self.step.numpy(), duration)
 
 def create_gan_train_step(generator,
                           discriminator,
