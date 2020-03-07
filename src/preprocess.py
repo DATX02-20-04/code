@@ -48,6 +48,12 @@ def filter_transform(fn):
 def parse_tfrecord(features):
     return map_transform(lambda x: tf.io.parse_single_example(x, features))
 
+def read_file():
+    return map_transform(lambda x: tf.io.read_file(x))
+
+def decode_wav(desired_channels=-1, desired_samples=-1):
+    return map_transform(lambda x: tf.audio.decode_wav(x, desired_channels, desired_samples))
+
 def one_hot(depth):
     return map_transform(lambda x: tf.one_hot(x, depth))
 
