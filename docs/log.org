@@ -1,10 +1,15 @@
 #+TITLE: Project Log
 
-#+OPTIONS: toc:nil
 #+OPTIONS: num:nil
 #+OPTIONS: html-postamble:nil
 
+#+EXPORT_FILE_NAME: index
+
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://gongzhitaao.org/orgcss/org.css"/>
+
 #+LATEX_HEADER: \usepackage[margin=3cm]{geometry}
+#+LATEX: \setlength{\parindent}{0pt}
+#+LATEX: \setlength{\parskip}{\baselineskip}
 #+LATEX_CLASS: article
 
 * Introduction
@@ -15,6 +20,130 @@
   A time log can be found at Google Sheets: https://bit.ly/2PRKRl8
 
   The time log has exact tasks worked on each entry, for each member.
+
+* Week 7
+** Important info
+   We've migrated to a new drive, which means larger storage capacity but also
+   means the timelog link has been updated to a new link. Our progress will not
+   be updated on the old link so make sure you check the new one!
+
+   Also regarding the time log feedback about members not putting in enough
+   time, due to the IT part of our group having more work to do regarding other
+   courses, we've opted for them to only work 16h a week until next week. They
+   will account for this by working 24h later. We also update the time log every
+   Friday so if a week is missing
+
+** Progress
+*** Presentation
+    We held the half time presentation and were satisfied with it, though we
+    still have some problems we want to work out regarding the scope of the
+    project.
+*** SpecGAN
+    All we've done on specGAN this week is to setup training environment and
+    checkpointing so that we can train it for a longer period of time.
+
+    Below are some results of training the model on all kinds of guitar sounds
+    in the NSynth dataset. Note that this set includes both acoustic and
+    electric guitar, which sound very different.
+
+#+DOWNLOADED: file:///home/eethern/Downloads/result.gif @ 2020-03-06 12:41:39
+[[file:Week%207/result_2020-03-06_12-41-39.gif]]
+
+    This is a GIF of the training from epoch 0 to epoch ~140. Not much to say other than it looks decent.
+
+#+DOWNLOADED: file:///home/eethern/Downloads/image.png @ 2020-03-06 12:43:03
+[[file:Week%207/image_2020-03-06_12-43-03.png]]
+
+    This image show a longer training period, epoch ~640 of a different seed. As you
+    can see, the spectrograms here resemble the real ones calculated in week 5. I
+    realised I haven't explained how a spectrogram works:
+
+    - X axis is the sample (time in discrete sense)
+    - Y is the frequency, or tone if you will
+    - Color is the magnitude of the short-term fourier transform
+
+    The straight horizontal lines indicate a frequency or note was played for a long
+    time. The reason for many horizontal lines are overtones of the note. These
+    overtones should be evenly spaced, if we are trying to simulate a note from an
+    instrument. As you can see, the model has far to go in that regard.
+
+    Also note the purple part to the right. The sound samples are 4 seconds long,
+    with 64000 samples each but almost all sounds cut out at around 3.2s. That is
+    way the purple area exists in each spectrogram.
+
+    I should also mention that this is trained on the valid set of NSynth, meaning
+    instead of ~280k samples that the training set has, we are only working with
+    ~12k. This is very bad, but the reason has to do with us not being able to load
+    in the larger dataset into colab due to some bug that is extremely hard to
+    troubleshoot. (Input/output error if you are curious). There is very little info
+    online so either we try solving it on our own (no good error log of it) or we
+    use other training resources.
+
+    We also have to work on inverting this; there are a lot of parameters that need
+    to be specified for this inversion to be done correctly and sound okay.
+
+*** New model proposal by Elias
+#+DOWNLOADED: file:///home/eethern/Downloads/MVIMG_20200306_125637.jpg @ 2020-03-06 13:00:04
+[[file:Week%207/MVIMG_20200306_125637_2020-03-06_13-00-04.jpg]]
+
+    While SpecGan is good at generating notes, it is not easy to convert an existing note to a latent vector which can be fed to the generator.  This would be useful if we want to train a network to generate melodies as a sequence of latent space vectors.
+
+    The solution proposed here is to make a hybrid of variational autoencoders and gans, such that crisp images can still be generated, but it also becomes possible to encode them.
+
+    The idea is to first train a variational autoencoder, and then train a gan to generate realistic images when given the encoding and some noise as input.
+    In order to ensure that the generated images look similar to the input, the GAN generated image is also encoded, and the generator
+    gets an additional loss that ensures that the new encoding is similar to the encoding of the original image.
+
+*** Transformer and MIDI
+    In the transoformer regard, we are working on getting the MIDI pipeline done
+    so that we can train the transformers on midi data. The dataset for this is
+    MAESTRO, which includes both raw audio and MIDI of recordings.
+
+    MIDI is great at structure, and the goal of the transformers are to get long
+    term structure. Further ahead in the project, we want to combine note
+    generation with structure of transformers to hopefully generate music with
+    details of raw audio and structure of MIDI.
+
+    So far, there's a lot of research about transformers and how other models
+    have encoded MIDI for use with machine learning.
+
+*** Problems
+    - *Resources*: Still no reply about resources for training on chalmers. Sent
+      another mail asking for a response since it has been a week.
+    - *Ambitions and scope of project*: We will discuss this more in the next
+      meeting.
+    - *Low hours carl*: He has 3 other courses that take his time, which makes
+      distributing the hours difficult.
+
+** Summary of each member
+   - *Christoffer*: Helped with structuring the presentation. Trained a specGAN to
+     generate nice looking images (lots of bug testing and hyperparameter tuning
+     in this task). Minor work on transformers (mostly reading about existing
+     implementations and how to encode MIDI).
+   - *Eric*: Looked at the MIDI format and created a MIDI encoder function that
+     can later be used in the dataset preprocessing pipelines. Read about GAN
+     training techniques like label smoothing. Read about the MIDI format and
+     created a function to encode MIDI files to a format that can be used to
+     train a network.
+   - *Carl*: Gave up on wavenet (at least for now), currently working on
+     preprocessing the MAESTRO dataset)
+   - *Lovisa*: Helped a bit with preparing presentation (along with the rest of
+     the group), continued work on spectrogram GAN, started working on
+     transformers with Elias and Christoffer. Mainly tried to get the Music
+     Transformer by Magenta on github to work, as well as collected some
+     research relevant to the subject.
+   - *Cao*: Worked on the presentation with the group and presented it with Elias.
+     Did some light reading about wave2midi2wave.
+   - *Elias*: This week I worked on, and presented the half-time presentation with
+     cao. Also came up with a new model for encoding and synthesis of high
+     quality data samples with untangled, normally distributed, latent
+     representations.
+** Next week
+   - We got the recommendation to just work on implementation, but we have quite
+     a bit of things we could add to the report already.
+   - Finish encoding MIDI and start experimenting with transformers for structure.
+   - Explore the idea described by Elias above
+   - Hopefully solve the resource problem
 
 * Week 6
   We spent parts of the week revising the project plan, which is now accepted.
@@ -234,7 +363,7 @@
      #+CAPTION: Architecture proposal by Elias
      #+LABEL: fig:week4_prop
      #+NAME: fig:week4_prop
-   [[./img/week3proposal.png]]
+   [[./img/weekproposal.png]]
 
 * Week 3
   As per usual, the week began with a meeting on Tuesday followed by a longer
