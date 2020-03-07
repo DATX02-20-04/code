@@ -38,18 +38,6 @@ class GANExample():
         self.dataset = dataset
         self.hparams = hparams
 
-        if 'instrument' in self.hparams:
-            self.dataset = preprocess.filter_transform(self.instrument_filter)(dataset)
-
-        # Create preprocessing pipeline for the melspectograms
-        self.dataset = preprocess.pipeline(self.dataset, [
-            preprocess.extract('audio'),
-            preprocess.melspec(sr=self.hparams['sample_rate']),
-            preprocess.pad([[0, 0], [0, 4]], 'CONSTANT', constant_values=self.hparams['log_amin']),
-            preprocess.amp_to_log(amin=self.hparams['log_amin']),
-            preprocess.normalize(),
-        ])
-
         # Determine shape of the spectograms in the dataset
         self.spec_shape = None
         for e in self.dataset.take(1):

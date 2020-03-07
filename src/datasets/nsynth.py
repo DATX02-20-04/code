@@ -15,6 +15,19 @@ def nsynth_from_tfrecord(nsynth_tfrecord_path):
         }),
     ])
 
+def nsynth_to_melspec(dataset, hparams):
+    if 'instrument' in hparams:
+        dataset = preprocess.filter_transform(instrument_filter)(dataset)
+
+    # Create preprocessing pipeline for the melspectograms
+    return preprocess.pipeline(dataset, [
+        preprocess.extract('audio'),
+        preprocess.melspec(sr=hparams['sample_rate']),
+        preprocess.pad([[0, 0], [0, 4]], 'CONSTANT', constant_values=hparams['log_amin']),
+        preprocess.amp_to_log(amin=hparams['log_amin']),
+        preprocess.normalize(),
+    ])
+
 instruments = {
     'bass': 0,
     'brass': 1,
