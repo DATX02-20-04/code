@@ -119,7 +119,8 @@ class GANExample():
         gen_loss, disc_loss = stats
         self.gen_loss_avg(gen_loss)
         self.disc_loss_avg(disc_loss)
-        print(f"Step: {step}, Gen Loss: {self.gen_loss_avg.result()}, Disc Loss: {self.disc_loss_avg.result()}", end='\r')
+        if step % 100 == 0:
+            print(f"Step: {step}, Gen Loss: {self.gen_loss_avg.result()}, Disc Loss: {self.disc_loss_avg.result()}")
 
     # This runs at the end of every epoch and is used to display metrics
     def on_epoch_complete(self, epoch, step, duration):
