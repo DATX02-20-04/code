@@ -3,61 +3,23 @@ import preprocess
 import os
 from losses import create_simple_gan_loss
 from training import Trainer, create_gan_train_step
-from datasets.nsynth import nsynth_from_tfrecord, instruments
+from datasets.nsynth import nsynth_from_tfrecord, instruments, nsynth_to_melspec
 from models.simple_gan import create_generator, create_discriminator
 import matplotlib.pyplot as plt
-import IPython.display as display
+#import IPython.display as display
+from model import Model
 
 # Some compatability options for some graphics cards
-# from tensorflow.compat.v1 import ConfigProto
-# from tensorflow.compat.v1 import InteractiveSession
-# config = ConfigProto()
-# config.gpu_options.allow_growth = True
-# session = InteractiveSession(config=config)
+from tensorflow.compat.v1 import ConfigProto
+from tensorflow.compat.v1 import InteractiveSession
+config = ConfigProto()
+config.gpu_options.allow_growth = True
+session = InteractiveSession(config=config)
 
-# Setup hyperparameters
-hparams = {
-    'epochs': 10,
-    'steps_per_epoch': 10,
-    'sample_rate': 16000,
-    'batch_size': 64,
-    'buffer_size': 1000,
-    'latent_size': 100,
-    'generator_scale': 256,
-    'gen_lr': 0.0001,
-    'disc_lr': 0.0004,
-    'log_amin': 1e-5,
-    'num_examples': 16
-}
 
-# Load nsynth dataset from a tfrecord
-dataset = nsynth_from_tfrecord('/home/big/datasets/nsynth/nsynth-train.tfrecord')
-
-class GANExample():
-    def __init__(self, dataset=dataset, hparams=hparams):
-        self.dataset = dataset
-        self.hparams = hparams
-
-        # Determine shape of the spectograms in the dataset
-        self.spec_shape = None
-        for e in self.dataset.take(1):
-            self.spec_shape = e.shape
-            print(f'Spectogram shape: {self.spec_shape}')
-
-        # Make sure we got a shape before continuing
-        assert self.spec_shape is not None, "Could not get spectogram shape"
-
-        # Make sure the dimensions of spectogram is divisible by 4.
-        # This is because the generator is going to upscale it's state twice with a factor of 2.
-        assert self.spec_shape[0] % 4 == 0 and self.spec_shape[1] % 4 == 0, "Spectogram dimensions is not divisible by 4"
-
-        # Create preprocessing pipeline for shuffling and batching
-        self.dataset = preprocess.pipeline(self.dataset, [
-            preprocess.set_channels(1),
-            preprocess.shuffle(self.hparams['buffer_size']),
-            preprocess.batch(self.hparams['batch_size']),
-            preprocess.prefetch()
-        ])
+class GANExample(Model):
+    def __init__(self, dataset, hparams):
+        super(GANExample, self).__init__(dataset, hparams)
 
         # Create the generator and discriminator loss functions
         self.generator_loss, self.discriminator_loss = create_simple_gan_loss(tf.keras.losses.BinaryCrossentropy(from_logits=True))
@@ -83,7 +45,6 @@ class GANExample():
 
         self.seed = tf.random.normal([self.hparams['num_examples'], self.hparams['latent_size']])
 
-        self.trainer = Trainer(self.dataset, self.hparams)
 
         self.ckpt = tf.train.Checkpoint(
             step=self.trainer.step,
@@ -102,12 +63,32 @@ class GANExample():
                                                           self.discriminator_optimizer,
                                                           self.hparams['batch_size'],
                                                           self.hparams['latent_size']))
-        self.trainer.on_epoch_start = self.on_epoch_start
-        self.trainer.on_step = self.on_step
-        self.trainer.on_epoch_complete = self.on_epoch_complete
 
     def instrument_filter(self, x):
         return tf.reshape(tf.math.equal(x['instrument_family'], instruments[self.hparams['instrument']]), [])
+
+    def preprocess(self, dataset):
+        # Determine shape of the spectograms in the dataset
+        self.spec_shape = None
+        for e in dataset.take(1):
+            self.spec_shape = e.shape
+            print(f'Spectogram shape: {self.spec_shape}')
+
+        # Make sure we got a shape before continuing
+        assert self.spec_shape is not None, "Could not get spectogram shape"
+
+        # Make sure the dimensions of spectogram is divisible by 4.
+        # This is because the generator is going to upscale it's state twice with a factor of 2.
+        assert self.spec_shape[0] % 4 == 0 and self.spec_shape[1] % 4 == 0, "Spectogram dimensions is not divisible by 4"
+
+        # Create preprocessing pipeline for shuffling and batching
+        return preprocess.pipeline(dataset, [
+            preprocess.set_channels(1),
+            preprocess.shuffle(self.hparams['buffer_size']),
+            preprocess.batch(self.hparams['batch_size']),
+            preprocess.prefetch()
+        ])
+
 
     # This runs at the start of every epoch
     def on_epoch_start(self, epoch, step):
@@ -124,7 +105,7 @@ class GANExample():
 
     # This runs at the end of every epoch and is used to display metrics
     def on_epoch_complete(self, epoch, step, duration):
-        display.clear_output(wait=True)
+        #display.clear_output(wait=True)
         print(f"Epoch: {epoch}, Step: {step}, Gen Loss: {self.gen_loss_avg.result()}, Disc Loss: {self.disc_loss_avg.result()}, Duration: {duration} s")
         self.generate_and_save_images_epoch(epoch, step)
 
@@ -159,3 +140,29 @@ class GANExample():
         plt.show()
 
         return pipeline(tf.unstack(generated))
+
+
+
+if __name__ == '__main__':
+    # Setup hyperparameters
+    hparams = {
+        'epochs': 10,
+        'steps_per_epoch': 1000,
+        'sample_rate': 16000,
+        'batch_size': 32,
+        'buffer_size': 1000,
+        'latent_size': 100,
+        'generator_scale': 128,
+        'gen_lr': 0.0001,
+        'disc_lr': 0.0004,
+        'log_amin': 1e-5,
+        'num_examples': 16,
+        'save_dir': '.'
+    }
+
+    # Load nsynth dataset from a tfrecord
+    dataset = nsynth_from_tfrecord('/home/big/datasets/nsynth/nsynth-train.tfrecord')
+
+    dataset = nsynth_to_melspec(dataset, hparams)
+    gan = GANExample(dataset, hparams)
+    gan.trainer.run()
