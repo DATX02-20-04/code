@@ -78,6 +78,11 @@ if __name__ == '__main__':
 
     # Load nsynth dataset from a tfrecord
     dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=True)
+    dataset = preprocess.pipeline(dataset, [
+        preprocess.extract('audio'),
+        preprocess.frame(hparams['window_samples'], hparams['window_samples']),
+        preprocess.unbatch()
+    ])
 
     vae = VAEExample(dataset, hparams)
     vae.train()
