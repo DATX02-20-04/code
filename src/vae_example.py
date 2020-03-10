@@ -41,17 +41,12 @@ class VAEExample(Model):
         self.vae.fit(self.dataset, epochs=self.hparams['epochs'], validation_data=self.dataset.take(100), steps_per_epoch=self.hparams['steps_per_epoch'], callbacks=[cb])
 
     def on_epoch_end(self, epoch, logs):
-        print("Sampling...")
         z = self.prior.sample(100)
         decoded = self.decoder(z, training=False).mean()
-        print("DECODED: ", decoded)
         sample = tf.reshape(decoded, [-1]).numpy()
 
-        print("Plotting...")
         plt.plot(sample)
-        plt.show()
         wavfile.write(f'sample{epoch}.wav', self.hparams['sample_rate'], sample)
-        print("Done")
 
     def preprocess(self, dataset):
         return preprocess.pipeline(dataset, [
