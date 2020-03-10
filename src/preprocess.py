@@ -1,6 +1,7 @@
 import tensorflow as tf
 import librosa
 import mido
+import numpy as np
 
 def index_map(index, f):
     # Carl: I don't think this parallelizes very well, but I'm not sure
@@ -159,7 +160,7 @@ def load_midi():
 def encode_midi(note_count=128, max_time_shift=100, time_shift_m=10):
     return map_transform(_encode_midi(note_count, max_time_shift, time_shift_m))
 
-def _encode_midi(note_count, max_time_shift, time_shift_m):
+def _encode_midi(note_count, max_time_shift, time_shift_ms):
     def _midi(x):
         midi = []
         for msg in x:
