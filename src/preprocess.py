@@ -1,44 +1,36 @@
 import tensorflow as tf
 import librosa
 import mido
+import numpy as np
 
-def index_map(index):
-    def map_index(fn):
-        def imap(x):
-            x[index] = fn(x[index])
-            return x
-        return imap
-    return map_index
+def index_map(index, f):
+    # Carl: I don't think this parallelizes very well, but I'm not sure
+    def imap(x):
+        x[index] = f(x[index])
+        return x
+    return map_transform(imap)
 
-def pipeline(dataset, transforms, index_map=None):
-    for transform in transforms:
-        dataset = transform(dataset, index_map)
-    return dataset
-
-def map_transform(fn):
-    def transform(dataset, index_map):
-        map_fn = fn if index_map is None else index_map(fn)
-        if isinstance(dataset, tf.data.Dataset):
-            return dataset.map(map_fn,
-                            num_parallel_calls=tf.data.experimental.AUTOTUNE)
-        else:
-            return map(map_fn, dataset)
-    return transform
-
-def composition_transform(transforms):
-    def transform(dataset, index_map=None):
+def pipeline(transforms):
+    def transform(dataset):
         for trns in transforms:
-            dataset = trns(dataset, index_map)
+            dataset = trns(dataset)
         return dataset
     return transform
 
-def filter_transform(fn):
-    def transform(dataset, index_map=None):
-        filter_fn = fn if index_map is None else index_map(fn)
+def map_transform(fn):
+    def transform(dataset):
         if isinstance(dataset, tf.data.Dataset):
-            return dataset.filter(filter_fn)
+            return dataset.map(fn, num_parallel_calls=tf.data.experimental.AUTOTUNE)
         else:
-            return filter(filter_fn, dataset)
+            return map(fn, dataset)
+    return transform
+
+def filter_transform(fn):
+    def transform(dataset):
+        if isinstance(dataset, tf.data.Dataset):
+            return dataset.filter(fn)
+        else:
+            return filter(fn, dataset)
     return transform
 
 
@@ -135,7 +127,7 @@ def transpose2d():
 def spec(fft_length=1024, frame_step=512, frame_length=None, **kwargs):
     if frame_length is None:
         frame_length = fft_length
-    return composition_transform([
+    return pipeline([
         stft(frame_length, frame_step, fft_length),
         abs(),
         transpose2d()
@@ -144,7 +136,7 @@ def spec(fft_length=1024, frame_step=512, frame_length=None, **kwargs):
 def melspec(sr, fft_length=1024, frame_step=512, frame_length=None, **kwargs):
     if frame_length is None:
         frame_length = fft_length
-    return composition_transform([
+    return pipeline([
         stft(frame_length, frame_step, fft_length),
         abs(),
         mels(sr, fft_length//2+1, **kwargs),
@@ -157,18 +149,15 @@ def invert_melspec(sr, fft_length=1024, frame_step=512, frame_length=None):
     return map_transform(lambda x: librosa.feature.inverse.mel_to_audio(x.numpy(), sr=sr, n_fft=fft_length, hop_length=frame_step, win_length=frame_length))
 
 def invert_log_melspec(sr, fft_length=1024, frame_step=512, frame_length=None, amin=1e-5):
-    return composition_transform([
+    return pipeline([
         log_to_amp(amin),
         invert_melspec(sr, fft_length, frame_step, frame_length)
     ])
 
 def load_midi():
-    return map_transform(lambda x: mido.MidiFile(x))
+    return map_transform(lambda x: mido.MidiFile(x.numpy()))
 
-def encode_midi(note_count=128, max_time_shift=100, time_shift_m=10):
-    return map_transform(_encode_midi(note_count, max_time_shift, time_shift_m))
-
-def _encode_midi(note_count, max_time_shift, time_shift_m):
+def encode_midi(note_count=128, max_time_shift=100, time_shift_ms=10):
     def _midi(x):
         midi = []
         for msg in x:
@@ -188,12 +177,10 @@ def _encode_midi(note_count, max_time_shift, time_shift_m):
             if note is not None:
                 midi.append(tf.concat([etype, note, time_enc], axis=0))
         return tf.stack(midi)
-    return _midi
+    return map_transform(_midi)
 
 def midi(note_count=128, max_time_shift=100, time_shift_m=10):
-    return composition_transform([
+    return pipeline([
         load_midi(),
         encode_midi(note_count, max_time_shift, time_shift_m)
     ])
-
-
