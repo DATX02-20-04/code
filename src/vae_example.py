@@ -45,7 +45,6 @@ class VAEExample(Model):
         decoded = self.decoder(z, training=False).mean()
         sample = tf.concat(decoded, axis=0).numpy().reshape(-1)
 
-        plt.plot(sample)
         wavfile.write(f'sample{epoch}.wav', self.hparams['sample_rate'], sample)
 
     def preprocess(self, dataset):
