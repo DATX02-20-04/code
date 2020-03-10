@@ -41,7 +41,7 @@ class VAEExample(Model):
         self.vae.fit(self.dataset, epochs=self.hparams['epochs'], validation_data=self.dataset.take(100), steps_per_epoch=self.hparams['steps_per_epoch'], callbacks=[cb])
 
     def on_epoch_end(self, epoch, logs):
-        z = self.prior.sample(100)
+        z = tf.random.normal([100, self.hparams['latent_size']])
         decoded = self.decoder(z, training=False).mean()
         sample = tf.concat(decoded, axis=0).numpy().reshape(-1)
 
