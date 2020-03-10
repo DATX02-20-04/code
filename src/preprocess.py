@@ -2,43 +2,39 @@ import tensorflow as tf
 import librosa
 import mido
 
-def index_map(index):
-    def map_index(fn):
-        def imap(x):
-            x[index] = fn(x[index])
-            return x
-        return imap
-    return map_index
+def index_map(index, f):
+    # Carl: I don't think this parallelizes very well, but I'm not sure
+    def imap(x):
+        x[index] = f(x[index])
+        return x
+    return map_transform(imap)
 
-def pipeline(dataset, transforms, index_map=None):
+def pipeline(dataset, transforms):
     for transform in transforms:
-        dataset = transform(dataset, index_map)
+        dataset = transform(dataset)
     return dataset
 
 def map_transform(fn):
-    def transform(dataset, index_map):
-        map_fn = fn if index_map is None else index_map(fn)
+    def transform(dataset):
         if isinstance(dataset, tf.data.Dataset):
-            return dataset.map(map_fn,
-                            num_parallel_calls=tf.data.experimental.AUTOTUNE)
+            return dataset.map(fn, num_parallel_calls=tf.data.experimental.AUTOTUNE)
         else:
-            return map(map_fn, dataset)
+            return map(fn, dataset)
     return transform
 
 def composition_transform(transforms):
-    def transform(dataset, index_map=None):
+    def transform(dataset):
         for trns in transforms:
-            dataset = trns(dataset, index_map)
+            dataset = trns(dataset)
         return dataset
     return transform
 
 def filter_transform(fn):
-    def transform(dataset, index_map=None):
-        filter_fn = fn if index_map is None else index_map(fn)
+    def transform(dataset):
         if isinstance(dataset, tf.data.Dataset):
-            return dataset.filter(filter_fn)
+            return dataset.filter(fn)
         else:
-            return filter(filter_fn, dataset)
+            return filter(fn, dataset)
     return transform
 
 
@@ -195,5 +191,3 @@ def midi(note_count=128, max_time_shift=100, time_shift_m=10):
         load_midi(),
         encode_midi(note_count, max_time_shift, time_shift_m)
     ])
-
-
