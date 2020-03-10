@@ -104,6 +104,9 @@ def istft(frame_length, frame_step, fft_length=None):
 def abs():
     return map_transform(lambda x: tf.abs(x))
 
+def dupe():
+    return map_transform(lambda x: (x, x))
+
 def _normalize(x):
     _max = tf.reduce_max(x)
     _min = tf.reduce_min(x)

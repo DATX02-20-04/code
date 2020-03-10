@@ -6,13 +6,16 @@ class Model():
         self.hparams = hparams
         self.dataset = self.preprocess(dataset)
 
-        self.trainer = Trainer(self.dataset, self.hparams)
-        self.trainer.on_epoch_start = self.on_epoch_start
-        self.trainer.on_step = self.on_step
-        self.trainer.on_epoch_complete = self.on_epoch_complete
+        # self.trainer = Trainer(self.dataset, self.hparams)
+        # self.trainer.on_epoch_start = self.on_epoch_start
+        # self.trainer.on_step = self.on_step
+        # self.trainer.on_epoch_complete = self.on_epoch_complete
+
+    def train(self):
+        self.trainer.train()
 
     def preprocess(self, dataset):
-        pass
+        return dataset
 
     def on_epoch_start(self, epoch, step):
         pass
