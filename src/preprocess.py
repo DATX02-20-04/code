@@ -9,10 +9,12 @@ def index_map(index, f):
         return x
     return map_transform(imap)
 
-def pipeline(dataset, transforms):
-    for transform in transforms:
-        dataset = transform(dataset)
-    return dataset
+def pipeline(transforms):
+    def transform(dataset):
+        for trns in transforms:
+            dataset = trns(dataset)
+        return dataset
+    return transform
 
 def map_transform(fn):
     def transform(dataset):
@@ -20,13 +22,6 @@ def map_transform(fn):
             return dataset.map(fn, num_parallel_calls=tf.data.experimental.AUTOTUNE)
         else:
             return map(fn, dataset)
-    return transform
-
-def composition_transform(transforms):
-    def transform(dataset):
-        for trns in transforms:
-            dataset = trns(dataset)
-        return dataset
     return transform
 
 def filter_transform(fn):
@@ -131,7 +126,7 @@ def transpose2d():
 def spec(fft_length=1024, frame_step=512, frame_length=None, **kwargs):
     if frame_length is None:
         frame_length = fft_length
-    return composition_transform([
+    return pipeline([
         stft(frame_length, frame_step, fft_length),
         abs(),
         transpose2d()
@@ -140,7 +135,7 @@ def spec(fft_length=1024, frame_step=512, frame_length=None, **kwargs):
 def melspec(sr, fft_length=1024, frame_step=512, frame_length=None, **kwargs):
     if frame_length is None:
         frame_length = fft_length
-    return composition_transform([
+    return pipeline([
         stft(frame_length, frame_step, fft_length),
         abs(),
         mels(sr, fft_length//2+1, **kwargs),
@@ -153,7 +148,7 @@ def invert_melspec(sr, fft_length=1024, frame_step=512, frame_length=None):
     return map_transform(lambda x: librosa.feature.inverse.mel_to_audio(x.numpy(), sr=sr, n_fft=fft_length, hop_length=frame_step, win_length=frame_length))
 
 def invert_log_melspec(sr, fft_length=1024, frame_step=512, frame_length=None, amin=1e-5):
-    return composition_transform([
+    return pipeline([
         log_to_amp(amin),
         invert_melspec(sr, fft_length, frame_step, frame_length)
     ])
@@ -187,7 +182,7 @@ def _encode_midi(note_count, max_time_shift, time_shift_m):
     return _midi
 
 def midi(note_count=128, max_time_shift=100, time_shift_m=10):
-    return composition_transform([
+    return pipeline([
         load_midi(),
         encode_midi(note_count, max_time_shift, time_shift_m)
     ])
