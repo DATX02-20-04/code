@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 #import IPython.display as display
 from model import Model
 import scipy.io.wavfile as wavfile
+import tensorflow_datasets as tfds
 
 tfpl = tfp.layers
 tfd = tfp.distributions
@@ -76,7 +77,7 @@ if __name__ == '__main__':
     }
 
     # Load nsynth dataset from a tfrecord
-    dataset = maestro_from_files('/home/big/datasets/maestro-v2.0.0/', hparams['window_samples'])
+    dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=True)
 
     vae = VAEExample(dataset, hparams)
     vae.train()
