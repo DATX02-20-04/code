@@ -155,12 +155,9 @@ def invert_log_melspec(sr, fft_length=1024, frame_step=512, frame_length=None, a
     ])
 
 def load_midi():
-    return map_transform(lambda x: mido.MidiFile(x))
+    return map_transform(lambda x: mido.MidiFile(x.numpy()))
 
-def encode_midi(note_count=128, max_time_shift=100, time_shift_m=10):
-    return map_transform(_encode_midi(note_count, max_time_shift, time_shift_m))
-
-def _encode_midi(note_count, max_time_shift, time_shift_ms):
+def encode_midi(note_count=128, max_time_shift=100, time_shift_ms=10):
     def _midi(x):
         midi = []
         for msg in x:
@@ -180,7 +177,7 @@ def _encode_midi(note_count, max_time_shift, time_shift_ms):
             if note is not None:
                 midi.append(tf.concat([etype, note, time_enc], axis=0))
         return tf.stack(midi)
-    return _midi
+    return map_transform(_midi)
 
 def midi(note_count=128, max_time_shift=100, time_shift_m=10):
     return pipeline([
