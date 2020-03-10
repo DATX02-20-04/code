@@ -12,6 +12,8 @@ from model import Model
 # Some compatability options for some graphics cards
 from tensorflow.compat.v1 import ConfigProto
 from tensorflow.compat.v1 import InteractiveSession
+import tensorflow_datasets as tfds
+
 config = ConfigProto()
 config.gpu_options.allow_growth = True
 session = InteractiveSession(config=config)
@@ -146,7 +148,7 @@ class GANExample(Model):
 if __name__ == '__main__':
     # Setup hyperparameters
     hparams = {
-        'epochs': 10,
+        'epochs': 100,
         'steps_per_epoch': 1000,
         'sample_rate': 16000,
         'batch_size': 32,
@@ -160,8 +162,8 @@ if __name__ == '__main__':
         'save_dir': '.'
     }
 
-    # Load nsynth dataset from a tfrecord
-    dataset = nsynth_from_tfrecord('/home/big/datasets/nsynth/nsynth-train.tfrecord')
+    # Load nsynth dataset from tfds
+    dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=True)
 
     dataset = nsynth_to_melspec(dataset, hparams)
     gan = GANExample(dataset, hparams)
