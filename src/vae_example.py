@@ -43,7 +43,7 @@ class VAEExample(Model):
     def on_epoch_end(self, epoch, logs):
         z = self.prior.sample(100)
         decoded = self.decoder(z, training=False).mean()
-        sample = tf.reshape(decoded, [-1]).numpy()
+        sample = tf.concat(decoded, axis=0).numpy().reshape(-1)
 
         plt.plot(sample)
         wavfile.write(f'sample{epoch}.wav', self.hparams['sample_rate'], sample)
