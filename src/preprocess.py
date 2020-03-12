@@ -62,16 +62,16 @@ def set_channels(channels):
     return map_transform(lambda x: tf.reshape(x, [*x.shape, channels]))
 
 def batch(batch_size):
-    return lambda dataset, index_map: dataset.batch(batch_size)
+    return lambda dataset: dataset.batch(batch_size)
 
 def unbatch():
-    return lambda dataset, index_map: dataset.unbatch()
+    return lambda dataset: dataset.unbatch()
 
 def shuffle(buffer_size):
-    return lambda dataset, index_map: dataset.shuffle(buffer_size)
+    return lambda dataset: dataset.shuffle(buffer_size)
 
 def prefetch():
-    return lambda dataset, index_map: dataset.prefetch(tf.data.experimental.AUTOTUNE)
+    return lambda dataset: dataset.prefetch(tf.data.experimental.AUTOTUNE)
 
 def pad(paddings, mode, constant_values=0, name=None):
     return map_transform(lambda x: tf.pad(x, paddings, mode, constant_values, name))
