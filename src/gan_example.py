@@ -82,12 +82,12 @@ class GANExample(Model):
         assert self.spec_shape[0] % 4 == 0 and self.spec_shape[1] % 4 == 0, "Spectogram dimensions is not divisible by 4"
 
         # Create preprocessing pipeline for shuffling and batching
-        return preprocess.pipeline(dataset, [
+        return preprocess.pipeline([
             preprocess.set_channels(1),
             preprocess.shuffle(self.hparams['buffer_size']),
             preprocess.batch(self.hparams['batch_size']),
             preprocess.prefetch()
-        ])
+        ])(dataset)
 
 
     # This runs at the start of every epoch

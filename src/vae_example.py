@@ -60,13 +60,13 @@ class VAEExample(Model):
         wavfile.write(f'sample{epoch}.wav', self.hparams['sample_rate'], sample)
 
     def preprocess(self, dataset):
-        return preprocess.pipeline(dataset, [
+        return preprocess.pipeline([
             preprocess.set_channels(1),
             preprocess.dupe(),
             preprocess.shuffle(self.hparams['buffer_size']),
             preprocess.batch(self.hparams['batch_size']),
             preprocess.prefetch()
-        ])
+        ])(dataset)
 
 
 
@@ -89,11 +89,11 @@ if __name__ == '__main__':
 
     # Load nsynth dataset from a tfrecord
     dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=True)
-    dataset = preprocess.pipeline(dataset, [
+    dataset = preprocess.pipeline([
         preprocess.extract('audio'),
         preprocess.frame(hparams['window_samples'], hparams['window_samples']),
         preprocess.unbatch()
-    ])
+    ])(dataset)
 
     vae = VAEExample(dataset, hparams)
     vae.train()

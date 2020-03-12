@@ -3,7 +3,7 @@ import preprocess
 
 def nsynth_from_tfrecord(nsynth_tfrecord_path):
     dataset = tf.data.TFRecordDataset([nsynth_tfrecord_path])
-    return preprocess.pipeline(dataset, [
+    return preprocess.pipeline([
         preprocess.parse_tfrecord({
             "note_str": tf.io.FixedLenFeature([], dtype=tf.string),
             "pitch": tf.io.FixedLenFeature([1], dtype=tf.int64),
@@ -13,20 +13,20 @@ def nsynth_from_tfrecord(nsynth_tfrecord_path):
             "instrument_source": tf.io.FixedLenFeature([1], dtype=tf.int64),
             "instrument_family": tf.io.FixedLenFeature([1], dtype=tf.int64),
         }),
-    ])
+    ])(dataset)
 
 def nsynth_to_melspec(dataset, hparams):
     if 'instrument' in hparams:
         dataset = preprocess.filter_transform(instrument_filter)(dataset)
 
     # Create preprocessing pipeline for the melspectograms
-    return preprocess.pipeline(dataset, [
+    return preprocess.pipeline([
         preprocess.extract('audio'),
         preprocess.melspec(sr=hparams['sample_rate']),
         preprocess.pad([[0, 0], [0, 4]], 'CONSTANT', constant_values=hparams['log_amin']),
         preprocess.amp_to_log(amin=hparams['log_amin']),
         preprocess.normalize(),
-    ])
+    ])(dataset)
 
 instruments = {
     'bass': 0,
