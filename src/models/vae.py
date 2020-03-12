@@ -10,9 +10,13 @@ tfd = tfp.distributions
 def create_vae(latent_size, scale, samples, prior):
     i = tfkl.Input(shape=(samples, 1))
 
-    o = tfkl.Conv1D(scale, kernel_size=8, strides=8, dilation_rate=1, activation='relu')(i)
+    o = tfkl.Conv1D(scale, kernel_size=8, strides=8, dilation_rate=1)(i)
+    o = tfkl.BatchNormalization(axis=1)(o)
+    o = tfkl.ReLU()(o)
 
-    o = tfkl.Conv1D(2 * scale, kernel_size=3, strides=2, activation='relu')(o)
+    o = tfkl.Conv1D(2 * scale, kernel_size=3, strides=2)(o)
+    o = tfkl.BatchNormalization(axis=1)(o)
+    o = tfkl.ReLU()(o)
 
     o = tfkl.Flatten()(o)
 
@@ -29,12 +33,18 @@ def create_vae(latent_size, scale, samples, prior):
     o = tfkl.Reshape(target_shape=(s, 1))(o)
 
     o = tfkl.UpSampling1D(size=2)(o)
-    o = tfkl.Conv1D(2 * scale, kernel_size=3, strides=1, padding='SAME', activation='relu')(o)
+    o = tfkl.Conv1D(2 * scale, kernel_size=3, strides=1, padding='SAME')(o)
+    o = tfkl.BatchNormalization(axis=1)(o)
+    o = tfkl.ReLU()(o)
 
     o = tfkl.UpSampling1D(size=2)(o)
-    o = tfkl.Conv1D(scale, kernel_size=3, strides=1, padding='SAME', activation='relu')(o)
+    o = tfkl.Conv1D(scale, kernel_size=3, strides=1, padding='SAME')(o)
+    o = tfkl.BatchNormalization(axis=1)(o)
+    o = tfkl.ReLU()(o)
 
-    o = tfkl.Conv1D(1, kernel_size=3, strides=1, padding='SAME', activation='relu')(o)
+    o = tfkl.Conv1D(1, kernel_size=3, strides=1, padding='SAME')(o)
+    o = tfkl.BatchNormalization(axis=1)(o)
+    o = tfkl.ReLU()(o)
 
     o = tfkl.Flatten()(o)
 
