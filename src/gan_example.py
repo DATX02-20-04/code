@@ -156,7 +156,7 @@ if __name__ == '__main__':
 
     if args.plot:
         print('Plotting enabled')
-    if args.save:
+    if args.saveimg:
         print('Saving images enabled')
 
     # Setup hyperparameters
