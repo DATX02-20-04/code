@@ -61,6 +61,8 @@ class VAEExample(Model):
 
     def preprocess(self, dataset):
         return preprocess.pipeline([
+            preprocess.frame(self.hparams['window_samples'], self.hparams['window_samples']),
+            preprocess.unbatch(),
             preprocess.set_channels(1),
             preprocess.dupe(),
             preprocess.shuffle(self.hparams['buffer_size']),
@@ -91,8 +93,6 @@ if __name__ == '__main__':
     dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=True)
     dataset = preprocess.pipeline([
         preprocess.extract('audio'),
-        preprocess.frame(hparams['window_samples'], hparams['window_samples']),
-        preprocess.unbatch()
     ])(dataset)
 
     vae = VAEExample(dataset, hparams)

@@ -34,7 +34,7 @@ class GANExample(Model):
 
         # Create the actual models for the generator and discriminator
         self.generator = create_generator(self.hparams['latent_size'], self.hparams['generator_scale'], self.spec_shape)
-        self.discriminator = create_discriminator(self.spec_shape)
+        self.discriminator = create_discriminator(self.hparams['discriminator_scale'], self.spec_shape)
 
         # Define some metrics to be used in the training
         self.gen_loss_avg = tf.keras.metrics.Mean()
@@ -169,6 +169,7 @@ if __name__ == '__main__':
         'buffer_size': 1000,
         'latent_size': 100,
         'generator_scale': 128,
+        'discriminator_scale': 64,
         'gen_lr': 0.0001,
         'disc_lr': 0.0004,
         'log_amin': 1e-5,

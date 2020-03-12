@@ -11,11 +11,12 @@ class Trainer():
     def init_checkpoint(self, ckpt):
         self.ckpt = ckpt
         self.manager = tf.train.CheckpointManager(self.ckpt, os.path.join(self.hparams['save_dir'], 'ckpts'), max_to_keep=3)
-        self.ckpt.restore(self.manager.latest_checkpoint)
-        if self.manager.latest_checkpoint:
-            print("Restored from {}".format(self.manager.latest_checkpoint))
-        else:
-            print("Initializing from scratch.")
+        if ('ckpt' in self.hparams and self.hparams['ckpt']):
+            self.ckpt.restore(self.manager.latest_checkpoint)
+            if self.manager.latest_checkpoint:
+                print("Restored from {}".format(self.manager.latest_checkpoint))
+            else:
+                print("Initializing from scratch.")
 
     def set_train_step(self, train_step):
         self.train_step = train_step

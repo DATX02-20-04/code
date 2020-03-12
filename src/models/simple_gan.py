@@ -10,12 +10,12 @@ def create_generator(latent_size, scale, shape):
 
     o = layers.Reshape((shape[0]//4, shape[1]//4, scale))(o)
 
-    o = layers.Conv2D(128, (5, 5), strides=(1, 1), padding='same', use_bias=False)(o)
+    o = layers.Conv2D(scale, (5, 5), strides=(1, 1), padding='same', use_bias=False)(o)
     o = layers.BatchNormalization()(o)
     o = layers.LeakyReLU()(o)
 
     o = layers.UpSampling2D(size=(2, 2))(o)
-    o = layers.Conv2D(64, (5, 5), strides=(1, 1), padding='same', use_bias=False)(o)
+    o = layers.Conv2D(scale//2, (5, 5), strides=(1, 1), padding='same', use_bias=False)(o)
     o = layers.BatchNormalization()(o)
     o = layers.LeakyReLU()(o)
 
@@ -25,15 +25,15 @@ def create_generator(latent_size, scale, shape):
     return tf.keras.Model(inputs=i, outputs=o)
 
 
-def create_discriminator(shape):
+def create_discriminator(scale, shape):
     i = layers.Input(shape=[*shape, 1])
 
-    o = layers.Conv2D(32, (3, 3), strides=(1, 1), padding='same')(i)
+    o = layers.Conv2D(scale, (3, 3), strides=(1, 1), padding='same')(i)
     o = layers.BatchNormalization()(o)
     o = layers.LeakyReLU()(o)
     # o = layers.Dropout(0.3)(o)
 
-    o = layers.Conv2D(16, (4, 4), strides=(2, 2), padding='same')(o)
+    o = layers.Conv2D(scale//2, (4, 4), strides=(2, 2), padding='same')(o)
     o = layers.BatchNormalization()(o)
     o = layers.LeakyReLU()(o)
     # o = layers.Dropout(0.3)(o)
