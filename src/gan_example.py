@@ -165,4 +165,4 @@ if __name__ == '__main__':
 
     dataset = nsynth_to_melspec(dataset, hparams)
     gan = GANExample(dataset, hparams)
-    gan.trainer.run()
+    gan.train()
