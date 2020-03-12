@@ -151,10 +151,13 @@ class GANExample(Model):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Start training.')
     parser.add_argument('--plot', help='Enable to activate plotting', action='store_true')
+    parser.add_argument('--saveimg', help='Enable to save images after each epoch', action='store_true')
     args = parser.parse_args()
 
     if args.plot:
         print('Plotting enabled')
+    if args.save:
+        print('Saving images enabled')
 
     # Setup hyperparameters
     hparams = {
@@ -170,7 +173,8 @@ if __name__ == '__main__':
         'disc_lr': 0.0004,
         'log_amin': 1e-5,
         'num_examples': 16,
-        'save_dir': '.'
+        'save_dir': './images',
+        'save_images': args.saveimg
     }
 
     # Load nsynth dataset from tfds
