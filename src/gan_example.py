@@ -6,6 +6,8 @@ from training import Trainer, create_gan_train_step
 from datasets.nsynth import nsynth_from_tfrecord, instruments, nsynth_to_melspec
 from models.simple_gan import create_generator, create_discriminator
 import matplotlib.pyplot as plt
+
+import argparse
 #import IPython.display as display
 from model import Model
 
@@ -126,7 +128,8 @@ class GANExample(Model):
                 raise Exception("Could not save image, no save_dir was specified in hparams.")
             plt.savefig(os.path.join(self.image_save_dir, 'image_at_epoch_{:04d}_step_{}.png'.format(epoch, step)))
 
-        plt.show()
+        if self.hparams['plot']:
+            plt.show()
 
     def sample_sound(self, seed, pipeline):
         generated = self.generator(seed, training=False)
@@ -139,15 +142,23 @@ class GANExample(Model):
             plt.imshow(generated[i, :, :, 0])
             plt.axis('off')
 
-        plt.show()
+        if self.hparams['plot']:
+            plt.show()
 
         return pipeline(tf.unstack(generated))
 
 
-
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Start training.')
+    parser.add_argument('--plot', help='Enable to activate plotting', action='store_true')
+    args = parser.parse_args()
+
+    if args.plot:
+        print('Plotting enabled')
+
     # Setup hyperparameters
     hparams = {
+        'plot': args.plot,
         'epochs': 100,
         'steps_per_epoch': 1000,
         'sample_rate': 16000,
