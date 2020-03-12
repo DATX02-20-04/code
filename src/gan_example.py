@@ -6,12 +6,16 @@ from training import Trainer, create_gan_train_step
 from datasets.nsynth import nsynth_from_tfrecord, instruments, nsynth_to_melspec
 from models.simple_gan import create_generator, create_discriminator
 import matplotlib.pyplot as plt
+
+import argparse
 #import IPython.display as display
 from model import Model
 
 # Some compatability options for some graphics cards
 from tensorflow.compat.v1 import ConfigProto
 from tensorflow.compat.v1 import InteractiveSession
+import tensorflow_datasets as tfds
+
 config = ConfigProto()
 config.gpu_options.allow_growth = True
 session = InteractiveSession(config=config)
@@ -124,7 +128,8 @@ class GANExample(Model):
                 raise Exception("Could not save image, no save_dir was specified in hparams.")
             plt.savefig(os.path.join(self.image_save_dir, 'image_at_epoch_{:04d}_step_{}.png'.format(epoch, step)))
 
-        plt.show()
+        if self.hparams['plot']:
+            plt.show()
 
     def sample_sound(self, seed, pipeline):
         generated = self.generator(seed, training=False)
@@ -137,16 +142,27 @@ class GANExample(Model):
             plt.imshow(generated[i, :, :, 0])
             plt.axis('off')
 
-        plt.show()
+        if self.hparams['plot']:
+            plt.show()
 
         return pipeline(tf.unstack(generated))
 
 
-
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Start training.')
+    parser.add_argument('--plot', help='Enable to activate plotting', action='store_true')
+    parser.add_argument('--saveimg', help='Enable to save images after each epoch', action='store_true')
+    args = parser.parse_args()
+
+    if args.plot:
+        print('Plotting enabled')
+    if args.saveimg:
+        print('Saving images enabled')
+
     # Setup hyperparameters
     hparams = {
-        'epochs': 10,
+        'plot': args.plot,
+        'epochs': 100,
         'steps_per_epoch': 1000,
         'sample_rate': 16000,
         'batch_size': 32,
@@ -157,11 +173,12 @@ if __name__ == '__main__':
         'disc_lr': 0.0004,
         'log_amin': 1e-5,
         'num_examples': 16,
-        'save_dir': '.'
+        'save_dir': './images',
+        'save_images': args.saveimg
     }
 
-    # Load nsynth dataset from a tfrecord
-    dataset = nsynth_from_tfrecord('/home/big/datasets/nsynth/nsynth-train.tfrecord')
+    # Load nsynth dataset from tfds
+    dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=True)
 
     dataset = nsynth_to_melspec(dataset, hparams)
     gan = GANExample(dataset, hparams)
