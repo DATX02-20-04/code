@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 #import IPython.display as display
 from model import Model
 import scipy.io.wavfile as wavfile
+import tensorflow_datasets as tfds
 
 tfpl = tfp.layers
 tfd = tfp.distributions
@@ -33,25 +34,30 @@ class VAEExample(Model):
 
         self.vae.compile(optimizer=self.optimizer, loss=self.negloglik)
 
+        try:
+            self.vae.load_weights('ckpts/vae')
+            self.encoder.load_weights('ckpts/encoder')
+            self.decoder.load_weights('ckpts/decoder')
+            print('Loaded weights')
+        except:
+            print('Initializing from scratch')
+
         self.seed = tf.random.normal([self.hparams['num_examples'], self.hparams['latent_size']])
 
     def train(self):
-        self.on_epoch_end(0, None)
         cb = tf.keras.callbacks.LambdaCallback(on_epoch_begin=None, on_epoch_end=self.on_epoch_end, on_batch_begin=None, on_batch_end=None, on_train_begin=None, on_train_end=None)
         self.vae.fit(self.dataset, epochs=self.hparams['epochs'], validation_data=self.dataset.take(100), steps_per_epoch=self.hparams['steps_per_epoch'], callbacks=[cb])
 
     def on_epoch_end(self, epoch, logs):
-        print("Sampling...")
-        z = self.prior.sample(100)
-        decoded = self.decoder(z, training=False).mean()
-        print("DECODED: ", decoded)
-        sample = tf.reshape(decoded, [-1]).numpy()
+        self.vae.save_weights('ckpts/vae')
+        self.encoder.save_weights('ckpts/encoder')
+        self.decoder.save_weights('ckpts/decoder')
 
-        print("Plotting...")
-        plt.plot(sample)
-        plt.show()
+        z = tf.random.normal([100, self.hparams['latent_size']])
+        decoded = self.decoder(z, training=False).mean()
+        sample = tf.concat(decoded, axis=0).numpy().reshape(-1)
+
         wavfile.write(f'sample{epoch}.wav', self.hparams['sample_rate'], sample)
-        print("Done")
 
     def preprocess(self, dataset):
         return preprocess.pipeline(dataset, [
@@ -68,9 +74,9 @@ if __name__ == '__main__':
     # Setup hyperparameters
     hparams = {
         'epochs': 10,
-        'steps_per_epoch': 2000,
         'sample_rate': 16000,
         'window_samples': 8000,
+        'steps_per_epoch': None,
         'batch_size': 64,
         'buffer_size': 1000,
         'latent_size': 100,
@@ -82,7 +88,12 @@ if __name__ == '__main__':
     }
 
     # Load nsynth dataset from a tfrecord
-    dataset = maestro_from_files('/home/big/datasets/maestro-v2.0.0/', hparams['window_samples'])
+    dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=True)
+    dataset = preprocess.pipeline(dataset, [
+        preprocess.extract('audio'),
+        preprocess.frame(hparams['window_samples'], hparams['window_samples']),
+        preprocess.unbatch()
+    ])
 
     vae = VAEExample(dataset, hparams)
     vae.train()
