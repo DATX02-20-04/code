@@ -124,7 +124,7 @@ class GANExample(Model):
             plt.axis('off')
 
         if 'save_images' in self.hparams and self.hparams['save_images']:
-            if self.image_save_dir is not None:
+            if self.image_save_dir is None:
                 raise Exception("Could not save image, no save_dir was specified in hparams.")
             plt.savefig(os.path.join(self.image_save_dir, 'image_at_epoch_{:04d}_step_{}.png'.format(epoch, step)))
 
@@ -173,7 +173,7 @@ if __name__ == '__main__':
         'disc_lr': 0.0004,
         'log_amin': 1e-5,
         'num_examples': 16,
-        'save_dir': './images',
+        'save_dir': './',
         'save_images': args.saveimg
     }
 
