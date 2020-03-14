@@ -25,6 +25,25 @@ def map_transform(fn):
             return map(fn, dataset)
     return transform
 
+def numpy():
+    def transform(dataset):
+        if isinstance(dataset, tf.data.Dataset):
+            return dataset.as_numpy_iterator()
+        else:
+            return dataset
+    return transform
+
+def tensor(output_types):
+    def transform(dataset):
+        if isinstance(dataset, tf.data.Dataset):
+            return dataset
+        else:
+            def _generator():
+                for x in dataset:
+                    yield x
+            return tf.data.Dataset.from_generator(_generator, output_types)
+    return transform
+
 def filter_transform(fn):
     def transform(dataset):
         if isinstance(dataset, tf.data.Dataset):
@@ -158,7 +177,7 @@ def invert_log_melspec(sr, fft_length=1024, frame_step=512, frame_length=None, a
     ])
 
 def load_midi():
-    return map_transform(lambda x: mido.MidiFile(x.numpy()))
+    return map_transform(lambda x: mido.MidiFile(x))
 
 def encode_midi(note_count=128, max_time_shift=100, time_shift_ms=10):
     def _midi(x):
@@ -170,20 +189,22 @@ def encode_midi(note_count=128, max_time_shift=100, time_shift_ms=10):
                 note = None
                 etype = None
 
-            if msg.type == 'note_on':
-                note = tf.reshape(tf.one_hot(np.array([msg.note]), note_count), [-1])
-                etype = [1]
-            elif msg.type == 'note_off':
-                note = tf.zeros((note_count,))
-                etype = [0]
+                if msg.type == 'note_on':
+                    note = tf.reshape(tf.one_hot(np.array([msg.note]), note_count), [-1])
+                    etype = [1]
+                elif msg.type == 'note_off':
+                    note = tf.zeros((note_count,))
+                    etype = [0]
 
-            if note is not None:
-                midi.append(tf.concat([etype, note, time_enc], axis=0))
+                if note is not None:
+                    midi.append(tf.concat([etype, note, time_enc], axis=0))
         return tf.stack(midi)
     return map_transform(_midi)
 
 def midi(note_count=128, max_time_shift=100, time_shift_m=10):
     return pipeline([
+        numpy(),
         load_midi(),
-        encode_midi(note_count, max_time_shift, time_shift_m)
+        encode_midi(note_count, max_time_shift, time_shift_m),
+        tensor(tf.float32),
     ])
