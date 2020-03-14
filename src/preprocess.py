@@ -1,7 +1,9 @@
 import tensorflow as tf
 import librosa
 import mido
+import math
 import numpy as np
+import itertools
 
 def index_map(index, f):
     # Carl: I don't think this parallelizes very well, but I'm not sure
@@ -179,26 +181,59 @@ def invert_log_melspec(sr, fft_length=1024, frame_step=512, frame_length=None, a
 def load_midi():
     return map_transform(lambda x: mido.MidiFile(x))
 
-def encode_midi(note_count=128, max_time_shift=100, time_shift_ms=10):
+def encode_midi(note_count=128, max_time_shift=100, time_shift_ms=10, velocity_count=100):
     def _midi(x):
         midi = []
-        for msg in x:
+        for msg in itertools.islice(x, 200):
+            print(msg)
             if not msg.is_meta:
                 time_shift = min(int(msg.time*1000) // time_shift_ms, max_time_shift)-1
                 time_enc = tf.reshape(tf.one_hot(np.array([time_shift]), max_time_shift), [-1])
                 note = None
+                velocity = None
                 etype = None
 
                 if msg.type == 'note_on':
                     note = tf.reshape(tf.one_hot(np.array([msg.note]), note_count), [-1])
+                    velocity = tf.reshape(tf.one_hot(np.array([msg.velocity]), velocity_count), [-1])
                     etype = [1]
-                elif msg.type == 'note_off':
+                else:# msg.type == 'note_off':
                     note = tf.zeros((note_count,))
+                    velocity = tf.zeros((velocity_count,))
                     etype = [0]
 
                 if note is not None:
-                    midi.append(tf.concat([etype, note, time_enc], axis=0))
+                    midi.append(tf.concat([etype, note, velocity, time_enc], axis=0))
+
         return tf.stack(midi)
+    return map_transform(_midi)
+
+def decode_midi(note_count=128, max_time_shift=100, time_shift_ms=10, velocity_count=100):
+    def _midi(x):
+        mid = mido.MidiFile()
+        track = mido.MidiTrack()
+        mid.tracks.append(track)
+
+        for e in tf.unstack(x):
+            [mtype, note, velocity, time] = tf.split(e, [1, note_count, velocity_count, max_time_shift])
+            if mtype == 1:
+                mtype = 'note_on'
+            else:
+                mtype = 'note_off'
+
+            note = tf.argmax(note, axis=-1).numpy()
+            velocity = tf.argmax(velocity, axis=-1).numpy()
+            time = tf.argmax(time, axis=-1)
+            time = ((time+1)*time_shift_ms)/1000
+            time = int(round(mido.second2tick(time.numpy(), mid.ticks_per_beat, 500000)))
+            print(note, velocity, time)
+
+            if mtype == 'note_on':
+                track.append(mido.Message(mtype, note=note, velocity=velocity, time=time))
+            else:
+                track.append(mido.Message(mtype, time=time))
+
+        return mid
     return map_transform(_midi)
 
 def midi(note_count=128, max_time_shift=100, time_shift_m=10):

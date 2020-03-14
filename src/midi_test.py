@@ -1,13 +1,17 @@
 import tensorflow as tf
 import preprocess as pre
 
-dataset = tf.data.Dataset.list_files('/home/big/datasets/maestro-v2.0.0/**/*.midi')
+dataset = tf.data.Dataset.from_tensor_slices(['test.midi'])
 
 dataset = pre.pipeline([
     pre.midi(),
     pre.unbatch(),
     pre.prefetch(),
+    pre.batch(100),
+    pre.numpy(),
+    pre.decode_midi(),
 ])(dataset)
 
-for x in dataset.take(10):
-    print(x)
+x = next(dataset)
+
+x.save('decoded.midi')
