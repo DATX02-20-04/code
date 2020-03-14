@@ -184,8 +184,7 @@ def load_midi():
 def encode_midi(note_count=128, max_time_shift=100, time_shift_ms=10, velocity_count=100):
     def _midi(x):
         midi = []
-        for msg in itertools.islice(x, 200):
-            print(msg)
+        for msg in x:
             if not msg.is_meta:
                 time_shift = min(int(msg.time*1000) // time_shift_ms, max_time_shift)-1
                 time_enc = tf.reshape(tf.one_hot(np.array([time_shift]), max_time_shift), [-1])
@@ -226,7 +225,6 @@ def decode_midi(note_count=128, max_time_shift=100, time_shift_ms=10, velocity_c
             time = tf.argmax(time, axis=-1)
             time = ((time+1)*time_shift_ms)/1000
             time = int(round(mido.second2tick(time.numpy(), mid.ticks_per_beat, 500000)))
-            print(note, velocity, time)
 
             if mtype == 'note_on':
                 track.append(mido.Message(mtype, note=note, velocity=velocity, time=time))
