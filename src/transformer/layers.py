@@ -132,10 +132,12 @@ class Encoder(tfkl.Layer):
 
     def call(self, x, training, mask):
         seq_len = x.shape[1]
+        chan = x.shape[2]
+        print(self.pos_enc.shape, seq_len, chan)
 
-        x = self.embedding(x)
+        # x = self.embedding(x)
         x *= tf.math.sqrt(tf.cast(self.d_model, tf.float32))
-        x += self.pos_enc[:, :seq_len, :]
+        x += self.pos_enc
 
         x = self.dropout(x, training=training)
 
@@ -151,7 +153,7 @@ class Decoder(tfkl.Layer):
         self.d_model = d_model
         self.num_layers = num_layers
 
-        self.embedding = tfkl.Embedding(target_vocab_size, d_model)
+        # self.embedding = tfkl.Embedding(target_vocab_size, d_model)
         self.pos_enc = positional_encoding(max_pos_enc, d_model)
 
         self.layers = [DecoderLayer(d_model, num_heads, dff, rate) for _ in range(num_layers)]

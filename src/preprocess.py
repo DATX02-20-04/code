@@ -82,8 +82,11 @@ def reshape(shape):
 def set_channels(channels):
     return map_transform(lambda x: tf.reshape(x, [*x.shape, channels]))
 
-def batch(batch_size):
-    return lambda dataset: dataset.batch(batch_size)
+def cache(filename=''):
+    return lambda dataset: dataset.cache(filename)
+
+def batch(batch_size, drop_remainder=False):
+    return lambda dataset: dataset.batch(batch_size, drop_remainder)
 
 def unbatch():
     return lambda dataset: dataset.unbatch()
@@ -105,6 +108,13 @@ def frame(frame_length, frame_step, pad_end=False, pad_value=0, axis=-1, name=No
 def split(num_or_size_splits, axis=0, num=None, name='split'):
     return map_transform(lambda x: tf.split(x, num_or_size_splits,
                                                    axis, num, name))
+
+def debug():
+    return map_transform(lambda x: tf.py_function(_debug, [x], x.dtype))
+
+def _debug(x):
+    print(x)
+    return x
 
 def stft(frame_length, frame_step, fft_length=None):
     return map_transform(lambda x: tf.signal.stft(x, frame_length,
