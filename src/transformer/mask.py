@@ -5,5 +5,5 @@ def create_padding_mask(seq):
 
     return seq[:, tf.newaxis, tf.newaxis, :]
 
-def create_look_ahead_mask(size, chan):
-    return 1 - tf.linalg.band_part(tf.ones((size, chan)), -1, 0)
+def create_look_ahead_mask(size):
+    return 1 - tf.linalg.band_part(tf.ones((size, size)), -1, 0)

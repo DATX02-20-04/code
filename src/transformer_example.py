@@ -6,19 +6,21 @@ import time
 from transformer.model import Transformer
 from transformer.optimizer import TransformerLRSchedule
 from transformer.mask import create_padding_mask, create_look_ahead_mask
+import tensorflow_datasets as tfds
 
 tfk = tf.keras
 
 hparams = {
     'epochs': 20,
-    'num_layers': 1,
-    'd_model': 329,
+    'num_layers': 2,
+    'd_model': 128,
     'dff': 128,
-    'num_heads': 7,
-    'input_vocab_size': 16,
-    'target_vocab_size': 16,
+    'num_heads': 8,
+    'frame_size': 64,
+    'input_vocab_size': 128+128+100+100,
+    'target_vocab_size': 128+128+100+100,
     'batch_size': 32,
-    'buffer_size': 128,
+    'buffer_size': 10000,
     'dropout_rate': 0.1,
     'beta_1': 0.9,
     'beta_2': 0.98,
@@ -27,17 +29,23 @@ hparams = {
 
 dataset = tf.data.Dataset.list_files('/home/big/datasets/maestro-v2.0.0/**/*.midi')
 
-dataset = pre.pipeline([
+dataset_single = pre.pipeline([
     pre.midi(),
+    pre.frame(hparams['frame_size'], hparams['frame_size']//4, True),
     pre.unbatch(),
-    pre.batch(16, drop_remainder=True),
-    pre.dupe(),
-    pre.shuffle(hparams['buffer_size']),
-    pre.batch(hparams['batch_size']),
-    pre.prefetch(),
 ])(dataset)
 
-dataset = dataset.take(100).cache().repeat()
+
+dataset = pre.pipeline([
+    pre.batch(2, True),
+    pre.split(2),
+    pre.cache(),
+    pre.shuffle(hparams['buffer_size']),
+    pre.batch(hparams['batch_size'], True),
+    pre.prefetch(),
+])(dataset_single)
+
+dataset_single = dataset_single.as_numpy_iterator()
 
 transformer = Transformer(num_layers=hparams['num_layers'],
                           d_model=hparams['d_model'],
@@ -72,7 +80,7 @@ def create_masks(inp, tar):
     enc_padding_mask = create_padding_mask(inp)
     dec_padding_mask = create_padding_mask(inp)
 
-    look_ahead_mask = create_look_ahead_mask(tar.shape[1], tar.shape[2])
+    look_ahead_mask = create_look_ahead_mask(tf.shape(tar)[1])
     dec_target_padding_mask = create_padding_mask(tar)
     combined_mask = tf.maximum(dec_target_padding_mask, look_ahead_mask)
 
@@ -91,7 +99,12 @@ if ckpt_manager.latest_checkpoint:
     print ('Latest checkpoint restored!!')
 
 
-@tf.function
+train_step_signature = [
+    tf.TensorSpec(shape=(None, None), dtype=tf.int64),
+    tf.TensorSpec(shape=(None, None), dtype=tf.int64),
+]
+
+@tf.function(input_signature=train_step_signature)
 def train_step(inp, tar):
     tar_inp = tar[:, :-1]
     tar_real = tar[:, 1:]
@@ -113,6 +126,49 @@ def train_step(inp, tar):
     train_accuracy(tar_real, predictions)
 
 
+def evaluate(inp_sentence):
+    encoder_input = tf.expand_dims(inp_sentence, 0)
+
+    decoder_input = [64]
+    output = tf.expand_dims(decoder_input, 0)
+    output_tot = tf.expand_dims(decoder_input, 0)
+
+    for i in range(hparams['frame_size']):
+        enc_padding_mask, combined_mask, dec_padding_mask = create_masks(
+            encoder_input, output)
+
+        predictions, attention_weights = transformer(encoder_input,
+                                                    output,
+                                                    False,
+                                                    enc_padding_mask,
+                                                    combined_mask,
+                                                    dec_padding_mask)
+
+        predictions = predictions[: ,-1:, :]
+
+        predicted_id = tf.cast(tf.argmax(predictions, axis=-1), tf.int32)
+
+        # if predicted_id == hparams[]+1:
+        #     return tf.squeeze(output, axis=0), attention_weights
+
+        output = tf.concat([output, predicted_id], axis=-1)
+
+    return tf.squeeze(output, axis=0), attention_weights
+
+def generate(batch):
+    output = next(dataset_single)
+    print(output)
+    outputs = []
+    for i in range(16):
+        output, _ = evaluate(output)
+        outputs.append(output)
+        print(output)
+    decoded = next(pre.decode_midi()(iter([tf.concat(outputs, 0)])))
+    decoded.save('gen{}.midi'.format(batch))
+
+
+generate(0)
+
 for epoch in range(hparams['epochs']):
     start = time.time()
 
@@ -121,13 +177,20 @@ for epoch in range(hparams['epochs']):
 
     batch = 0
     for inp, tar in dataset:
-        print(inp.shape)
+        inp = tf.reshape(inp, [hparams['batch_size'], hparams['frame_size']])
+        tar = tf.reshape(tar, [hparams['batch_size'], hparams['frame_size']])
         train_step(inp, tar)
 
         batch += 1
         if batch % 50 == 0:
             print ('Epoch {} Batch {} Loss {:.4f} Accuracy {:.4f}'.format(
                 epoch + 1, batch, train_loss.result(), train_accuracy.result()))
+
+        if batch % 2000 == 0:
+            ckpt_save_path = ckpt_manager.save()
+            print ('Saving checkpoint for batch {} at {}'.format(batch,
+                                                                    ckpt_save_path))
+            generate(batch)
 
     if (epoch + 1) % 5 == 0:
         ckpt_save_path = ckpt_manager.save()
@@ -139,3 +202,5 @@ for epoch in range(hparams['epochs']):
                                                 train_accuracy.result()))
 
     print ('Time taken for 1 epoch: {} secs\n'.format(time.time() - start))
+
+

@@ -26,7 +26,7 @@ class MultiHeadAttention(tfkl.Layer):
         return tf.transpose(x, perm=[0, 2, 1, 3])
 
     def call(self, v, k, q, mask):
-        batch_size = q.shape[0]
+        batch_size = tf.shape(q)[0]
 
         v = self.wv(v)
         k = self.wk(k)
@@ -131,13 +131,11 @@ class Encoder(tfkl.Layer):
         self.dropout = tfkl.Dropout(rate)
 
     def call(self, x, training, mask):
-        seq_len = x.shape[1]
-        chan = x.shape[2]
-        print(self.pos_enc.shape, seq_len, chan)
+        seq_len = tf.shape(x)[1]
 
-        # x = self.embedding(x)
+        x = self.embedding(x)
         x *= tf.math.sqrt(tf.cast(self.d_model, tf.float32))
-        x += self.pos_enc
+        x += self.pos_enc[:, :seq_len, :]
 
         x = self.dropout(x, training=training)
 
@@ -153,7 +151,7 @@ class Decoder(tfkl.Layer):
         self.d_model = d_model
         self.num_layers = num_layers
 
-        # self.embedding = tfkl.Embedding(target_vocab_size, d_model)
+        self.embedding = tfkl.Embedding(target_vocab_size, d_model)
         self.pos_enc = positional_encoding(max_pos_enc, d_model)
 
         self.layers = [DecoderLayer(d_model, num_heads, dff, rate) for _ in range(num_layers)]
@@ -161,7 +159,7 @@ class Decoder(tfkl.Layer):
         self.dropout = tfkl.Dropout(rate)
 
     def call(self, x, enc_output, training, look_ahead_mask, padding_mask):
-        seq_len = x.shape[1]
+        seq_len = tf.shape(x)[1]
 
         attention_weights = {}
 
