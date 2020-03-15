@@ -5,9 +5,8 @@ dataset = tf.data.Dataset.from_tensor_slices(['test.midi'])
 
 dataset = pre.pipeline([
     pre.midi(),
+    pre.frame(400, 1),
     pre.unbatch(),
-    pre.prefetch(),
-    pre.batch(100),
     pre.numpy(),
     pre.decode_midi(),
 ])(dataset)
