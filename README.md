@@ -23,7 +23,7 @@ from datasets.nsynth import nsynth_from_tfrecord
 Find out if resources are availalbe by:
 ```console
 user@bar:~$ nvidia-smi
-``**
+```
 
 ```text
 +-----------------------------------------------------------------------------+
