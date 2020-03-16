@@ -124,6 +124,7 @@ def create_gan_hist_train_step(generator,
 def create_vae_gan_train_step(generator, discriminator, encoder, decoder, vae,
                               generator_loss_f, discriminator_loss_f, vae_loss_f, latent_loss_f,
                               generator_optimizer, discriminator_optimizer, vae_optimizer,
+                              latent_loss_factor,
                               batch_size, gen_z_size):
     @tf.function
     def train_step(x):
@@ -131,20 +132,25 @@ def create_vae_gan_train_step(generator, discriminator, encoder, decoder, vae,
 
         with tf.GradientTape(persistent=True) as tape:
             encoded = encoder(x, training=True)
+            regularization_loss = encoder.losses[0]
             decoded = decoder(encoded, training=True)
-            vae_loss = vae_loss_f(x, decoded)
+            vae_loss = vae_loss_f(x, decoded) + regularization_loss
 
-            gen_input = tf.concat(encoded, noise, 1)
+
+            gen_input = tf.concat([encoded, noise], 1)
             generated_x = generator(gen_input, training=True)
 
             real_output = discriminator(x, training=True)
             fake_output = discriminator(generated_x, training=True)
 
-            gen_loss = generator_loss_f(fake_output) + latent_loss_f(encoded, encoder(generated_x, training=True))
+            gen_loss = generator_loss_f(fake_output)
+            latent_loss = latent_loss_factor*latent_loss_f(encoded, encoder(generated_x, training=True))
+            total_gen_loss = gen_loss + latent_loss
+
             disc_loss = discriminator_loss_f(real_output, fake_output)
 
         gradients_of_vae = tape.gradient(vae_loss, vae.trainable_variables)
-        gradients_of_generator = tape.gradient(gen_loss, generator.trainable_variables)
+        gradients_of_generator = tape.gradient(total_gen_loss, generator.trainable_variables)
         gradients_of_discriminator = tape.gradient(disc_loss, discriminator.trainable_variables)
 
         vae_optimizer.apply_gradients(zip(gradients_of_vae, vae.trainable_variables))
@@ -153,6 +159,6 @@ def create_vae_gan_train_step(generator, discriminator, encoder, decoder, vae,
 
         # clear gradients from memory
         del tape
-        return vae_loss, gen_loss, disc_loss
+        return vae_loss, total_gen_loss, disc_loss
 
     return train_step

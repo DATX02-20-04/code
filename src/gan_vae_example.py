@@ -37,11 +37,12 @@ class GANVAEExample(Model):
         # Define the optimizers
         self.generator_optimizer = tf.keras.optimizers.Adam(self.hparams['gen_lr'])
         self.discriminator_optimizer = tf.keras.optimizers.Adam(self.hparams['disc_lr'])
-        self.vae_optimizer = tf.keras.optimizers.Adam(self.hparams['vae_lr'])
+        self.vae_optimizer = tf.keras.optimizers.SGD(self.hparams['vae_lr'])
 
         self.prior = tfd.Independent(tfd.Normal(loc=tf.zeros((self.hparams['latent_size'])), scale=1),
                                      reinterpreted_batch_ndims=1)
-        self.vae_loss = lambda x, rv_x: -rv_x.log_prob(x)
+        #self.vae_loss = lambda x, rv_x: -rv_x.log_prob(x)
+        self.vae_loss = tf.keras.losses.MSE
         self.latent_loss = tf.keras.losses.MSE
 
         # Create the actual models for the generator and discriminator
@@ -66,7 +67,7 @@ class GANVAEExample(Model):
             except:
                 pass
 
-        self.seed = tf.random.normal([self.hparams['num_examples'], self.hparams['latent_size']])
+        self.seed = tf.random.normal([self.hparams['num_examples'], self.hparams['latent_size']+self.hparams['gen_z_size']])
 
         self.ckpt = tf.train.Checkpoint(
             step=self.trainer.step,
@@ -94,6 +95,7 @@ class GANVAEExample(Model):
                                                               self.generator_optimizer,
                                                               self.discriminator_optimizer,
                                                               self.vae_optimizer,
+                                                              self.hparams['latent_loss_factor'],
                                                               self.hparams['batch_size'],
                                                               self.hparams['gen_z_size']))
 
@@ -131,7 +133,7 @@ class GANVAEExample(Model):
 
     # This runs at every step in the training (for each batch in dataset)
     def on_step(self, step, stats):
-        gen_loss, disc_loss, vae_loss = stats
+        vae_loss, gen_loss, disc_loss = stats
         self.gen_loss_avg(gen_loss)
         self.disc_loss_avg(disc_loss)
         self.vae_loss_avg(vae_loss)
@@ -200,10 +202,11 @@ if __name__ == '__main__':
         'batch_size': 32,
         'buffer_size': 1000,
         'latent_size': 100,
+        'latent_loss_factor': 1000.,
         'model_scale': 128,
         'gen_lr': 0.0001,
         'disc_lr': 0.0004,
-        'vae_lr': 0.0001,
+        'vae_lr': 1e-11,
         'gen_z_size': 16,
         'log_amin': 1e-5,
         'num_examples': 16,

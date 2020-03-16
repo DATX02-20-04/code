@@ -27,8 +27,9 @@ def create_gan_vae(shape, latent_size, gen_z_size, scale, prior):
     o = tfkl.Dropout(0.4)(o)
     o = tfkl.Flatten()(o)
 
-    o = tfkl.Dense(tfpl.MultivariateNormalTriL.params_size(latent_size), activation=None)(o)
-    o = tfpl.MultivariateNormalTriL(latent_size, activity_regularizer=tfpl.KLDivergenceRegularizer(prior))(o)
+    o = tfkl.Dense(tfpl.IndependentNormal.params_size(latent_size), activation="relu")(o)
+    o = tfkl.Dense(tfpl.IndependentNormal.params_size(latent_size), activation=None)(o)
+    o = tfpl.IndependentNormal(latent_size, activity_regularizer=tfpl.KLDivergenceRegularizer(prior, weight=2.0))(o)
 
     encoder = tfk.Model(inputs=i, outputs=o)
 
@@ -53,7 +54,7 @@ def create_gan_vae(shape, latent_size, gen_z_size, scale, prior):
     o = tfkl.UpSampling2D(size=(2, 2))(o)
     o = tfkl.Conv2D(2, (5, 5), strides=(1, 1), padding='same', use_bias=False, activation='tanh')(o)
     o = tfkl.Flatten()(o)
-    o = tfpl.IndependentNormal(shape)(o)
+    o = tfpl.IndependentNormal((*shape,1))(o)
 
     decoder = tfk.Model(inputs=i, outputs=o)
 
@@ -99,8 +100,9 @@ def create_gan_vae(shape, latent_size, gen_z_size, scale, prior):
 
     o = tfkl.Dropout(0.4)(o)
     o = tfkl.Flatten()(o)
-    o = tfkl.Dense(1)(o)
+    o = tfkl.Dense(1, activation='sigmoid')(o)
 
     discriminator = tfk.Model(inputs=i, outputs=o)
 
+    vae.summary()
     return vae, encoder, decoder, generator, discriminator
