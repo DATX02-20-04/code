@@ -177,7 +177,7 @@ if __name__ == '__main__':
         'batch_size': 32,
         'buffer_size': 1000,
         'latent_size': 100,
-        'generator_scale': 64,
+        'generator_scale': 128,
         'gen_lr': 0.0001,
         'disc_lr': 0.0004,
         'log_amin': 1e-5,
