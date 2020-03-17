@@ -32,8 +32,10 @@
     lot of our time was spent on setup of this computer and porting of our colab
     code to work on it.
 *** Meetings
-    Due to the pandemic, we've decided to hold all meetings (including
-    supervision) online.
+    Due to the pandemic, we may start holding meetings online rather than in
+    person (if multiple people message about not being able to join).
+    Supervision meetings are all held online for now on until further notice
+    from Chalmers.
 *** Exam week
     Because it is exam time for other courses, a lot of group members had to
     spend their time studying for those or writing reports.
