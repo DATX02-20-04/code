@@ -12,11 +12,11 @@ tfk = tf.keras
 
 hparams = {
     'epochs': 20,
-    'num_layers': 2,
+    'num_layers': 4,
     'd_model': 128,
-    'dff': 128,
+    'dff': 512,
     'num_heads': 8,
-    'frame_size': 64,
+    'frame_size': 256,
     'input_vocab_size': 128+128+100+100,
     'target_vocab_size': 128+128+100+100,
     'batch_size': 32,
@@ -31,7 +31,7 @@ dataset = tf.data.Dataset.list_files('/home/big/datasets/maestro-v2.0.0/**/*.mid
 
 dataset_single = pre.pipeline([
     pre.midi(),
-    pre.frame(hparams['frame_size'], hparams['frame_size']//4, True),
+    pre.frame(hparams['frame_size'], hparams['frame_size'], True),
     pre.unbatch(),
 ])(dataset)
 
@@ -155,19 +155,20 @@ def evaluate(inp_sentence):
 
     return tf.squeeze(output, axis=0), attention_weights
 
-def generate(batch):
-    output = next(dataset_single)
+seed = next(dataset_single)
+def generate(epoch):
+    output = seed
     print(output)
     outputs = []
-    for i in range(16):
+    for i in range(4):
         output, _ = evaluate(output)
         outputs.append(output)
         print(output)
     decoded = next(pre.decode_midi()(iter([tf.concat(outputs, 0)])))
-    decoded.save('gen{}.midi'.format(batch))
+    decoded.save('gen_e{}.midi'.format(epoch))
 
 
-generate(0)
+# generate(0)
 
 for epoch in range(hparams['epochs']):
     start = time.time()
@@ -186,16 +187,10 @@ for epoch in range(hparams['epochs']):
             print ('Epoch {} Batch {} Loss {:.4f} Accuracy {:.4f}'.format(
                 epoch + 1, batch, train_loss.result(), train_accuracy.result()))
 
-        if batch % 2000 == 0:
-            ckpt_save_path = ckpt_manager.save()
-            print ('Saving checkpoint for batch {} at {}'.format(batch,
-                                                                    ckpt_save_path))
-            generate(batch)
-
-    if (epoch + 1) % 5 == 0:
-        ckpt_save_path = ckpt_manager.save()
-        print ('Saving checkpoint for epoch {} at {}'.format(epoch+1,
-                                                                ckpt_save_path))
+    ckpt_save_path = ckpt_manager.save()
+    print ('Saving checkpoint for epoch {} at {}'.format(epoch+1,
+                                                            ckpt_save_path))
+    generate(epoch)
 
     print ('Epoch {} Loss {:.4f} Accuracy {:.4f}'.format(epoch + 1,
                                                 train_loss.result(),
