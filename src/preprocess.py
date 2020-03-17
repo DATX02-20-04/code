@@ -120,13 +120,18 @@ def abs():
 def dupe():
     return map_transform(lambda x: (x, x))
 
-def _normalize(x):
-    _max = tf.reduce_max(x)
-    _min = tf.reduce_min(x)
-    return ((x - _min) / (_max - _min)) * 2 - 1
+def _normalize(normalization='neg_one_to_one'):
+    def _n(x):
+        _max = tf.reduce_max(x)
+        _min = tf.reduce_min(x)
+        if normalization == 'neg_one_to_one':
+            return ((x - _min) / (_max - _min)) * 2 - 1
+        elif normalization == 'zero_to_one':
+            return ((x - _min) / (_max - _min))
+    return _n
 
-def normalize():
-    return map_transform(_normalize)
+def normalize(normalization='neg_one_to_one'):
+    return map_transform(_normalize(normalization))
 
 def amp_to_log(amin=1e-5):
     return map_transform(lambda x: tf.math.log(x + amin))
@@ -172,8 +177,17 @@ def invert_melspec(sr, fft_length=1024, frame_step=512, frame_length=None):
         frame_length = fft_length
     return map_transform(lambda x: librosa.feature.inverse.mel_to_audio(x.numpy(), sr=sr, n_fft=fft_length, hop_length=frame_step, win_length=frame_length))
 
-def invert_log_melspec(sr, fft_length=1024, frame_step=512, frame_length=None, amin=1e-5):
+def denormalize(denorm_amin=-20, denorm_amax=0, normalization='neg_one_to_one'):
+    if normalization == 'neg_one_to_one':
+        return map_transform(lambda x: (((x+1)*0.5)*(denorm_amax-denorm_amin)+denorm_amin))
+    elif normalization == 'zero_to_one':
+        return map_transform(lambda x: (x*(denorm_amax-denorm_amin)+denorm_amin))
+    else:
+        raise Exception(f"No normalization type named '{normalization}'.")
+
+def invert_log_melspec(sr, fft_length=1024, frame_step=512, frame_length=None, amin=1e-5, denorm_amin=-20, denorm_amax=0):
     return pipeline([
+        denormalize(denorm_amin, denorm_amax),
         log_to_amp(amin),
         invert_melspec(sr, fft_length, frame_step, frame_length)
     ])
