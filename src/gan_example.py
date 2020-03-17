@@ -8,6 +8,8 @@ from models.simple_gan import create_generator, create_discriminator
 import matplotlib.pyplot as plt
 
 import argparse
+import yaml
+
 #import IPython.display as display
 from model import Model
 
@@ -149,23 +151,13 @@ class GANExample(Model):
 
 
 if __name__ == '__main__':
-    # Default hyperparams
-    defaults = {
-        'plot': False,
-        'epochs': 100,
-        'steps_per_epoch': 1000,
-        'sample_rate': 16000,
-        'batch_size': 32,
-        'buffer_size': 1000,
-        'latent_size': 100,
-        'generator_scale': 128,
-        'gen_lr': 0.0001,
-        'disc_lr': 0.0004,
-        'log_amin': 1e-5,
-        'num_examples': 16,
-        'save_dir': './',
-        'save_images': False
-    }
+    # Load hyperparams from yaml file
+    with open('hparams.yaml', 'r') as stream:
+        try:
+            defaults = yaml.safe_load(stream)['hparams']
+            print(defaults)
+        except yaml.YAMLError as e:
+            print(e)
 
     parser = argparse.ArgumentParser(description='Start training of the gan_example')
     parser.add_argument('--plot',
@@ -240,8 +232,6 @@ if __name__ == '__main__':
     hparams['buffer_size'] = args.buffer_size
     hparams['latent_size'] = args.latent_size
 
-    print(defaults)
-    print(hparams)
     # Load nsynth dataset from tfds
     dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=True)
 
