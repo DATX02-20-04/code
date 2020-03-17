@@ -7,8 +7,10 @@ from datasets.nsynth import nsynth_from_tfrecord, instruments, nsynth_to_melspec
 from models.simple_gan import create_generator, create_discriminator
 import matplotlib.pyplot as plt
 
+
 import argparse
-import yaml
+from util import load_hparams
+
 
 #import IPython.display as display
 from model import Model
@@ -150,14 +152,10 @@ class GANExample(Model):
         return pipeline(tf.unstack(generated))
 
 
+
 if __name__ == '__main__':
     # Load hyperparams from yaml file
-    with open('hparams.yaml', 'r') as stream:
-        try:
-            defaults = yaml.safe_load(stream)['hparams']
-            print(defaults)
-        except yaml.YAMLError as e:
-            print(e)
+    defaults = load_hparams('hparams.yaml')
 
     parser = argparse.ArgumentParser(description='Start training of the gan_example')
     parser.add_argument('--plot',
