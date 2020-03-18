@@ -7,7 +7,11 @@ from datasets.nsynth import nsynth_from_tfrecord, instruments, nsynth_to_melspec
 from models.simple_gan import create_generator, create_discriminator
 import matplotlib.pyplot as plt
 
+
 import argparse
+from util import load_hparams
+
+
 #import IPython.display as display
 from model import Model
 
@@ -148,34 +152,83 @@ class GANExample(Model):
         return pipeline(tf.unstack(generated))
 
 
+
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Start training.')
-    parser.add_argument('--plot', help='Enable to activate plotting', action='store_true')
-    parser.add_argument('--saveimg', help='Enable to save images after each epoch', action='store_true')
+    # Load hyperparams from yaml file
+    defaults = load_hparams('hparams.yaml')
+
+    parser = argparse.ArgumentParser(description='Start training of the gan_example')
+    parser.add_argument('--plot',
+                        help='Enable to activate plotting',
+                        action='store_true',
+    )
+    parser.add_argument('--saveimg',
+                        help='Enable to save images after each epoch',
+                        action='store_true',
+    )
+    parser.add_argument('--save_dir',
+                        metavar='PATH',
+                        help='Set the save directory for images and checkpoints',
+                        type=str,
+                        nargs='?',
+                        const=defaults['save_dir'],
+    )
+    parser.add_argument('--epochs',
+                        metavar='N',
+                        help='Set the number of epochs to train',
+                        type=int,
+                        nargs='?',
+                        const=defaults['epochs'],
+    )
+    parser.add_argument('--steps',
+                        metavar='N',
+                        help='Set the number of steps per epoch',
+                        type=int,
+                        nargs='?',
+                        const=defaults['steps_per_epoch'],
+    )
+    parser.add_argument('--sr',
+                        metavar='N',
+                        help='Set the sample rate',
+                        type=int,
+                        nargs='?',
+                        const=defaults['sample_rate'],
+    )
+    parser.add_argument('--batch_size',
+                        metavar='N',
+                        help='Set the batch size',
+                        type=int,
+                        nargs='?',
+                        const=defaults['batch_size'],
+    )
+    parser.add_argument('--buffer_size',
+                        metavar='N',
+                        help='Set the buffer size',
+                        type=int,
+                        nargs='?',
+                        const=defaults['buffer_size'],
+    )
+    parser.add_argument('--latent_size',
+                        metavar='N',
+                        help='Set the latent vector size',
+                        type=int,
+                        nargs='?',
+                        const=defaults['latent_size'],
+    )
+
     args = parser.parse_args()
 
-    if args.plot:
-        print('Plotting enabled')
-    if args.saveimg:
-        print('Saving images enabled')
+    hparams = defaults
 
-    # Setup hyperparameters
-    hparams = {
-        'plot': args.plot,
-        'epochs': 100,
-        'steps_per_epoch': 1000,
-        'sample_rate': 16000,
-        'batch_size': 32,
-        'buffer_size': 1000,
-        'latent_size': 100,
-        'generator_scale': 128,
-        'gen_lr': 0.0001,
-        'disc_lr': 0.0004,
-        'log_amin': 1e-5,
-        'num_examples': 16,
-        'save_dir': './',
-        'save_images': args.saveimg
-    }
+    hparams['plot'] = args.plot
+    hparams['save_images'] = args.saveimg
+    hparams['save_dir'] = args.save_dir
+    hparams['epochs'] = args.epochs
+    hparams['steps_per_epoch'] = args.steps
+    hparams['sample_rate'] = args.sr
+    hparams['batch_size'] = args.batch_size
+    hparams['buffer_size'] = args.buffer_size
+    hparams['latent_size'] = args.latent_size
 
     # Load nsynth dataset from tfds
     dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=True)
