@@ -1,13 +1,8 @@
 import tensorflow as tf
-import data.process as preprocess
-import os
-import matplotlib.pyplot as plt
-
+import data.process as pro
 from models.common.training import Trainer
 from data.nsynth import nsynth_from_tfrecord, instruments, nsynth_to_melspec
 from models.gan.model import GAN
-
-#import IPython.display as display
 
 # Some compatability options for some graphics cards
 from tensorflow.compat.v1 import ConfigProto
@@ -67,11 +62,11 @@ def start(hparams):
     assert spec_shape[0] % 4 == 0 and spec_shape[1] % 4 == 0, "Spectogram dimensions is not divisible by 4"
 
     # Create preprocessing pipeline for shuffling and batching
-    dataset = preprocess.pipeline([
-        preprocess.set_channels(1),
-        preprocess.shuffle(hparams['buffer_size']),
-        preprocess.batch(hparams['batch_size']),
-        preprocess.prefetch()
+    dataset = pro.pipeline([
+        pro.set_channels(1),
+        pro.shuffle(hparams['buffer_size']),
+        pro.batch(hparams['batch_size']),
+        pro.prefetch()
     ])(dataset)
 
     gan = GAN(spec_shape, hparams)
