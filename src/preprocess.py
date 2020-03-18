@@ -95,7 +95,20 @@ def prefetch():
     return lambda dataset: dataset.prefetch(tf.data.experimental.AUTOTUNE)
 
 def pad(paddings, mode, constant_values=0, name=None):
-    return map_transform(lambda x: tf.pad(x, paddings, mode, constant_values, name))
+    return map_transform(_pad(paddings, mode, constant_values, name))
+
+def _pad(paddings, mode, constant_values=0, name=None):
+    def _p(x):
+        if type(constant_values) == str:
+            if constant_values == 'min':
+                values = tf.reduce_min(x)
+            elif constant_values == 'max':
+                values = tf.reduce_max(x)
+        else:
+            values = constant_values
+        return tf.pad(x, paddings, mode, values, name)
+    return _p
+
 
 def frame(frame_length, frame_step, pad_end=False, pad_value=0, axis=-1, name=None):
     return map_transform(lambda x: tf.signal.frame(x, frame_length,
@@ -162,20 +175,17 @@ def spec(fft_length=1024, frame_step=512, frame_length=None, **kwargs):
         transpose2d()
     ])
 
-def melspec(sr, fft_length=1024, frame_step=512, frame_length=None, **kwargs):
-    if frame_length is None:
-        frame_length = fft_length
+def melspec(sr, n_fft=1024, hop_length=512, win_length=None, **kwargs):
     return pipeline([
-        stft(frame_length, frame_step, fft_length),
-        abs(),
-        mels(sr, fft_length//2+1, **kwargs),
-        transpose2d()
+        numpy(),
+        map_transform(lambda x: librosa.feature.melspectrogram(x, sr=sr, n_fft=n_fft, hop_length=hop_length, win_length=win_length)),
+        map_transform(lambda x: librosa.core.power_to_db(x, ref=1.0)),
+        tensor(tf.float32),
+        # stft(frame_length, frame_step, fft_length),
+        # abs(),
+        # mels(sr, fft_length//2+1, **kwargs),
+        # transpose2d()
     ])
-
-def invert_melspec(sr, fft_length=1024, frame_step=512, frame_length=None):
-    if frame_length is None:
-        frame_length = fft_length
-    return map_transform(lambda x: librosa.feature.inverse.mel_to_audio(x.numpy(), sr=sr, n_fft=fft_length, hop_length=frame_step, win_length=frame_length))
 
 def denormalize(denorm_amin=-20, denorm_amax=0, normalization='neg_one_to_one'):
     if normalization == 'neg_one_to_one':
@@ -185,11 +195,12 @@ def denormalize(denorm_amin=-20, denorm_amax=0, normalization='neg_one_to_one'):
     else:
         raise Exception(f"No normalization type named '{normalization}'.")
 
-def invert_log_melspec(sr, fft_length=1024, frame_step=512, frame_length=None, amin=1e-5, denorm_amin=-38, denorm_amax=0):
+def invert_log_melspec(sr, n_fft=1024, hop_length=512, win_length=None, amin=1e-5, denorm_amin=-38, denorm_amax=0):
     return pipeline([
-        denormalize(denorm_amin, denorm_amax),
-        log_to_amp(amin),
-        invert_melspec(sr, fft_length, frame_step, frame_length)
+        # denormalize(denorm_amin, denorm_amax),
+        # log_to_amp(amin),
+        map_transform(lambda x: librosa.core.db_to_power(x, ref=1.0)),
+        map_transform(lambda x: librosa.feature.inverse.mel_to_audio(x, sr=sr, n_fft=n_fft, hop_length=hop_length, win_length=win_length))
     ])
 
 def load_midi():
