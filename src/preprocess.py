@@ -185,7 +185,7 @@ def denormalize(denorm_amin=-20, denorm_amax=0, normalization='neg_one_to_one'):
     else:
         raise Exception(f"No normalization type named '{normalization}'.")
 
-def invert_log_melspec(sr, fft_length=1024, frame_step=512, frame_length=None, amin=1e-5, denorm_amin=-20, denorm_amax=0):
+def invert_log_melspec(sr, fft_length=1024, frame_step=512, frame_length=None, amin=1e-5, denorm_amin=-38, denorm_amax=0):
     return pipeline([
         denormalize(denorm_amin, denorm_amax),
         log_to_amp(amin),
