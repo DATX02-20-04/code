@@ -1,9 +1,8 @@
 import tensorflow as tf
-from transformer.attention import scaled_dot_product_attention
-from positional import positional_encoding
-
-tfk = tf.keras
-tfkl = tfk.layers
+import tensorflow.keras as tfk
+from tensorflow.keras import layers as tfkl
+from models.transformer.attention import scaled_dot_product_attention
+from models.transformer.positional import positional_encoding
 
 class MultiHeadAttention(tfkl.Layer):
     def __init__(self, d_model, num_heads):
