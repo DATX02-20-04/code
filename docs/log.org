@@ -21,6 +21,46 @@
 
   The time log has exact tasks worked on each entry, for each member.
 
+* Week 8
+** Progress
+   In general, because of the pandemic and exams, the project progressed less
+   than other weeks. There have been some progress with audio generation, but it
+   is hard to include audio snippets into this page so maybe they will exist in
+   our repo at some point.
+*** Training resources
+    We finally gained access to a computer we can use for training. This means a
+    lot of our time was spent on setup of this computer and porting of our colab
+    code to work on it.
+*** Meetings
+    Due to the pandemic, we may start holding meetings online rather than in
+    person (if multiple people message about not being able to join).
+    Supervision meetings are all held online for now on until further notice
+    from Chalmers.
+*** Exam week
+    Because it is exam time for other courses, a lot of group members had to
+    spend their time studying for those or writing reports.
+*** MIDI framework
+    We now have a MIDI pipeline and library written, so we can now use this to
+    create our models (as we've already begun to some extent).
+** Summary of each memeber
+   - *Christoffer*: Wrote code for flags used in specgan for training. Started
+     training gansynth specgan on training computer. Kept communication for
+     access to training resources.
+   - *Eric*: Setup training computer (scripts, environment) and wrote basic
+     integration tests for our code. Also worked on our implementation of a
+     transformer.
+   - *Carl*: Work on MIDI tools and get the music transformer repo running.
+   - *Lovisa*: Been busy with other course, but worked on trello planning for the whole group.
+   - *Cao*: Been busy with other course, kept up with work by other gorup memebers
+   - *Elias*: Work on gan vae hybrid.
+** Next week
+   - Keep writing report
+   - Continue work on music transformer
+   - More extensive training with training computer
+   - Create guide for how to use the training computer
+   - Create more throrough tests (unit and integration)
+   - Write a bunch of utility functions (flags, plotting etc).
+
 * Week 7
 ** Important info
    We've migrated to a new drive, which means larger storage capacity but also
