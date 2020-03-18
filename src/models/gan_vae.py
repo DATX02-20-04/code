@@ -100,7 +100,7 @@ def create_gan_vae(shape, latent_size, gen_z_size, scale, prior):
 
     o = tfkl.Dropout(0.4)(o)
     o = tfkl.Flatten()(o)
-    o = tfkl.Dense(1, activation='sigmoid')(o)
+    o = tfkl.Dense(1)(o)
 
     discriminator = tfk.Model(inputs=i, outputs=o)
 
