@@ -1,17 +1,9 @@
 import tensorflow as tf
-import tensorflow_probability as tfp
-import data.process as preprocess
-import os
+import data.process as pro
 from models.common.training import Trainer
 from data.maestro import maestro_from_files
 from models.vae.model import VAE
-import matplotlib.pyplot as plt
-#import IPython.display as display
-import scipy.io.wavfile as wavfile
 import tensorflow_datasets as tfds
-
-tfpl = tfp.layers
-tfd = tfp.distributions
 
 # Some compatability options for some graphics cards
 from tensorflow.compat.v1 import ConfigProto
@@ -23,15 +15,15 @@ session = InteractiveSession(config=config)
 def start(hparams):
     # Load nsynth dataset
     dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=True)
-    dataset = preprocess.pipeline([
-        preprocess.extract('audio'),
-        preprocess.frame(hparams['window_samples'], hparams['window_samples']),
-        preprocess.unbatch(),
-        preprocess.set_channels(1),
-        preprocess.dupe(),
-        preprocess.shuffle(hparams['buffer_size']),
-        preprocess.batch(hparams['batch_size']),
-        preprocess.prefetch()
+    dataset = pro.pipeline([
+        pro.extract('audio'),
+        pro.frame(hparams['window_samples'], hparams['window_samples']),
+        pro.unbatch(),
+        pro.set_channels(1),
+        pro.dupe(),
+        pro.shuffle(hparams['buffer_size']),
+        pro.batch(hparams['batch_size']),
+        pro.prefetch()
     ])(dataset)
 
     vae = VAE(hparams)
