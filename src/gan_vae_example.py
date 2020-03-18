@@ -7,6 +7,7 @@ from training import Trainer, create_gan_train_step, create_vae_gan_train_step
 from datasets.nsynth import nsynth_from_tfrecord, instruments, nsynth_to_melspec
 from models.gan_vae import create_gan_vae
 import matplotlib.pyplot as plt
+import librosa
 
 import argparse
 # import IPython.display as display
@@ -162,7 +163,7 @@ class GANVAEExample(Model):
 
         for i in range(generated.shape[0]):
             plt.subplot(4, 4, i + 1)
-            plt.imshow(generated[i, :, :, 0])
+            plt.imshow(generated[i, :, :])
             plt.axis('off')
 
         if self.save_images:
@@ -203,18 +204,18 @@ if __name__ == '__main__':
     # Setup hyperparameters
     hparams = {
         'plot': args.plot,
-        'epochs': 100,
+        'epochs': 200,
         'steps_per_epoch': 1000,
         'sample_rate': 16000,
         'batch_size': 32,
         'buffer_size': 1000,
-        'latent_size': 100,
-        'latent_loss_factor': 1000.,
+        'latent_size': 12,
+        'latent_loss_factor': .2,
         'model_scale': 128,
-        'gen_lr': 0.0001,
+        'gen_lr': 0.0004,
         'disc_lr': 0.0004,
-        'vae_lr': 1e-11,
-        'gen_z_size': 16,
+        'vae_lr':  tf.keras.optimizers.schedules.ExponentialDecay(1e-11, decay_steps=100,  decay_rate=0.96,  staircase=False),
+        'gen_z_size': 88,
         'log_amin': 1e-5,
         'num_examples': 16,
         'save_dir': './',
@@ -227,5 +228,4 @@ if __name__ == '__main__':
 
     dataset = nsynth_to_melspec(dataset, hparams)
     gan = GANVAEExample(dataset, hparams)
-    gan.generate_and_save(0, 0)
-    # gan.train()
+    gan.train()

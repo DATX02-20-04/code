@@ -137,14 +137,14 @@ def create_vae_gan_train_step(generator, discriminator, encoder, decoder, vae,
             vae_loss = vae_loss_f(x, decoded) + regularization_loss
 
 
-            gen_input = tf.concat([encoded, noise], 1)
+            gen_input = tf.concat([encoded.mean(), noise], 1)
             generated_x = generator(gen_input, training=True)
 
             real_output = discriminator(x, training=True)
             fake_output = discriminator(generated_x, training=True)
 
             gen_loss = generator_loss_f(fake_output)
-            latent_loss = latent_loss_factor*latent_loss_f(encoded, encoder(generated_x, training=True))
+            latent_loss = latent_loss_factor*latent_loss_f(encoded.mean(), encoder(generated_x, training=True).mean())
             total_gen_loss = gen_loss + latent_loss
 
             disc_loss = discriminator_loss_f(real_output, fake_output)
