@@ -7,6 +7,15 @@ import os
 import importlib
 from util import load_hparams, parse_train_args
 
+# Some compatability options for some graphics cards
+from tensorflow.compat.v1 import ConfigProto
+from tensorflow.compat.v1 import InteractiveSession
+import tensorflow_datasets as tfds
+
+config = ConfigProto()
+config.gpu_options.allow_growth = True
+session = InteractiveSession(config=config)
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Start training a model')
 
