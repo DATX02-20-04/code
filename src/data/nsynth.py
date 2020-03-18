@@ -16,7 +16,7 @@ def nsynth_from_tfrecord(nsynth_tfrecord_path):
     ])(dataset)
 
 def nsynth_to_melspec(dataset, hparams):
-    if hparams['instrument'] is not None:
+    if 'instrument' in hparams and hparams['instrument'] is not None:
         dataset = pro.filter_transform(instrument_filter)(dataset)
 
     # Create preprocessing pipeline for the melspectograms
