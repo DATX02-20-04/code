@@ -5,13 +5,6 @@ from data.maestro import maestro_from_files
 from models.vae.model import VAE
 import tensorflow_datasets as tfds
 
-# Some compatability options for some graphics cards
-from tensorflow.compat.v1 import ConfigProto
-from tensorflow.compat.v1 import InteractiveSession
-config = ConfigProto()
-config.gpu_options.allow_growth = True
-session = InteractiveSession(config=config)
-
 def start(hparams):
     # Load nsynth dataset
     dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=True)

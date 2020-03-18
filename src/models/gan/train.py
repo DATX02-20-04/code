@@ -4,16 +4,6 @@ from models.common.training import Trainer
 from data.nsynth import nsynth_from_tfrecord, instruments, nsynth_to_melspec
 from models.gan.model import GAN
 
-# Some compatability options for some graphics cards
-from tensorflow.compat.v1 import ConfigProto
-from tensorflow.compat.v1 import InteractiveSession
-import tensorflow_datasets as tfds
-
-config = ConfigProto()
-config.gpu_options.allow_growth = True
-session = InteractiveSession(config=config)
-
-
 # Define some metrics to be used in the training
 gen_loss_avg = tf.keras.metrics.Mean()
 disc_loss_avg = tf.keras.metrics.Mean()
