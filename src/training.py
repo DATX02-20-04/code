@@ -2,6 +2,7 @@ import tensorflow as tf
 import os
 import time
 
+
 class Trainer():
     def __init__(self, dataset, hparams):
         self.dataset = dataset
@@ -10,7 +11,8 @@ class Trainer():
 
     def init_checkpoint(self, ckpt):
         self.ckpt = ckpt
-        self.manager = tf.train.CheckpointManager(self.ckpt, os.path.join(self.hparams['save_dir'], 'ckpts'), max_to_keep=3)
+        self.manager = tf.train.CheckpointManager(self.ckpt, os.path.join(self.hparams['save_dir'], 'ckpts'),
+                                                  max_to_keep=3)
         self.ckpt.restore(self.manager.latest_checkpoint)
         if self.manager.latest_checkpoint:
             print("Restored from {}".format(self.manager.latest_checkpoint))
@@ -26,7 +28,7 @@ class Trainer():
 
         steps_per_epoch = self.hparams['steps_per_epoch'] if 'steps_per_epoch' in self.hparams else None
 
-        for epoch in range(1, self.hparams['epochs']+1):
+        for epoch in range(1, self.hparams['epochs'] + 1):
             start = time.time()
             if self.on_epoch_start is not None:
                 self.on_epoch_start(epoch, self.step.numpy())
@@ -46,6 +48,7 @@ class Trainer():
             duration = end - start
             if self.on_epoch_complete is not None:
                 self.on_epoch_complete(epoch, self.step.numpy(), duration)
+
 
 def create_gan_train_step(generator,
                           discriminator,
@@ -78,14 +81,15 @@ def create_gan_train_step(generator,
 
     return train_step
 
+
 def create_gan_hist_train_step(generator,
-                          discriminator,
-                          generator_loss,
-                          discriminator_loss,
-                          generator_optimizer,
-                          discriminator_optimizer,
-                          batch_size,
-                          latent_size):
+                               discriminator,
+                               generator_loss,
+                               discriminator_loss,
+                               generator_optimizer,
+                               discriminator_optimizer,
+                               batch_size,
+                               latent_size):
     gen_history = []
 
     @tf.function
@@ -113,5 +117,48 @@ def create_gan_hist_train_step(generator,
         discriminator_optimizer.apply_gradients(zip(gradients_of_discriminator, discriminator.trainable_variables))
 
         return gen_loss, disc_loss
+
+    return train_step
+
+
+def create_vae_gan_train_step(generator, discriminator, encoder, decoder, vae,
+                              generator_loss_f, discriminator_loss_f, vae_loss_f, latent_loss_f,
+                              generator_optimizer, discriminator_optimizer, vae_optimizer,
+                              latent_loss_factor,
+                              batch_size, gen_z_size):
+    @tf.function
+    def train_step(x):
+        noise = tf.random.normal([batch_size, gen_z_size])
+
+        with tf.GradientTape(persistent=True) as tape:
+            encoded = encoder(x, training=True)
+            regularization_loss = encoder.losses[0]
+            decoded = decoder(encoded, training=True)
+            vae_loss = vae_loss_f(x, decoded) + regularization_loss
+
+
+            gen_input = tf.concat([encoded.mean(), noise], 1)
+            generated_x = generator(gen_input, training=True)
+
+            real_output = discriminator(x, training=True)
+            fake_output = discriminator(generated_x, training=True)
+
+            gen_loss = generator_loss_f(fake_output)
+            latent_loss = latent_loss_factor*latent_loss_f(encoded.mean(), encoder(generated_x, training=True).mean())
+            total_gen_loss = gen_loss + latent_loss
+
+            disc_loss = discriminator_loss_f(real_output, fake_output)
+
+        gradients_of_vae = tape.gradient(vae_loss, vae.trainable_variables)
+        gradients_of_generator = tape.gradient(total_gen_loss, generator.trainable_variables)
+        gradients_of_discriminator = tape.gradient(disc_loss, discriminator.trainable_variables)
+
+        vae_optimizer.apply_gradients(zip(gradients_of_vae, vae.trainable_variables))
+        generator_optimizer.apply_gradients(zip(gradients_of_generator, generator.trainable_variables))
+        discriminator_optimizer.apply_gradients(zip(gradients_of_discriminator, discriminator.trainable_variables))
+
+        # clear gradients from memory
+        del tape
+        return vae_loss, total_gen_loss, disc_loss
 
     return train_step
