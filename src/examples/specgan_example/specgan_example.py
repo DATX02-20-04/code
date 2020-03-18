@@ -3,12 +3,13 @@ from tensorflow.compat.v1 import ConfigProto
 from tensorflow.compat.v1 import InteractiveSession
 import matplotlib.pyplot as plt
 
+
 import os
-from datasets.nsynth import instruments, nsynth_to_melspec
-from models.simple_gan import create_generator, create_discriminator
-from .. import preprocess
-from ..losses import create_simple_gan_loss
-from ..training import create_gan_train_step
+from ...datasets.nsynth import instruments, nsynth_to_melspec
+from ...models.simple_gan import create_generator, create_discriminator
+from ...datasets import preprocess
+from ...models.losses import create_simple_gan_loss
+from ...models.training import create_gan_train_step
 
 
 import argparse

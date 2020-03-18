@@ -1,6 +1,5 @@
 import tensorflow as tf
-from .. import preprocess as pre
-
+from ...datasets import preprocess as pre
 
 dataset = tf.data.Dataset.from_tensor_slices(["test.midi"])
 

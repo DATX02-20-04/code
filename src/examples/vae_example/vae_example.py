@@ -1,16 +1,17 @@
 import tensorflow as tf
 import tensorflow_probability as tfp
 import os
-from datasets.maestro import maestro_from_files
+
+from ...datasets.maestro import maestro_from_files
 import matplotlib.pyplot as plt
 
-from ..models.vae import create_vae
-from .. import preprocess
-from ..losses import create_simple_gan_loss
-from ..training import Trainer, create_gan_train_step
+from ...models.vae import create_vae
+from ...datasets import preprocess
+from ...models.losses import create_simple_gan_loss
+from ...models.training import Trainer, create_gan_train_step
 
 # import IPython.display as display
-from ..model import Model
+from ...models.model import Model
 import scipy.io.wavfile as wavfile
 import tensorflow_datasets as tfds
 
