@@ -3,6 +3,7 @@ import data.process as pro
 from models.common.training import Trainer
 from data.nsynth import nsynth_from_tfrecord, instruments, nsynth_to_melspec
 from models.gan.model import GAN
+import tensorflow_datasets as tfds
 
 # Define some metrics to be used in the training
 gen_loss_avg = tf.keras.metrics.Mean()
