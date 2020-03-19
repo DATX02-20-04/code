@@ -47,8 +47,9 @@ def start(hparams):
 
 
     dataset = pro.pipeline([
-        # pro.batch(2, True),
-        pro.dupe(),
+        pro.batch(2, True),
+        pro.split(2),
+        # pro.dupe(),
         pro.map_transform(_reshape),
         pro.cache(),
         pro.shuffle(hparams['buffer_size']),

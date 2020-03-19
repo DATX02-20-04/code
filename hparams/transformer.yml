@@ -1,7 +1,7 @@
 hparams:
   name: 'transformer'
   epochs: 20
-  steps: 2000
+  steps: 0
   num_layers: 4
   d_model: 256
   dff: 256
