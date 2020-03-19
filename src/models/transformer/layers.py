@@ -1,7 +1,31 @@
 import tensorflow as tf
 import tensorflow.keras as tfk
 from tensorflow.keras import layers as tfkl
-from models.transformer.positional import positional_encoding
+import numpy as np
+
+class PositionalEncoding(tfkl.Layer):
+    def __init__(self, position, d_model):
+        super(PositionalEncoding, self).__init__()
+
+        a = self.get_angles(np.arange(position)[:, np.newaxis],
+                            np.arange(d_model)[np.newaxis, :],
+                            d_model)
+
+        a[:, 0::2] = np.sin(a[:, 0::2])
+
+        a[:, 1::2] = np.cos(a[:, 1::2])
+
+        self.pos_enc = a[np.newaxis, ...]
+
+        self.pos_enc = tf.cast(self.pos_enc, dtype=tf.float32)
+
+    def call(self, x):
+        seq_len = tf.shape(x)[1]
+        return x + self.pos_enc[:, :seq_len, :]
+
+    def get_angles(self, pos, i, d_model):
+        w = 1.0 / np.power(10000, (2*(i//2)) / np.float32(d_model))
+        return pos * w
 
 class ScaledAttention(tfkl.Layer):
     def __init__(self):
@@ -144,18 +168,16 @@ class Encoder(tfkl.Layer):
         self.num_layers = num_layers
 
         self.embedding = tfkl.Embedding(input_vocab_size, d_model)
-        self.pos_enc = positional_encoding(max_pos_enc, self.d_model)
+        self.pos_enc = PositionalEncoding(max_pos_enc, self.d_model)
 
         self.layers = [EncoderLayer(d_model, num_heads, dff, rate) for _ in range(num_layers)]
 
         self.dropout = tfkl.Dropout(rate)
 
     def call(self, x, training, mask):
-        seq_len = tf.shape(x)[1]
-
         x = self.embedding(x)
         x *= tf.math.sqrt(tf.cast(self.d_model, tf.float32))
-        x += self.pos_enc[:, :seq_len, :]
+        x = self.pos_enc(x)
 
         x = self.dropout(x, training=training)
 
@@ -172,20 +194,18 @@ class Decoder(tfkl.Layer):
         self.num_layers = num_layers
 
         self.embedding = tfkl.Embedding(target_vocab_size, d_model)
-        self.pos_enc = positional_encoding(max_pos_enc, d_model)
+        self.pos_enc = PositionalEncoding(max_pos_enc, self.d_model)
 
         self.layers = [DecoderLayer(d_model, num_heads, dff, rate) for _ in range(num_layers)]
 
         self.dropout = tfkl.Dropout(rate)
 
     def call(self, x, enc_output, training, look_ahead_mask, padding_mask):
-        seq_len = tf.shape(x)[1]
-
         attention_weights = {}
 
         x = self.embedding(x)
         x *= tf.math.sqrt(tf.cast(self.d_model, tf.float32))
-        x += self.pos_enc[:, :seq_len, :]
+        x = self.pos_enc(x)
 
         x = self.dropout(x, training=training)
 
