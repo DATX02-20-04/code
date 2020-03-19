@@ -89,20 +89,20 @@ class Transformer(tfk.Model):
     def evaluate(self, inp_sentence):
         encoder_input = tf.expand_dims(inp_sentence, 0)
 
-        decoder_input = [64]
+        decoder_input = [inp_sentence[0]]
         output = tf.expand_dims(decoder_input, 0)
         output_tot = tf.expand_dims(decoder_input, 0)
 
         for i in range(self.hparams['frame_size']):
-            enc_padding_mask, combined_mask, dec_padding_mask = create_masks(
+            enc_padding_mask, combined_mask, dec_padding_mask = self.create_masks(
                 encoder_input, output)
 
-            predictions, attention_weights = transformer(encoder_input,
-                                                        output,
-                                                        False,
-                                                        enc_padding_mask,
-                                                        combined_mask,
-                                                        dec_padding_mask)
+            predictions, attention_weights = self.call(encoder_input,
+                                                       output,
+                                                       False,
+                                                       enc_padding_mask,
+                                                       combined_mask,
+                                                       dec_padding_mask)
 
             predictions = predictions[: ,-1:, :]
 

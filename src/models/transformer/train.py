@@ -7,17 +7,6 @@ from models.transformer.model import Transformer
 import tensorflow_datasets as tfds
 
 
-def generate(transformer, epoch, seed):
-    output = seed
-    print(output)
-    outputs = []
-    for i in range(4):
-        output, _ = transformer.evaluate(output)
-        outputs.append(output)
-        print(output)
-    decoded = next(pro.decode_midi()(iter([tf.concat(outputs, 0)])))
-    decoded.save('gen_e{}.midi'.format(epoch))
-
 train_loss = tfk.metrics.Mean(name='train_loss')
 train_accuracy = tfk.metrics.SparseCategoricalAccuracy(name='train_accuracy')
 
@@ -58,8 +47,8 @@ def start(hparams):
 
 
     dataset = pro.pipeline([
-        pro.batch(2, True),
-        pro.split(2),
+        # pro.batch(2, True),
+        pro.dupe(),
         pro.map_transform(_reshape),
         pro.cache(),
         pro.shuffle(hparams['buffer_size']),
@@ -93,31 +82,3 @@ def start(hparams):
     trainer.on_epoch_complete = on_epoch_complete
 
     trainer.run()
-
-    # for epoch in range(hparams['epochs']):
-    #     start = time.time()
-
-    #     train_loss.reset_states()
-    #     train_accuracy.reset_states()
-
-    #     batch = 0
-    #     for inp, tar in dataset:
-    #         inp = tf.reshape(inp, [hparams['batch_size'], hparams['frame_size']])
-    #         tar = tf.reshape(tar, [hparams['batch_size'], hparams['frame_size']])
-    #         train_step(inp, tar)
-
-    #         batch += 1
-    #         if batch % 50 == 0:
-    #             print ('Epoch {} Batch {} Loss {:.4f} Accuracy {:.4f}'.format(
-    #                 epoch + 1, batch, train_loss.result(), train_accuracy.result()))
-
-    #     ckpt_save_path = ckpt_manager.save()
-    #     print ('Saving checkpoint for epoch {} at {}'.format(epoch+1,
-    #                                                             ckpt_save_path))
-    #     generate(epoch, seed)
-
-    #     print ('Epoch {} Loss {:.4f} Accuracy {:.4f}'.format(epoch + 1,
-    #                                                 train_loss.result(),
-    #                                                 train_accuracy.result()))
-
-    #     print ('Time taken for 1 epoch: {} secs\n'.format(time.time() - start))

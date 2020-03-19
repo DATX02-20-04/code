@@ -1,6 +1,5 @@
 import tensorflow as tf
-
-tfk = tf.keras
+import tensorflow.keras as tfk
 
 class TransformerLRSchedule(tfk.optimizers.schedules.LearningRateSchedule):
     def __init__(self, d_model, warmup_steps=4000):
