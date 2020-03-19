@@ -1,8 +1,27 @@
 import tensorflow as tf
 import tensorflow.keras as tfk
 from tensorflow.keras import layers as tfkl
-from models.transformer.attention import scaled_dot_product_attention
 from models.transformer.positional import positional_encoding
+
+class ScaledAttention(tfkl.Layer):
+    def __init__(self):
+        super(ScaledAttention, self).__init__()
+
+    def call(self, q, k, v, mask):
+        qk = tf.matmul(q, k, transpose_b=True)
+
+        dk = tf.cast(tf.shape(k)[-1], tf.float32)
+        attention_logits = qk / tf.math.sqrt(dk)
+
+        if mask is not None:
+            attention_logits += (mask * -1e9)
+
+        weights = tf.nn.softmax(attention_logits, axis=-1)
+
+        outputs = tf.matmul(weights, v)
+
+        return outputs, weights
+
 
 class MultiHeadAttention(tfkl.Layer):
     def __init__(self, d_model, num_heads):
@@ -17,6 +36,8 @@ class MultiHeadAttention(tfkl.Layer):
         self.wv = tfkl.Dense(d_model)
         self.wk = tfkl.Dense(d_model)
         self.wq = tfkl.Dense(d_model)
+
+        self.scaled_attention = ScaledAttention()
 
         self.dense = tfkl.Dense(d_model)
 
@@ -35,7 +56,7 @@ class MultiHeadAttention(tfkl.Layer):
         k = self.split_heads(k, batch_size)
         q = self.split_heads(q, batch_size)
 
-        attention, attention_weights = scaled_dot_product_attention(q, k, v, mask)
+        attention, attention_weights = self.scaled_attention(q, k, v, mask)
 
         attention = tf.transpose(attention, perm=[0, 2, 1, 3])
         attention = tf.reshape(attention, [batch_size, -1, self.d_model])
