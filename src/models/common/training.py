@@ -1,6 +1,7 @@
 import tensorflow as tf
 import os
 import time
+import progressbar
 
 class Trainer():
     def __init__(self, dataset, hparams):
@@ -33,6 +34,14 @@ class Trainer():
         print(f'Epoch {epoch} completed in {duration:.3f} seconds at step {step}')
 
     def run(self):
+
+        epochs_bar = progressbar.ProgressBar(
+            name="Epochs",
+            min_value=1,
+            max_value=self.hparams['epochs']+1,
+            redirect_stdout=True
+        )
+
         if self.train_step is None:
             raise Exception("No train_step specified, call set_train_step on the trainer with your training step.")
 
@@ -40,6 +49,7 @@ class Trainer():
 
         for epoch in range(1, self.hparams['epochs']+1):
             start = time.time()
+            epochs_bar.update(epoch)
             self.on_epoch_start(epoch, self.step.numpy())
 
             d = self.dataset.take(steps_per_epoch) if steps_per_epoch > 0 else self.dataset
