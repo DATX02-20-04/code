@@ -72,7 +72,7 @@ to time slots to train and amount of training. We'll eventually use it to most
 likely train the transformer since it requires better specs than we had.
 
 *** Meetings
-Meetings has been going well online, we try to work more in voice calls a limit
+Meetings has been going well online, we try to work more in voice calls and limit
 how much we meet in person. It is still challenging ensuring everyone has tasks
 to work on and ensuring everyone is on the same page.
 
