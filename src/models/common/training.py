@@ -1,6 +1,36 @@
 import tensorflow as tf
 import os
 import time
+import progressbar as pb
+import progressbar.widgets as pbw
+
+class VariableBar(pbw.Bar, pbw.VariableMixin):
+    """
+    A Bar reading from a different variable. Due to limitations of ProgressBar2,
+    the maximum value cannot be a second variable.
+    """
+
+    def __init__(self, variable, max_value=pb.UnknownLength, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        pbw.VariableMixin.__init__(self, variable)
+        self.max_value = max_value
+
+    def __call__(self, progress, data, width):
+        (prev_value, prev_max) = (progress.value, progress.max_value)
+        try:
+            progress.value = data['variables'][self.name] or 0 # That is a bad API
+            progress.max_value = self.max_value
+            return super().__call__(progress, data, width)
+        finally:
+            (progress.value, progress.max_value) = (prev_value, prev_max)
+
+class Percentage(pbw.Percentage):
+    """
+    The default Percentage class shows N/A at zero percent, this one just shows 0%.
+    """
+
+    def __call__(self, progress, data, format=None):
+        return pbw.FormatWidgetMixin.__call__(self, progress, data)
 
 class Trainer():
     def __init__(self, dataset, hparams):
@@ -36,22 +66,35 @@ class Trainer():
         if self.train_step is None:
             raise Exception("No train_step specified, call set_train_step on the trainer with your training step.")
 
-        steps_per_epoch = self.hparams['steps'] if 'steps' in self.hparams else None
+        with pb.ProgressBar(
+                widgets=[
+                    Percentage(),
+                    ' ', pbw.SimpleProgress(format='(%s)' % pb.SimpleProgress.DEFAULT_FORMAT),
+                    ' ', pbw.Bar(),
+                    ' ', VariableBar("batch", self.hparams.get('steps', pb.UnknownLength)),
+                    ' ', pbw.Timer(),
+                    ' ', pbw.AdaptiveETA(),
+                ],
+                min_value=1,
+                max_value=self.hparams['epochs']+1,
+                redirect_stdout=True,
+        ).start() as bar:
+            for epoch in range(1, self.hparams['epochs']+1):
+                start = time.time()
+                self.on_epoch_start(epoch, self.step.numpy())
+                bar.update(epoch)
 
-        for epoch in range(1, self.hparams['epochs']+1):
-            start = time.time()
-            self.on_epoch_start(epoch, self.step.numpy())
+                d = self.dataset.take(self.hparams['steps']) if 'steps' in self.hparams else self.dataset
 
-            d = self.dataset.take(steps_per_epoch) if steps_per_epoch > 0 else self.dataset
+                for batch_no, batch in enumerate(d):
+                    bar.update(batch=batch_no)
+                    self.step.assign_add(1)
+                    stats = self.train_step(batch)
+                    self.on_step(epoch, self.step.numpy(), stats)
 
-            for batch in d:
-                self.step.assign_add(1)
-                stats = self.train_step(batch)
-                self.on_step(epoch, self.step.numpy(), stats)
+                if self.ckpt is not None:
+                    self.manager.save()
 
-            if self.ckpt is not None:
-                self.manager.save()
-
-            end = time.time()
-            duration = end - start
-            self.on_epoch_complete(epoch, self.step.numpy(), duration)
+                end = time.time()
+                duration = end - start
+                self.on_epoch_complete(epoch, self.step.numpy(), duration)
