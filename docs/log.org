@@ -25,7 +25,7 @@
 * Week 9
 ** Progress
 *** Report
-We created a very detailed outline of sections in the report that will make it
+We created a detailed outline of sections in the report that will make it
 easy to add things as we develop them. We've also started writing parts of the
 Theory chapter, explaining basic concepts. Finally, we want to write about the
 models we've implemented and tested.
@@ -36,38 +36,36 @@ encoder since we felt the wave2midi2wave wouldn't pan out in a way we would
 hope.
 
 *** VAE
-Elias and cao are assigned to this task, but since exams, not a lot of progress
-in this area has been made this week. It has however had similiar results to
-what specGAN is doing, and much research into it is still being done.
+Elias and cao were assigned to this task, but since exams, not a lot of progress
+in this area wasmade this week. The model has however had similiar results to
+SpecGan, so we are still researching this.
 
 *** Transformer
-The transformer is meant to deal with the structure of music. It trains on MIDI,
+The transformer aims to deal with the structure of music. It trains on MIDI,
 learning the relationships between sequences of MIDI notes and outputs the most
 appropriate notes. The aim of this model is to connect it with the note
 generation to generate complete music.
 
 We've been working towards getting the music transformer model running and also
-implementing our own. This week, we managed to run both and generate results.
-Below are the audio snippets of the two.
+implementing our own version of it. This week, we managed to run both and
+generate results. Below are the audio snippets of the two.
 
 *Our music transformer with prior*
 
-{{{AUDIO(audio/mutrans_our_no_prior.wav)}}}
-
-*Our music transformer without prior*
-
 {{{AUDIO(audio/mutrans_our_prior.wav)}}}
+
+{{{AUDIO(audio/mutrans_our_prior2.wav)}}}
 
 *Music transformer implementation found online without prior*
 
 {{{AUDIO(audio/mutrans_test.wav)}}}
 
-As you can hear, all three examples have structure, which is very promising. We
+As you can hear, all three examples have structure, which is promising. We
 will continue working on these and later connecting it with our note generation!
 
 *** Training resources
 We got access to another training platform, Bayes at DS&AI division. This server
-has much better hardware than the previous one, but restrictions when it comes
+has much better hardware than the previous one, but also restrictions when it comes
 to time slots to train and amount of training. We'll eventually use it to most
 likely train the transformer since it requires better specs than we had.
 
@@ -77,8 +75,7 @@ how much we meet in person. It is still challenging ensuring everyone has tasks
 to work on and ensuring everyone is on the same page.
 
 *** Exam week
-Still exam week so some members haven't gotten a lot done.
-** Summary of each memeber
+Still exam week so some members haven't gotten a lot donech memeber
    - *Christoffer*: Work on issues in the github like structuring repo, Also
      structured and started writing the report (signal processing in theory). A
      lot of the time is writing scripts to generate plots we can use in the
@@ -104,9 +101,8 @@ Still exam week so some members haven't gotten a lot done.
 - More extensive training with training computer and potentially Bayes
 - Create more throrough tests (unit and integration) (from last week)
 - Write a bunch of utility functions (flags, plotting etc). (from last week)
-- Continue work on the VAE and maybe begin connecting everything
-
-* Week 8
+  - Continue work on the VAE and maybe begin connecting eve
+    * Week 8
 ** Progress
    In general, because of the pandemic and exams, the project progressed less
    than other weeks. There have been some progress with audio generation, but it
@@ -142,10 +138,7 @@ Still exam week so some members haven't gotten a lot done.
    - Keep writing report
    - Continue work on music transformer
    - More extensive training with training computer
-   - Create guide for how to use the training computer
-   - Create more throrough tests (unit and integration)
-   - Write a bunch of utility functions (flags, plotting etc).
-
+   - Create guide for how to use the training
 * Week 7
 ** Important info
    We've migrated to a new drive, which means larger storage capacity but also
