@@ -68,26 +68,27 @@ class Trainer():
 
         with pb.ProgressBar(
                 widgets=[
-                    Percentage(),
-                    ' ', pbw.SimpleProgress(format='(%s)' % pb.SimpleProgress.DEFAULT_FORMAT),
-                    ' ', pbw.Bar(),
+                         Percentage(),
+                    ' ', VariableBar("epoch", self.hparams['epochs']),
                     ' ', VariableBar("batch", self.hparams.get('steps', pb.UnknownLength)),
                     ' ', pbw.Timer(),
-                    ' ', pbw.AdaptiveETA(),
+                    ' ', pbw.AdaptiveETA(samples=100),
                 ],
-                min_value=1,
-                max_value=self.hparams['epochs']+1,
+                min_value=0,
+                max_value=self.hparams['epochs'] * self.hparams.get('steps', 1),
                 redirect_stdout=True,
         ).start() as bar:
-            for epoch in range(1, self.hparams['epochs']+1):
+            for epoch in range(self.hparams['epochs']):
                 start = time.time()
                 self.on_epoch_start(epoch, self.step.numpy())
-                bar.update(epoch)
 
                 d = self.dataset.take(self.hparams['steps']) if 'steps' in self.hparams else self.dataset
 
                 for batch_no, batch in enumerate(d):
-                    bar.update(batch=batch_no)
+                    if 'steps' in self.hparams:
+                        bar.update(epoch*self.hparams['steps']+batch_no, epoch=epoch, batch=batch_no)
+                    else:
+                        bar.update(epoch, epoch=epoch, batch=batch_no)
                     self.step.assign_add(1)
                     stats = self.train_step(batch)
                     self.on_step(epoch, self.step.numpy(), stats)
