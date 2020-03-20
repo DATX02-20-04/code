@@ -12,7 +12,7 @@
 #+LATEX: \setlength{\parskip}{\baselineskip}
 #+LATEX_CLASS: article
 
-#+MACRO: AUDIO @@html:<audio controls="controlls" src="$1"></audio>@@
+#+MACRO: AUDIO @@html:<audio controls="controls" src="$1"></audio>@@
 
 * Introduction
   This page is a shared log detailing the work the group has done and what
@@ -58,7 +58,7 @@ Below are the audio snippets of the two.
 
 {{{AUDIO(audio/mutrans_our_prior.wav)}}}
 
-*Music transforemr implementation found online without prior*
+*Music transformer implementation found online without prior*
 
 {{{AUDIO(audio/mutrans_test.wav)}}}
 
