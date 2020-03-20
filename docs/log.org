@@ -12,6 +12,8 @@
 #+LATEX: \setlength{\parskip}{\baselineskip}
 #+LATEX_CLASS: article
 
+#+MACRO: AUDIO @@html:<audio controls="controls" src="$1"></audio>@@
+
 * Introduction
   This page is a shared log detailing the work the group has done and what
   challenges and problems it has encountered. For the most part, it's updated
@@ -19,9 +21,88 @@
 
   A time log can be found at Google Sheets: https://bit.ly/2PRKRl8
 
-  The time log has exact tasks worked on each entry, for each member.
+  The time log has exact tasks worked on each entry, for each
+* Week 9
+** Progress
+*** Report
+We created a detailed outline of sections in the report that will make it
+easy to add things as we develop them. We've also started writing parts of the
+Theory chapter, explaining basic concepts. Finally, we want to write about the
+models we've implemented and tested.
 
-* Week 8
+*** Shift of focus
+We decided to shift our focus entirely to the transformer and variational auto
+encoder since we felt the wave2midi2wave wouldn't pan out in a way we would
+hope.
+
+*** VAE
+Elias and cao were assigned to this task, but since exams, not a lot of progress
+in this area wasmade this week. The model has however had similiar results to
+SpecGan, so we are still researching this.
+
+*** Transformer
+The transformer aims to deal with the structure of music. It trains on MIDI,
+learning the relationships between sequences of MIDI notes and outputs the most
+appropriate notes. The aim of this model is to connect it with the note
+generation to generate complete music.
+
+We've been working towards getting the music transformer model running and also
+implementing our own version of it. This week, we managed to run both and
+generate results. Below are the audio snippets of the two.
+
+*Our music transformer with prior*
+
+{{{AUDIO(audio/mutrans_our_prior.wav)}}}
+
+{{{AUDIO(audio/mutrans_our_prior2.wav)}}}
+
+*Music transformer implementation found online without prior*
+
+{{{AUDIO(audio/mutrans_test.wav)}}}
+
+As you can hear, all three examples have structure, which is promising. We
+will continue working on these and later connecting it with our note generation!
+
+*** Training resources
+We got access to another training platform, Bayes at DS&AI division. This server
+has much better hardware than the previous one, but also restrictions when it comes
+to time slots to train and amount of training. We'll eventually use it to most
+likely train the transformer since it requires better specs than we had.
+
+*** Meetings
+Meetings has been going well online, we try to work more in voice calls and limit
+how much we meet in person. It is still challenging ensuring everyone has tasks
+to work on and ensuring everyone is on the same page.
+
+*** Exam week
+Still exam week so some members haven't gotten a lot donech memeber
+   - *Christoffer*: Work on issues in the github like structuring repo, Also
+     structured and started writing the report (signal processing in theory). A
+     lot of the time is writing scripts to generate plots we can use in the
+     report. Wrote guide on how to use training computer.
+   - *Eric*: Work on transformer, refactoring and general implementation details
+     (refactor project and split parts of code into separate runnable scripts).
+     Big issue for transformers is memory to train for long sequences and the
+     model copying it’s prior (initial input).
+   - *Carl*: Deploy script, refactoring and reviewing github pull requests. Wrote
+     a progressbar module for our training scripts, showing progress of training.
+   - *Lovisa*: Skeleton/outline of report and also started on implementing
+     wasserstein loss for specgan(math heavy so complete study mode of the
+     math). Progress in understanding the subject so will add to report. Had
+     trouble setting up repo (our repo) on laptop, carl helped with that.
+   - *Cao*: Set up things for the remote computer. Has been busy with other
+     courses to really participate much. Also as been missing an assigned task
+     which us in the group are working on fixing for next week.
+   - *Elias*: Not a lot of work since last meeting, mostly focused on other course
+     due to exam week.
+** Next week
+- Keep writing report
+- Continue work on music transformer
+- More extensive training with training computer and potentially Bayes
+- Create more throrough tests (unit and integration) (from last week)
+- Write a bunch of utility functions (flags, plotting etc). (from last week)
+  - Continue work on the VAE and maybe begin connecting eve
+    * Week 8
 ** Progress
    In general, because of the pandemic and exams, the project progressed less
    than other weeks. There have been some progress with audio generation, but it
@@ -57,10 +138,7 @@
    - Keep writing report
    - Continue work on music transformer
    - More extensive training with training computer
-   - Create guide for how to use the training computer
-   - Create more throrough tests (unit and integration)
-   - Write a bunch of utility functions (flags, plotting etc).
-
+   - Create guide for how to use the training
 * Week 7
 ** Important info
    We've migrated to a new drive, which means larger storage capacity but also
