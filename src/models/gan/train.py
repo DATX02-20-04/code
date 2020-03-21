@@ -5,9 +5,16 @@ from data.nsynth import nsynth_from_tfrecord, instruments, nsynth_to_melspec
 from models.gan.model import GAN
 import tensorflow_datasets as tfds
 
+import datetime
+
 # Define some metrics to be used in the training
 gen_loss_avg = tf.keras.metrics.Mean()
 disc_loss_avg = tf.keras.metrics.Mean()
+
+# Tensorfboard logging
+current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+train_log_dir = f'./logs/gradient_tape/{current_time}{/train}'
+train_summary_writer = tf.summary.create_file_writer(train_log_dir)
 
 
 def instrument_filter(hparams):
@@ -19,6 +26,11 @@ def instrument_filter(hparams):
 def on_epoch_start(epoch, step):
     gen_loss_avg = tf.keras.metrics.Mean()
     disc_loss_avg = tf.keras.metrics.Mean()
+
+    with train_summary_writer.as_default():
+        tf.summary.scalar('gen_loss', gen_loss_avg, step=epoch)
+        tf.summary.scalar('disc_loss', disc_loss_avg, step=epoch)
+
 
 # This runs at every step in the training (for each batch in dataset)
 def on_step(epoch, step, stats):
