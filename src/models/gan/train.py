@@ -13,7 +13,7 @@ disc_loss_avg = tf.keras.metrics.Mean()
 
 # Tensorfboard logging
 current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-train_log_dir = f'./logs/gradient_tape/{current_time}{/train}'
+train_log_dir = f'./logs/gradient_tape/{current_time}/train/'
 train_summary_writer = tf.summary.create_file_writer(train_log_dir)
 
 
