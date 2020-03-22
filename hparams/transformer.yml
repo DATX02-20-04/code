@@ -1,0 +1,16 @@
+hparams:
+  name: 'transformer'
+  epochs: 20
+  steps: 0
+  num_layers: 4
+  d_model: 256
+  dff: 256
+  num_heads: 4
+  frame_size: 1024
+  batch_size: 8
+  buffer_size: 100
+  dropout_rate: 0.2
+  beta_1: 0.9
+  beta_2: 0.98
+  epsilon: 0.000000001
+  save_dir: './'
