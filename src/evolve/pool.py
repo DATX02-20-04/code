@@ -6,21 +6,24 @@ class Pool():
         self.pool = []
         self.create_model = create_model
         self.hparams = HParams(hparams_template)
+        self.best = None
 
     def generate(self, mutation_rate, old):
         hp = self.hparams.generate(mutation_rate, old)
         return (hp, self.create_model(hp))
 
     def populate(self, size, mutation_rate=0.1):
-        self.pool = [self.generate(mutation_rate,
-                                   self.pool[i][0] if 0 <= i < len(self.pool) else None)
-                     for i in range(size)]
+        self.best = None
+        old = lambda i: self.pool[i][0] if 0 <= i < len(self.pool) and mutation_rate != 1 else None
+
+        self.pool = [self.generate(mutation_rate, old(i)) for i in range(size)]
         return self
 
     def evaluate(self, fitness_fn):
         self.fitness = [(fitness_fn(model[1]), i)
                         for i, model in enumerate(self.pool)]
         self.fitness.sort(reverse=True)
+        self.best = self.pool[self.fitness[0][1]]
         return self
 
     def select(self, count):

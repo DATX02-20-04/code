@@ -1,6 +1,7 @@
 import unittest
 import random
 import math
+import numpy as np
 from evolve.pool import Pool
 
 class TestPool(unittest.TestCase):
@@ -36,17 +37,24 @@ class TestPool(unittest.TestCase):
         self.assertEqual(len(pool.pool), 100)
 
     def test_pool_evolve(self):
-        pool = Pool(lambda hp: hp['test']+hp['other'], {
+        pool = Pool(lambda hp: hp['test'], {
             'test': {
                 'type': 'range',
                 'min': 0,
                 'max': 10000,
-                'step': 1,
-            },
-            'other': 2
+            }
         })
-        for _ in range(200):
-            pool = (pool.populate(200, 0.1)
-                    .evaluate(lambda x: 1/(abs(x-1337)+1))
-                    .select(200))
-        self.assertTrue(pool.fitness[0][0]>0.1)
+        target = 1337
+        generations = []
+        for _ in range(10):
+            pool.populate(500, 1)
+            generation = 0
+            while pool.best is None or pool.best[1] != target:
+                pool = (pool.populate(500, 0.5)
+                        .evaluate(lambda x: 1/(abs(x-target)+1))
+                        .select(500))
+                generation += 1
+            generations.append(generation)
+        gen_avg = np.array(generations).mean()
+        print(gen_avg)
+        self.assertTrue(gen_avg < 100)
