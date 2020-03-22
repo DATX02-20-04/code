@@ -29,6 +29,7 @@ def on_epoch_complete(epoch, step, duration):
     print(f"Epoch: {epoch}, Step: {step}, Loss: {train_loss.result()}, Accuracy: {train_accuracy.result()}, Duration: {duration:.3f}")
 
 def start(hparams):
+    print(hparams)
     input_vocab_size  = 128+128+100+100
     target_vocab_size = 128+128+100+100
 
