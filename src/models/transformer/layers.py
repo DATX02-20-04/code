@@ -3,6 +3,9 @@ import tensorflow.keras as tfk
 from tensorflow.keras import layers as tfkl
 import numpy as np
 
+# Define different components of the transformer nerual network architecture
+
+# Encode the positioning information to the vectors
 class PositionalEncoding(tfkl.Layer):
     def __init__(self, position, d_model):
         super(PositionalEncoding, self).__init__()

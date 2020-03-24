@@ -5,12 +5,13 @@ from models.transformer.layers import Encoder, Decoder
 from models.transformer.mask import create_padding_mask, create_look_ahead_mask
 from models.transformer.optimizer import TransformerLRSchedule
 
-
+# Transformer class. Initialize components of the transformer nerual network architecture
 class Transformer(tfk.Model):
     def __init__(self, input_vocab_size, target_vocab_size, pe_input, pe_target, hparams):
         super(Transformer, self).__init__()
         self.hparams = hparams
 
+        # Encoder
         self.encoder = Encoder(hparams['num_layers'],
                                hparams['d_model'],
                                hparams['num_heads'],
@@ -19,6 +20,7 @@ class Transformer(tfk.Model):
                                pe_input,
                                hparams['dropout_rate'])
 
+        # Decoder
         self.decoder = Decoder(hparams['num_layers'],
                                hparams['d_model'],
                                hparams['num_heads'],
@@ -36,6 +38,7 @@ class Transformer(tfk.Model):
                                              beta_2=hparams['beta_2'],
                                              epsilon=hparams['epsilon'])
 
+    # TODO
     def call(self, inp, tar, training, enc_padding_mask, look_ahead_mask, dec_padding_mask):
         eo = self.encoder(inp, training, enc_padding_mask)
 
@@ -45,6 +48,7 @@ class Transformer(tfk.Model):
 
         return fo, attention_weights
 
+    # Instruction for each training step
     @tf.function
     def train_step(self, x):
         inp, tar = x
@@ -66,7 +70,7 @@ class Transformer(tfk.Model):
 
         return loss, tar_real, predictions
 
-
+    # loss function
     def loss_function(self, real, pred):
         mask = tf.math.logical_not(tf.math.equal(real, 0))
         loss = self.loss_obj(real, pred)
@@ -76,6 +80,7 @@ class Transformer(tfk.Model):
 
         return tf.reduce_mean(loss)
 
+    # TODO
     def create_masks(self, inp, tar):
         enc_padding_mask = create_padding_mask(inp)
         dec_padding_mask = create_padding_mask(inp)
@@ -86,6 +91,7 @@ class Transformer(tfk.Model):
 
         return enc_padding_mask, combined_mask, dec_padding_mask
 
+    # TODO
     def evaluate(self, inp_sentence):
         encoder_input = tf.expand_dims(inp_sentence, 0)
 
@@ -114,4 +120,3 @@ class Transformer(tfk.Model):
             output = tf.concat([output, predicted_id], axis=-1)
 
         return tf.squeeze(output, axis=0), attention_weights
-
