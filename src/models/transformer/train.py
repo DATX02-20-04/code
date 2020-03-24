@@ -1,10 +1,12 @@
 import tensorflow as tf
 import tensorflow.keras as tfk
 import numpy as np
+import os
 from models.common.training import Trainer
 import data.process as pro
 from models.transformer.model import Transformer
 import tensorflow_datasets as tfds
+from evolve.hparams import HParams
 
 
 train_loss = tfk.metrics.Mean(name='train_loss')
@@ -29,11 +31,12 @@ def on_epoch_complete(epoch, step, duration):
     print(f"Epoch: {epoch}, Step: {step}, Loss: {train_loss.result()}, Accuracy: {train_accuracy.result()}, Duration: {duration:.3f}")
 
 def start(hparams):
+    hparams = HParams(hparams).generate()
     print(hparams)
     input_vocab_size  = 128+128+100+100
     target_vocab_size = 128+128+100+100
 
-    dataset = tf.data.Dataset.list_files('/home/big/datasets/maestro-v2.0.0/**/*.midi')
+    dataset = tf.data.Dataset.list_files(os.path.join(hparams['dataset_root'] if 'dataset_root' in hparams else './maestro-v2.0.0/', '**/*.midi'))
 
     dataset_single = pro.pipeline([
         pro.midi(),
