@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2020-03-15 Sun 22:47 -->
+<!-- 2020-03-20 Fri 21:08 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Project Log</title>
 <meta name="generator" content="Org mode" />
+<meta name="author" content="Christoffer Arvidsson" />
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
   .title  { text-align: center;
@@ -194,50 +196,28 @@
 </style>
 <link rel="stylesheet" type="text/css" href="https://gongzhitaao.org/orgcss/org.css"/>
 <script type="text/javascript">
-/*
-@licstart  The following is the entire license notice for the
-JavaScript code in this tag.
-
-Copyright (C) 2012-2019 Free Software Foundation, Inc.
-
-The JavaScript code in this tag is free software: you can
-redistribute it and/or modify it under the terms of the GNU
-General Public License (GNU GPL) as published by the Free Software
-Foundation, either version 3 of the License, or (at your option)
-any later version.  The code is distributed WITHOUT ANY WARRANTY;
-without even the implied warranty of MERCHANTABILITY or FITNESS
-FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
-
-As additional permission under GNU GPL version 3 section 7, you
-may distribute non-source (e.g., minimized or compacted) forms of
-that code without the copy of the GNU GPL normally required by
-section 4, provided you include this license notice and a URL
-through which recipients can access the Corresponding Source.
-
-
-@licend  The above is the entire license notice
-for the JavaScript code in this tag.
-*/
+// @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3-or-Later
 <!--/*--><![CDATA[/*><!--*/
- function CodeHighlightOn(elem, id)
- {
-   var target = document.getElementById(id);
-   if(null != target) {
-     elem.cacheClassElem = elem.className;
-     elem.cacheClassTarget = target.className;
-     target.className = "code-highlighted";
-     elem.className   = "code-highlighted";
-   }
- }
- function CodeHighlightOff(elem, id)
- {
-   var target = document.getElementById(id);
-   if(elem.cacheClassElem)
-     elem.className = elem.cacheClassElem;
-   if(elem.cacheClassTarget)
-     target.className = elem.cacheClassTarget;
- }
-/*]]>*///-->
+     function CodeHighlightOn(elem, id)
+     {
+       var target = document.getElementById(id);
+       if(null != target) {
+         elem.cacheClassElem = elem.className;
+         elem.cacheClassTarget = target.className;
+         target.className = "code-highlighted";
+         elem.className   = "code-highlighted";
+       }
+     }
+     function CodeHighlightOff(elem, id)
+     {
+       var target = document.getElementById(id);
+       if(elem.cacheClassElem)
+         elem.className = elem.cacheClassElem;
+       if(elem.cacheClassTarget)
+         target.className = elem.cacheClassTarget;
+     }
+    /*]]>*///-->
+// @license-end
 </script>
 </head>
 <body>
@@ -247,92 +227,109 @@ for the JavaScript code in this tag.
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org3811c4c">Introduction</a></li>
-<li><a href="#orgea10c56">Week 8</a>
+<li><a href="#org7a53360">Introduction</a></li>
+<li><a href="#org67a1726">Week 9</a>
 <ul>
-<li><a href="#org5007f8d">Progress</a>
+<li><a href="#org0d4bd4a">Progress</a>
 <ul>
-<li><a href="#orgee316c6">Training resources</a></li>
-<li><a href="#org3c0412a">Meetings</a></li>
-<li><a href="#org6e9333b">Exam week</a></li>
-<li><a href="#org3a126a4">MIDI framework</a></li>
+<li><a href="#orge406f73">Report</a></li>
+<li><a href="#orgc2e071b">Shift of focus</a></li>
+<li><a href="#orga7936b0">VAE</a></li>
+<li><a href="#orgc333acd">Transformer</a></li>
+<li><a href="#org5d984a7">Training resources</a></li>
+<li><a href="#org2a25f73">Meetings</a></li>
+<li><a href="#org5f3204b">Exam week</a></li>
 </ul>
 </li>
-<li><a href="#org1f30bce">Summary of each memeber</a></li>
-<li><a href="#org2efb09e">Next week</a></li>
+<li><a href="#orga754952">Summary of each memeber</a></li>
+<li><a href="#org3318f06">Next week</a></li>
 </ul>
 </li>
-<li><a href="#org044a3e8">Week 7</a>
+<li><a href="#org34bf90e">Week 8</a>
 <ul>
-<li><a href="#orgf925005">Important info</a></li>
-<li><a href="#orge700146">Progress</a>
+<li><a href="#orgd582e37">Progress</a>
 <ul>
-<li><a href="#orgd2b5e92">Presentation</a></li>
-<li><a href="#org0ee05c7">SpecGAN</a></li>
-<li><a href="#org7479988">New model proposal by Elias</a></li>
-<li><a href="#org2093fc8">Transformer and MIDI</a></li>
-<li><a href="#org934047e">Problems</a></li>
+<li><a href="#orgc0fd2da">Training resources</a></li>
+<li><a href="#org9702beb">Meetings</a></li>
+<li><a href="#org0d119c5">Exam week</a></li>
+<li><a href="#orgb4f2c30">MIDI framework</a></li>
 </ul>
 </li>
-<li><a href="#org023b6f2">Summary of each member</a></li>
-<li><a href="#org316cef9">Next week</a></li>
+<li><a href="#org5ff4860">Summary of each memeber</a></li>
+<li><a href="#orga40e9bf">Next week</a></li>
 </ul>
 </li>
-<li><a href="#org0e61a65">Week 6</a>
+<li><a href="#orgc69333c">Week 7</a>
 <ul>
-<li><a href="#org2094ed1">Project so far</a>
+<li><a href="#org905e395">Important info</a></li>
+<li><a href="#org64125b2">Progress</a>
 <ul>
-<li><a href="#orgc5356ea">WaveRNN</a></li>
-<li><a href="#org2d53cdb">SpecGAN</a></li>
-<li><a href="#orge97ff92">WaveNet</a></li>
-<li><a href="#org9857421">Problems</a></li>
+<li><a href="#orgfb6b92f">Presentation</a></li>
+<li><a href="#org2d88b4d">SpecGAN</a></li>
+<li><a href="#org3cee1dd">New model proposal by Elias</a></li>
+<li><a href="#org0d5979f">Transformer and MIDI</a></li>
+<li><a href="#orgb3ad5ec">Problems</a></li>
 </ul>
 </li>
-<li><a href="#org607b03a">Meetings and workshops</a></li>
-<li><a href="#orgea250d8">Summary of each member</a></li>
-<li><a href="#org1cc0404">Next week</a></li>
+<li><a href="#orgf49a3bb">Summary of each member</a></li>
+<li><a href="#org064e48c">Next week</a></li>
 </ul>
 </li>
-<li><a href="#org3317df1">Week 5</a>
+<li><a href="#orgabc63b7">Week 6</a>
 <ul>
-<li><a href="#org2b1e26f">Project plan review</a></li>
-<li><a href="#org355506d">Project so far</a>
+<li><a href="#org02a6156">Project so far</a>
 <ul>
-<li><a href="#org306e726">WaveNet</a></li>
-<li><a href="#orgdaee536">SpecGAN</a></li>
+<li><a href="#orgc589ff9">WaveRNN</a></li>
+<li><a href="#org00c14c3">SpecGAN</a></li>
+<li><a href="#org1ab06a2">WaveNet</a></li>
+<li><a href="#org4e9446c">Problems</a></li>
 </ul>
 </li>
-<li><a href="#orgef165bf">Meetings and workshops</a></li>
-<li><a href="#org3436fae">Summary of each member</a></li>
-<li><a href="#org0b150c5">Next week</a></li>
+<li><a href="#org2c16153">Meetings and workshops</a></li>
+<li><a href="#org64189fb">Summary of each member</a></li>
+<li><a href="#orge4b12e3">Next week</a></li>
 </ul>
 </li>
-<li><a href="#org3c56de8">Week 4</a>
+<li><a href="#orgc6f4733">Week 5</a>
 <ul>
-<li><a href="#org8231ac3">Time log warning</a></li>
-<li><a href="#org40027aa">Regarding project log feedback</a></li>
-<li><a href="#orgb934cb4">Meetings and workshops</a></li>
-<li><a href="#org9f2768c">Project so far</a></li>
-<li><a href="#org945743e">Summary of each member</a></li>
-</ul>
-</li>
-<li><a href="#org0b1d47c">Week 3</a>
+<li><a href="#orga190312">Project plan review</a></li>
+<li><a href="#orgaa4f2c5">Project so far</a>
 <ul>
-<li><a href="#orgbbce0d2">Problems encountered</a></li>
+<li><a href="#org07ccd1a">WaveNet</a></li>
+<li><a href="#org8112712">SpecGAN</a></li>
 </ul>
 </li>
-<li><a href="#orga28e2c2">Week 2</a></li>
-<li><a href="#org5328390">Week 1</a></li>
+<li><a href="#org9fb9529">Meetings and workshops</a></li>
+<li><a href="#orgb4c9d72">Summary of each member</a></li>
+<li><a href="#org09ad82b">Next week</a></li>
+</ul>
+</li>
+<li><a href="#org50e1ae2">Week 4</a>
+<ul>
+<li><a href="#org42507d4">Time log warning</a></li>
+<li><a href="#orgf3cc8ad">Regarding project log feedback</a></li>
+<li><a href="#orgbf9c431">Meetings and workshops</a></li>
+<li><a href="#orgc443627">Project so far</a></li>
+<li><a href="#org8668415">Summary of each member</a></li>
+</ul>
+</li>
+<li><a href="#org48ff574">Week 3</a>
+<ul>
+<li><a href="#org98eaacf">Problems encountered</a></li>
+</ul>
+</li>
+<li><a href="#org952dff2">Week 2</a></li>
+<li><a href="#org364d607">Week 1</a></li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-org3811c4c" class="outline-2">
-<h2 id="org3811c4c">Introduction</h2>
-<div class="outline-text-2" id="text-org3811c4c">
+<div id="outline-container-org7a53360" class="outline-2">
+<h2 id="org7a53360">Introduction</h2>
+<div class="outline-text-2" id="text-org7a53360">
 <p>
 This page is a shared log detailing the work the group has done and what
-challenges and problems it has encountered. For the most part, it's updated
+challenges and problems it has encountered. For the most part, it&rsquo;s updated
 weekly unless some big change happens.
 </p>
 
@@ -341,18 +338,175 @@ A time log can be found at Google Sheets: <a href="https://bit.ly/2PRKRl8">https
 </p>
 
 <p>
-The time log has exact tasks worked on each entry, for each member.
+The time log has exact tasks worked on each entry, for each
+</p>
+</div>
+</div>
+<div id="outline-container-org67a1726" class="outline-2">
+<h2 id="org67a1726">Week 9</h2>
+<div class="outline-text-2" id="text-org67a1726">
+</div>
+<div id="outline-container-org0d4bd4a" class="outline-3">
+<h3 id="org0d4bd4a">Progress</h3>
+<div class="outline-text-3" id="text-org0d4bd4a">
+</div>
+<div id="outline-container-orge406f73" class="outline-4">
+<h4 id="orge406f73">Report</h4>
+<div class="outline-text-4" id="text-orge406f73">
+<p>
+We created a very detailed outline of sections in the report that will make it
+easy to add things as we develop them. We&rsquo;ve also started writing parts of the
+Theory chapter, explaining basic concepts. Finally, we want to write about the
+models we&rsquo;ve implemented and tested.
 </p>
 </div>
 </div>
 
-<div id="outline-container-orgea10c56" class="outline-2">
-<h2 id="orgea10c56">Week 8</h2>
-<div class="outline-text-2" id="text-orgea10c56">
+<div id="outline-container-orgc2e071b" class="outline-4">
+<h4 id="orgc2e071b">Shift of focus</h4>
+<div class="outline-text-4" id="text-orgc2e071b">
+<p>
+We decided to shift our focus entirely to the transformer and variational auto
+encoder since we felt the wave2midi2wave wouldn&rsquo;t pan out in a way we would
+hope.
+</p>
 </div>
-<div id="outline-container-org5007f8d" class="outline-3">
-<h3 id="org5007f8d">Progress</h3>
-<div class="outline-text-3" id="text-org5007f8d">
+</div>
+
+<div id="outline-container-orga7936b0" class="outline-4">
+<h4 id="orga7936b0">VAE</h4>
+<div class="outline-text-4" id="text-orga7936b0">
+<p>
+Elias and cao are assigned to this task, but since exams, not a lot of progress
+in this area has been made this week. It has however had similiar results to
+what specGAN is doing, and much research into it is still being done.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgc333acd" class="outline-4">
+<h4 id="orgc333acd">Transformer</h4>
+<div class="outline-text-4" id="text-orgc333acd">
+<p>
+The transformer is meant to deal with the structure of music. It trains on MIDI,
+learning the relationships between sequences of MIDI notes and outputs the most
+appropriate notes. The aim of this model is to connect it with the note
+generation to generate complete music.
+</p>
+
+<p>
+We&rsquo;ve been working towards getting the music transformer model running and also
+implementing our own. This week, we managed to run both and generate results.
+Below are the audio snippets of the two.
+</p>
+
+<p>
+<b>Our music transformer with prior</b>
+</p>
+
+<p>
+<audio controls="controls" src="audio/mutrans_our_prior.wav"></audio>
+</p>
+
+<p>
+<audio controls="controls" src="audio/mutrans_our_prior2.wav"></audio>
+</p>
+
+<p>
+<b>Music transformer implementation found online without prior</b>
+</p>
+
+<p>
+<audio controls="controls" src="audio/mutrans_test.wav"></audio>
+</p>
+
+<p>
+As you can hear, all three examples have structure, which is very promising. We
+will continue working on these and later connecting it with our note generation!
+</p>
+</div>
+</div>
+
+<div id="outline-container-org5d984a7" class="outline-4">
+<h4 id="org5d984a7">Training resources</h4>
+<div class="outline-text-4" id="text-org5d984a7">
+<p>
+We got access to another training platform, Bayes at DS&amp;AI division. This server
+has much better hardware than the previous one, but restrictions when it comes
+to time slots to train and amount of training. We&rsquo;ll eventually use it to most
+likely train the transformer since it requires better specs than we had.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org2a25f73" class="outline-4">
+<h4 id="org2a25f73">Meetings</h4>
+<div class="outline-text-4" id="text-org2a25f73">
+<p>
+Meetings has been going well online, we try to work more in voice calls and limit
+how much we meet in person. It is still challenging ensuring everyone has tasks
+to work on and ensuring everyone is on the same page.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org5f3204b" class="outline-4">
+<h4 id="org5f3204b">Exam week</h4>
+<div class="outline-text-4" id="text-org5f3204b">
+<p>
+Still exam week so some members haven&rsquo;t gotten a lot done.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orga754952" class="outline-3">
+<h3 id="orga754952">Summary of each memeber</h3>
+<div class="outline-text-3" id="text-orga754952">
+<ul class="org-ul">
+<li><b>Christoffer</b>: Work on issues in the github like structuring repo, Also
+structured and started writing the report (signal processing in theory). A
+lot of the time is writing scripts to generate plots we can use in the
+report. Wrote guide on how to use training computer.</li>
+<li><b>Eric</b>: Work on transformer, refactoring and general implementation details
+(refactor project and split parts of code into separate runnable scripts).
+Big issue for transformers is memory to train for long sequences and the
+model copying it’s prior (initial input).</li>
+<li><b>Carl</b>: Deploy script, refactoring and reviewing github pull requests. Wrote
+a progressbar module for our training scripts, showing progress of training.</li>
+<li><b>Lovisa</b>: Skeleton/outline of report and also started on implementing
+wasserstein loss for specgan(math heavy so complete study mode of the
+math). Progress in understanding the subject so will add to report. Had
+trouble setting up repo (our repo) on laptop, carl helped with that.</li>
+<li><b>Cao</b>: Set up things for the remote computer. Has been busy with other
+courses to really participate much. Also as been missing an assigned task
+which us in the group are working on fixing for next week.</li>
+<li><b>Elias</b>: Not a lot of work since last meeting, mostly focused on other course
+due to exam week.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org3318f06" class="outline-3">
+<h3 id="org3318f06">Next week</h3>
+<div class="outline-text-3" id="text-org3318f06">
+<ul class="org-ul">
+<li>Keep writing report</li>
+<li>Continue work on music transformer</li>
+<li>More extensive training with training computer and potentially Bayes</li>
+<li>Create more throrough tests (unit and integration) (from last week)</li>
+<li>Write a bunch of utility functions (flags, plotting etc). (from last week)</li>
+<li>Continue work on the VAE and maybe begin connecting everything</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org34bf90e" class="outline-2">
+<h2 id="org34bf90e">Week 8</h2>
+<div class="outline-text-2" id="text-org34bf90e">
+</div>
+<div id="outline-container-orgd582e37" class="outline-3">
+<h3 id="orgd582e37">Progress</h3>
+<div class="outline-text-3" id="text-orgd582e37">
 <p>
 In general, because of the pandemic and exams, the project progressed less
 than other weeks. There have been some progress with audio generation, but it
@@ -360,9 +514,9 @@ is hard to include audio snippets into this page so maybe they will exist in
 our repo at some point.
 </p>
 </div>
-<div id="outline-container-orgee316c6" class="outline-4">
-<h4 id="orgee316c6">Training resources</h4>
-<div class="outline-text-4" id="text-orgee316c6">
+<div id="outline-container-orgc0fd2da" class="outline-4">
+<h4 id="orgc0fd2da">Training resources</h4>
+<div class="outline-text-4" id="text-orgc0fd2da">
 <p>
 We finally gained access to a computer we can use for training. This means a
 lot of our time was spent on setup of this computer and porting of our colab
@@ -370,37 +524,39 @@ code to work on it.
 </p>
 </div>
 </div>
-<div id="outline-container-org3c0412a" class="outline-4">
-<h4 id="org3c0412a">Meetings</h4>
-<div class="outline-text-4" id="text-org3c0412a">
+<div id="outline-container-org9702beb" class="outline-4">
+<h4 id="org9702beb">Meetings</h4>
+<div class="outline-text-4" id="text-org9702beb">
 <p>
-Due to the pandemic, we've decided to hold all meetings (including
-supervision) online.
+Due to the pandemic, we may start holding meetings online rather than in
+person (if multiple people message about not being able to join).
+Supervision meetings are all held online for now on until further notice
+from Chalmers.
 </p>
 </div>
 </div>
-<div id="outline-container-org6e9333b" class="outline-4">
-<h4 id="org6e9333b">Exam week</h4>
-<div class="outline-text-4" id="text-org6e9333b">
+<div id="outline-container-org0d119c5" class="outline-4">
+<h4 id="org0d119c5">Exam week</h4>
+<div class="outline-text-4" id="text-org0d119c5">
 <p>
 Because it is exam time for other courses, a lot of group members had to
 spend their time studying for those or writing reports.
 </p>
 </div>
 </div>
-<div id="outline-container-org3a126a4" class="outline-4">
-<h4 id="org3a126a4">MIDI framework</h4>
-<div class="outline-text-4" id="text-org3a126a4">
+<div id="outline-container-orgb4f2c30" class="outline-4">
+<h4 id="orgb4f2c30">MIDI framework</h4>
+<div class="outline-text-4" id="text-orgb4f2c30">
 <p>
 We now have a MIDI pipeline and library written, so we can now use this to
-create our models (as we've already begun to some extent).
+create our models (as we&rsquo;ve already begun to some extent).
 </p>
 </div>
 </div>
 </div>
-<div id="outline-container-org1f30bce" class="outline-3">
-<h3 id="org1f30bce">Summary of each memeber</h3>
-<div class="outline-text-3" id="text-org1f30bce">
+<div id="outline-container-org5ff4860" class="outline-3">
+<h3 id="org5ff4860">Summary of each memeber</h3>
+<div class="outline-text-3" id="text-org5ff4860">
 <ul class="org-ul">
 <li><b>Christoffer</b>: Wrote code for flags used in specgan for training. Started
 training gansynth specgan on training computer. Kept communication for
@@ -415,9 +571,9 @@ transformer.</li>
 </ul>
 </div>
 </div>
-<div id="outline-container-org2efb09e" class="outline-3">
-<h3 id="org2efb09e">Next week</h3>
-<div class="outline-text-3" id="text-org2efb09e">
+<div id="outline-container-orga40e9bf" class="outline-3">
+<h3 id="orga40e9bf">Next week</h3>
+<div class="outline-text-3" id="text-orga40e9bf">
 <ul class="org-ul">
 <li>Keep writing report</li>
 <li>Continue work on music transformer</li>
@@ -430,15 +586,15 @@ transformer.</li>
 </div>
 </div>
 
-<div id="outline-container-org044a3e8" class="outline-2">
-<h2 id="org044a3e8">Week 7</h2>
-<div class="outline-text-2" id="text-org044a3e8">
+<div id="outline-container-orgc69333c" class="outline-2">
+<h2 id="orgc69333c">Week 7</h2>
+<div class="outline-text-2" id="text-orgc69333c">
 </div>
-<div id="outline-container-orgf925005" class="outline-3">
-<h3 id="orgf925005">Important info</h3>
-<div class="outline-text-3" id="text-orgf925005">
+<div id="outline-container-org905e395" class="outline-3">
+<h3 id="org905e395">Important info</h3>
+<div class="outline-text-3" id="text-org905e395">
 <p>
-We've migrated to a new drive, which means larger storage capacity but also
+We&rsquo;ve migrated to a new drive, which means larger storage capacity but also
 means the timelog link has been updated to a new link. Our progress will not
 be updated on the old link so make sure you check the new one!
 </p>
@@ -446,20 +602,20 @@ be updated on the old link so make sure you check the new one!
 <p>
 Also regarding the time log feedback about members not putting in enough
 time, due to the IT part of our group having more work to do regarding other
-courses, we've opted for them to only work 16h a week until next week. They
+courses, we&rsquo;ve opted for them to only work 16h a week until next week. They
 will account for this by working 24h later. We also update the time log every
 Friday so if a week is missing
 </p>
 </div>
 </div>
 
-<div id="outline-container-orge700146" class="outline-3">
-<h3 id="orge700146">Progress</h3>
-<div class="outline-text-3" id="text-orge700146">
+<div id="outline-container-org64125b2" class="outline-3">
+<h3 id="org64125b2">Progress</h3>
+<div class="outline-text-3" id="text-org64125b2">
 </div>
-<div id="outline-container-orgd2b5e92" class="outline-4">
-<h4 id="orgd2b5e92">Presentation</h4>
-<div class="outline-text-4" id="text-orgd2b5e92">
+<div id="outline-container-orgfb6b92f" class="outline-4">
+<h4 id="orgfb6b92f">Presentation</h4>
+<div class="outline-text-4" id="text-orgfb6b92f">
 <p>
 We held the half time presentation and were satisfied with it, though we
 still have some problems we want to work out regarding the scope of the
@@ -467,11 +623,11 @@ project.
 </p>
 </div>
 </div>
-<div id="outline-container-org0ee05c7" class="outline-4">
-<h4 id="org0ee05c7">SpecGAN</h4>
-<div class="outline-text-4" id="text-org0ee05c7">
+<div id="outline-container-org2d88b4d" class="outline-4">
+<h4 id="org2d88b4d">SpecGAN</h4>
+<div class="outline-text-4" id="text-org2d88b4d">
 <p>
-All we've done on specGAN this week is to setup training environment and
+All we&rsquo;ve done on specGAN this week is to setup training environment and
 checkpointing so that we can train it for a longer period of time.
 </p>
 
@@ -483,7 +639,7 @@ electric guitar, which sound very different.
 
 
 <div class="figure">
-<p><img src="Week 7/result_2020-03-06_12-41-39.gif" alt="result_2020-03-06_12-41-39.gif" />
+<p><img src="Week%207/result_2020-03-06_12-41-39.gif" alt="result_2020-03-06_12-41-39.gif" />
 </p>
 </div>
 
@@ -493,14 +649,14 @@ This is a GIF of the training from epoch 0 to epoch ~140. Not much to say other 
 
 
 <div class="figure">
-<p><img src="Week 7/image_2020-03-06_12-43-03.png" alt="image_2020-03-06_12-43-03.png" />
+<p><img src="Week%207/image_2020-03-06_12-43-03.png" alt="image_2020-03-06_12-43-03.png" />
 </p>
 </div>
 
 <p>
 This image show a longer training period, epoch ~640 of a different seed. As you
 can see, the spectrograms here resemble the real ones calculated in week 5. I
-realised I haven't explained how a spectrogram works:
+realised I haven&rsquo;t explained how a spectrogram works:
 </p>
 
 <ul class="org-ul">
@@ -539,12 +695,12 @@ to be specified for this inversion to be done correctly and sound okay.
 </div>
 </div>
 
-<div id="outline-container-org7479988" class="outline-4">
-<h4 id="org7479988">New model proposal by Elias</h4>
-<div class="outline-text-4" id="text-org7479988">
+<div id="outline-container-org3cee1dd" class="outline-4">
+<h4 id="org3cee1dd">New model proposal by Elias</h4>
+<div class="outline-text-4" id="text-org3cee1dd">
 
 <div class="figure">
-<p><img src="Week 7/MVIMG_20200306_125637_2020-03-06_13-00-04.jpg" alt="MVIMG_20200306_125637_2020-03-06_13-00-04.jpg" />
+<p><img src="Week%207/MVIMG_20200306_125637_2020-03-06_13-00-04.jpg" alt="MVIMG_20200306_125637_2020-03-06_13-00-04.jpg" />
 </p>
 </div>
 
@@ -564,9 +720,9 @@ gets an additional loss that ensures that the new encoding is similar to the enc
 </div>
 </div>
 
-<div id="outline-container-org2093fc8" class="outline-4">
-<h4 id="org2093fc8">Transformer and MIDI</h4>
-<div class="outline-text-4" id="text-org2093fc8">
+<div id="outline-container-org0d5979f" class="outline-4">
+<h4 id="org0d5979f">Transformer and MIDI</h4>
+<div class="outline-text-4" id="text-org0d5979f">
 <p>
 In the transoformer regard, we are working on getting the MIDI pipeline done
 so that we can train the transformers on midi data. The dataset for this is
@@ -581,15 +737,15 @@ details of raw audio and structure of MIDI.
 </p>
 
 <p>
-So far, there's a lot of research about transformers and how other models
+So far, there&rsquo;s a lot of research about transformers and how other models
 have encoded MIDI for use with machine learning.
 </p>
 </div>
 </div>
 
-<div id="outline-container-org934047e" class="outline-4">
-<h4 id="org934047e">Problems</h4>
-<div class="outline-text-4" id="text-org934047e">
+<div id="outline-container-orgb3ad5ec" class="outline-4">
+<h4 id="orgb3ad5ec">Problems</h4>
+<div class="outline-text-4" id="text-orgb3ad5ec">
 <ul class="org-ul">
 <li><b>Resources</b>: Still no reply about resources for training on chalmers. Sent
 another mail asking for a response since it has been a week.</li>
@@ -602,9 +758,9 @@ distributing the hours difficult.</li>
 </div>
 </div>
 
-<div id="outline-container-org023b6f2" class="outline-3">
-<h3 id="org023b6f2">Summary of each member</h3>
-<div class="outline-text-3" id="text-org023b6f2">
+<div id="outline-container-orgf49a3bb" class="outline-3">
+<h3 id="orgf49a3bb">Summary of each member</h3>
+<div class="outline-text-3" id="text-orgf49a3bb">
 <ul class="org-ul">
 <li><b>Christoffer</b>: Helped with structuring the presentation. Trained a specGAN to
 generate nice looking images (lots of bug testing and hyperparameter tuning
@@ -631,9 +787,9 @@ representations.</li>
 </ul>
 </div>
 </div>
-<div id="outline-container-org316cef9" class="outline-3">
-<h3 id="org316cef9">Next week</h3>
-<div class="outline-text-3" id="text-org316cef9">
+<div id="outline-container-org064e48c" class="outline-3">
+<h3 id="org064e48c">Next week</h3>
+<div class="outline-text-3" id="text-org064e48c">
 <ul class="org-ul">
 <li>We got the recommendation to just work on implementation, but we have quite
 a bit of things we could add to the report already.</li>
@@ -645,16 +801,16 @@ a bit of things we could add to the report already.</li>
 </div>
 </div>
 
-<div id="outline-container-org0e61a65" class="outline-2">
-<h2 id="org0e61a65">Week 6</h2>
-<div class="outline-text-2" id="text-org0e61a65">
+<div id="outline-container-orgabc63b7" class="outline-2">
+<h2 id="orgabc63b7">Week 6</h2>
+<div class="outline-text-2" id="text-orgabc63b7">
 <p>
 We spent parts of the week revising the project plan, which is now accepted.
 </p>
 </div>
-<div id="outline-container-org2094ed1" class="outline-3">
-<h3 id="org2094ed1">Project so far</h3>
-<div class="outline-text-3" id="text-org2094ed1">
+<div id="outline-container-org02a6156" class="outline-3">
+<h3 id="org02a6156">Project so far</h3>
+<div class="outline-text-3" id="text-org02a6156">
 <p>
 The goal for the past two weeks have been generating a note. There has been a
 considerable amount of effort put towards this. Below some results are shown
@@ -663,43 +819,43 @@ linking to them)
 </p>
 </div>
 
-<div id="outline-container-orgc5356ea" class="outline-4">
-<h4 id="orgc5356ea">WaveRNN</h4>
-<div class="outline-text-4" id="text-orgc5356ea">
+<div id="outline-container-orgc589ff9" class="outline-4">
+<h4 id="orgc589ff9">WaveRNN</h4>
+<div class="outline-text-4" id="text-orgc589ff9">
 
 <div class="figure">
-<p><img src="Week 6/tacotron_wavernn_2020-02-29_11-20-30.png" alt="tacotron_wavernn_2020-02-29_11-20-30.png" />
+<p><img src="Week%206/tacotron_wavernn_2020-02-29_11-20-30.png" alt="tacotron_wavernn_2020-02-29_11-20-30.png" />
 </p>
 </div>
 
 
 <p>
 Eric managed to generate something loosely sounding like a flute using this
-model. Loosely as in it's clearly a wind instrument and it is a recognizable
+model. Loosely as in it&rsquo;s clearly a wind instrument and it is a recognizable
 note with overtones but it still needs some work/training.
 </p>
 </div>
 </div>
 
-<div id="outline-container-org2d53cdb" class="outline-4">
-<h4 id="org2d53cdb">SpecGAN</h4>
-<div class="outline-text-4" id="text-org2d53cdb">
+<div id="outline-container-org00c14c3" class="outline-4">
+<h4 id="org00c14c3">SpecGAN</h4>
+<div class="outline-text-4" id="text-org00c14c3">
 <p>
 Unfortuneately, the results from this model look decent, but sound terrible.
-It doesn't quite follow the implementation specGAN used, so that is an area we could improve.
+It doesn&rsquo;t quite follow the implementation specGAN used, so that is an area we could improve.
 </p>
 
 
 <div class="figure">
-<p><img src="Week 6/iVBORw0KGg_2020-02-29_11-15-02.png" alt="iVBORw0KGg_2020-02-29_11-15-02.png" />
+<p><img src="Week%206/iVBORw0KGg_2020-02-29_11-15-02.png" alt="iVBORw0KGg_2020-02-29_11-15-02.png" />
 </p>
 </div>
 </div>
 </div>
 
-<div id="outline-container-orge97ff92" class="outline-4">
-<h4 id="orge97ff92">WaveNet</h4>
-<div class="outline-text-4" id="text-orge97ff92">
+<div id="outline-container-org1ab06a2" class="outline-4">
+<h4 id="org1ab06a2">WaveNet</h4>
+<div class="outline-text-4" id="text-org1ab06a2">
 <p>
 Carl attempted training WaveNet, which when listening could produce both
 sine and square waves.
@@ -707,16 +863,16 @@ sine and square waves.
 
 
 <div class="figure">
-<p><img src="Week 6/1280px-Waveforms.svg_2020-02-29_11-23-23.png" alt="1280px-Waveforms.svg_2020-02-29_11-23-23.png" />
+<p><img src="Week%206/1280px-Waveforms.svg_2020-02-29_11-23-23.png" alt="1280px-Waveforms.svg_2020-02-29_11-23-23.png" />
 </p>
 </div>
 </div>
 </div>
 
 
-<div id="outline-container-org9857421" class="outline-4">
-<h4 id="org9857421">Problems</h4>
-<div class="outline-text-4" id="text-org9857421">
+<div id="outline-container-org4e9446c" class="outline-4">
+<h4 id="org4e9446c">Problems</h4>
+<div class="outline-text-4" id="text-org4e9446c">
 <p>
 <b>Too ambitions</b>: The project is very ambitious. The workflow of starting on
 simple tasks (generating a note etc) and building on those with sprints
@@ -725,23 +881,23 @@ what the end product will be.
 </p>
 
 <p>
-<b>Better planning</b>: We've realised we need a better system for distributing
+<b>Better planning</b>: We&rsquo;ve realised we need a better system for distributing
 tasks to the members. Right now you could easily not know what to work. Our
 idea is to use Trello for this, but that requires setup and splitting tasks
 into even smaller tasks.
 </p>
 
 <p>
-<b>Resources</b>: We need better resources for training. We've started asking about
+<b>Resources</b>: We need better resources for training. We&rsquo;ve started asking about
 these things. Hopefully we will get an answer next week.
 </p>
 </div>
 </div>
 </div>
 
-<div id="outline-container-org607b03a" class="outline-3">
-<h3 id="org607b03a">Meetings and workshops</h3>
-<div class="outline-text-3" id="text-org607b03a">
+<div id="outline-container-org2c16153" class="outline-3">
+<h3 id="org2c16153">Meetings and workshops</h3>
+<div class="outline-text-3" id="text-org2c16153">
 <p>
 Nothing special, most meetings regarded the project plan, the first
 presentation or just working on the two models explained last week.
@@ -749,9 +905,9 @@ presentation or just working on the two models explained last week.
 </div>
 </div>
 
-<div id="outline-container-orgea250d8" class="outline-3">
-<h3 id="orgea250d8">Summary of each member</h3>
-<div class="outline-text-3" id="text-orgea250d8">
+<div id="outline-container-org64189fb" class="outline-3">
+<h3 id="org64189fb">Summary of each member</h3>
+<div class="outline-text-3" id="text-org64189fb">
 <ul class="org-ul">
 <li>Christoffer: Mostly worked on plan and the specGAN model. Also started a
 bit on final report and helped with presentation. Also been handling
@@ -777,9 +933,9 @@ far.</li>
 </div>
 </div>
 
-<div id="outline-container-org1cc0404" class="outline-3">
-<h3 id="org1cc0404">Next week</h3>
-<div class="outline-text-3" id="text-org1cc0404">
+<div id="outline-container-orge4b12e3" class="outline-3">
+<h3 id="orge4b12e3">Next week</h3>
+<div class="outline-text-3" id="text-orge4b12e3">
 <ul class="org-ul">
 <li>Presentation on tuesday</li>
 <li>Tweak/train note generation models</li>
@@ -790,9 +946,9 @@ far.</li>
 </div>
 </div>
 
-<div id="outline-container-org3317df1" class="outline-2">
-<h2 id="org3317df1">Week 5</h2>
-<div class="outline-text-2" id="text-org3317df1">
+<div id="outline-container-orgc6f4733" class="outline-2">
+<h2 id="orgc6f4733">Week 5</h2>
+<div class="outline-text-2" id="text-orgc6f4733">
 <p>
 We spent this week working on implementing two kinds of models:
 </p>
@@ -807,9 +963,9 @@ The main purpose of this was to generate a note using the NSynth dataset
 </p>
 </div>
 
-<div id="outline-container-org2b1e26f" class="outline-3">
-<h3 id="org2b1e26f">Project plan review</h3>
-<div class="outline-text-3" id="text-org2b1e26f">
+<div id="outline-container-orga190312" class="outline-3">
+<h3 id="orga190312">Project plan review</h3>
+<div class="outline-text-3" id="text-orga190312">
 <p>
 After a meeting with our examiner, there were a fair amount of things that
 needed to be changed in the plan.
@@ -831,20 +987,20 @@ will also try to send it to our supervisor by Monday/Tuesday.
 </div>
 </div>
 
-<div id="outline-container-org355506d" class="outline-3">
-<h3 id="org355506d">Project so far</h3>
-<div class="outline-text-3" id="text-org355506d">
+<div id="outline-container-orgaa4f2c5" class="outline-3">
+<h3 id="orgaa4f2c5">Project so far</h3>
+<div class="outline-text-3" id="text-orgaa4f2c5">
 <p>
 So far, a lot of work has been going on using colab, a notebook editor in
 Google drive. It allows limited access to GPUs which makes it great for
-smaller experimentation of models. In the future, we'll want to either pay
+smaller experimentation of models. In the future, we&rsquo;ll want to either pay
 for access to GPUs, or try and use Chalmers GPU clusters.
 </p>
 </div>
 
-<div id="outline-container-org306e726" class="outline-4">
-<h4 id="org306e726">WaveNet</h4>
-<div class="outline-text-4" id="text-org306e726">
+<div id="outline-container-org07ccd1a" class="outline-4">
+<h4 id="org07ccd1a">WaveNet</h4>
+<div class="outline-text-4" id="text-org07ccd1a">
 <p>
 WaveNet requires the amplitudes to be encoded to something that is easier
 for the network to work with. This is done using mu<sub>law</sub> encoding, which is
@@ -854,9 +1010,9 @@ small amplitudes than large ones.
 </div>
 </div>
 
-<div id="outline-container-orgdaee536" class="outline-4">
-<h4 id="orgdaee536">SpecGAN</h4>
-<div class="outline-text-4" id="text-orgdaee536">
+<div id="outline-container-org8112712" class="outline-4">
+<h4 id="org8112712">SpecGAN</h4>
+<div class="outline-text-4" id="text-org8112712">
 <p>
 We were originally going to implement GAN-TTS, but because of its
 complexity, we decided to implement something simpler first. As mentioned,
@@ -865,7 +1021,7 @@ model using images (spectrographs).
 </p>
 
 
-<div id="org1b80dbd" class="figure">
+<div id="org6ffb02a" class="figure">
 <p><img src="./img/week5specs.png" alt="week5specs.png" />
 </p>
 <p><span class="figure-number">Figure 7: </span>Spectrographs for 10 different notes generated</p>
@@ -889,9 +1045,9 @@ required to suit our needs.
 </div>
 </div>
 
-<div id="outline-container-orgef165bf" class="outline-3">
-<h3 id="orgef165bf">Meetings and workshops</h3>
-<div class="outline-text-3" id="text-orgef165bf">
+<div id="outline-container-org9fb9529" class="outline-3">
+<h3 id="org9fb9529">Meetings and workshops</h3>
+<div class="outline-text-3" id="text-org9fb9529">
 <p>
 Meetings and workshops were spent working on the two models in groups of
 three people. Working in groups ensures everyone is learning and are helping
@@ -900,9 +1056,9 @@ eachother.
 </div>
 </div>
 
-<div id="outline-container-org3436fae" class="outline-3">
-<h3 id="org3436fae">Summary of each member</h3>
-<div class="outline-text-3" id="text-org3436fae">
+<div id="outline-container-orgb4c9d72" class="outline-3">
+<h3 id="orgb4c9d72">Summary of each member</h3>
+<div class="outline-text-3" id="text-orgb4c9d72">
 <ul class="org-ul">
 <li>Christoffer: Work on the SpecGAN model, specifically the part of converting the entire NSynth dataset into spectrograph images</li>
 <li>Eric: Work on preprocessing of data, like using the mu-law algorithm. Also been trying to implement a smaller version of wavenet and learning how to do custom training loops.</li>
@@ -914,9 +1070,9 @@ eachother.
 </div>
 </div>
 
-<div id="outline-container-org0b150c5" class="outline-3">
-<h3 id="org0b150c5">Next week</h3>
-<div class="outline-text-3" id="text-org0b150c5">
+<div id="outline-container-org09ad82b" class="outline-3">
+<h3 id="org09ad82b">Next week</h3>
+<div class="outline-text-3" id="text-org09ad82b">
 <ol class="org-ol">
 <li>Complete the project plan</li>
 <li>Start basic work on project report</li>
@@ -927,31 +1083,31 @@ eachother.
 </div>
 </div>
 
-<div id="outline-container-org3c56de8" class="outline-2">
-<h2 id="org3c56de8">Week 4</h2>
-<div class="outline-text-2" id="text-org3c56de8">
+<div id="outline-container-org50e1ae2" class="outline-2">
+<h2 id="org50e1ae2">Week 4</h2>
+<div class="outline-text-2" id="text-org50e1ae2">
 <p>
 Most of this weeks time was spent on planning and writing the project plan.
 </p>
 </div>
 
-<div id="outline-container-org8231ac3" class="outline-3">
-<h3 id="org8231ac3">Time log warning</h3>
-<div class="outline-text-3" id="text-org8231ac3">
+<div id="outline-container-org42507d4" class="outline-3">
+<h3 id="org42507d4">Time log warning</h3>
+<div class="outline-text-3" id="text-org42507d4">
 <p>
 Apparently the expected work amount up to (and including) week 3 was an average of
 72 hours (according to mail sent to supervisor). Unless this is an error, that
 would mean 24 hours worked per week on average. The information we received
-was that it's expected to work 20 hours a week, but that initially that is
-hard to achieve. In case it's not an error, we are aware of it but it doesn't
-match information we've gotten earlier.
+was that it&rsquo;s expected to work 20 hours a week, but that initially that is
+hard to achieve. In case it&rsquo;s not an error, we are aware of it but it doesn&rsquo;t
+match information we&rsquo;ve gotten earlier.
 </p>
 </div>
 </div>
 
-<div id="outline-container-org40027aa" class="outline-3">
-<h3 id="org40027aa">Regarding project log feedback</h3>
-<div class="outline-text-3" id="text-org40027aa">
+<div id="outline-container-orgf3cc8ad" class="outline-3">
+<h3 id="orgf3cc8ad">Regarding project log feedback</h3>
+<div class="outline-text-3" id="text-orgf3cc8ad">
 <p>
 I appreciate the feedback regarding the project log but want to explain something.
 So far, most of the work that has been done is either research (paper and
@@ -959,7 +1115,7 @@ presentation for group), writing contract/plan or minor implementation.
 </p>
 
 <p>
-I mention this because so far, there's very little to talk about regarding
+I mention this because so far, there&rsquo;s very little to talk about regarding
 individual performance here. We could spend a lot of time detailing
 everything done, but that is much better done in the time log above. The
 point is, up to this point there has been a lot of shared work.
@@ -972,9 +1128,9 @@ should be easier to write as more individual tasks will be delegated.
 </div>
 </div>
 
-<div id="outline-container-orgb934cb4" class="outline-3">
-<h3 id="orgb934cb4">Meetings and workshops</h3>
-<div class="outline-text-3" id="text-orgb934cb4">
+<div id="outline-container-orgbf9c431" class="outline-3">
+<h3 id="orgbf9c431">Meetings and workshops</h3>
+<div class="outline-text-3" id="text-orgbf9c431">
 <p>
 A meeting with chalmers writing was booked, but since that required two groups
 to sign up, the meeting never went through. We will try to book another one,
@@ -992,9 +1148,9 @@ bachelor theses.
 </div>
 </div>
 
-<div id="outline-container-org9f2768c" class="outline-3">
-<h3 id="org9f2768c">Project so far</h3>
-<div class="outline-text-3" id="text-org9f2768c">
+<div id="outline-container-orgc443627" class="outline-3">
+<h3 id="orgc443627">Project so far</h3>
+<div class="outline-text-3" id="text-orgc443627">
 <p>
 The project plan is complete. Some initial trial and error has been
 performed, though generating anything close to music is far off. According to
@@ -1004,18 +1160,18 @@ machine learning.
 
 <p>
 A issue we currently face seems to be storage space. Datasets take a fair
-amount of space, yet have to be loaded when training. We're currently waiting
+amount of space, yet have to be loaded when training. We&rsquo;re currently waiting
 for a reply regarding using Chalmers computing clusters but other options are
 available at a price. The canvas page does not specify whether pricing for
-such clusters are included in the 3000kr budget (as they don't fall under
+such clusters are included in the 3000kr budget (as they don&rsquo;t fall under
 components or software), so that will have to be investigated.
 </p>
 </div>
 </div>
 
-<div id="outline-container-org945743e" class="outline-3">
-<h3 id="org945743e">Summary of each member</h3>
-<div class="outline-text-3" id="text-org945743e">
+<div id="outline-container-org8668415" class="outline-3">
+<h3 id="org8668415">Summary of each member</h3>
+<div class="outline-text-3" id="text-org8668415">
 <p>
 We will use this section to detail problemsolving/tasks delegated to members.
 Besides everyone working on the project plan, here are some tasks solved by each member
@@ -1026,7 +1182,7 @@ Besides everyone working on the project plan, here are some tasks solved by each
 writing his own javascript script. Also have been very active in initial
 development and testing of ideas using google colab.</li>
 <li>Carl: Ensured our latex documents have proper systems for commenting and change requesting, which helped writing the plan immensely.</li>
-<li>Lovisa: Contacted AIVA (AI music company) for info on how their product worked but didn't get much back from them. Also went through tensorflow guides.</li>
+<li>Lovisa: Contacted AIVA (AI music company) for info on how their product worked but didn&rsquo;t get much back from them. Also went through tensorflow guides.</li>
 <li>Cao: Research autoencoders and attempted implementing and training basic models using Keras and tensorflow</li>
 <li><p>
 Elias: Made an architecture proposal (shown below), which we will look into more next week.
@@ -1041,9 +1197,9 @@ Elias: Made an architecture proposal (shown below), which we will look into more
 </div>
 </div>
 
-<div id="outline-container-org0b1d47c" class="outline-2">
-<h2 id="org0b1d47c">Week 3</h2>
-<div class="outline-text-2" id="text-org0b1d47c">
+<div id="outline-container-org48ff574" class="outline-2">
+<h2 id="org48ff574">Week 3</h2>
+<div class="outline-text-2" id="text-org48ff574">
 <p>
 As per usual, the week began with a meeting on Tuesday followed by a longer
 workshop. During the meeting, the members went through what they had worked on
@@ -1072,14 +1228,14 @@ this brought the draft much closer to the final writeup.
 
 <p>
 There is still work to be done on the plan. The deadline is next friday with
-the groups' deadline being set to Wednesday. Therefore, the next week will
+the groups&rsquo; deadline being set to Wednesday. Therefore, the next week will
 primarily deal with finishing the project plan.
 </p>
 </div>
 
-<div id="outline-container-orgbbce0d2" class="outline-3">
-<h3 id="orgbbce0d2">Problems encountered</h3>
-<div class="outline-text-3" id="text-orgbbce0d2">
+<div id="outline-container-org98eaacf" class="outline-3">
+<h3 id="org98eaacf">Problems encountered</h3>
+<div class="outline-text-3" id="text-org98eaacf">
 <p>
 Because the group is not used to writing a research project plan but rather a
 product project plan, one of the greatest obstacles have been defining what
@@ -1097,9 +1253,9 @@ that there is available time later on.
 </div>
 
 
-<div id="outline-container-orga28e2c2" class="outline-2">
-<h2 id="orga28e2c2">Week 2</h2>
-<div class="outline-text-2" id="text-orga28e2c2">
+<div id="outline-container-org952dff2" class="outline-2">
+<h2 id="org952dff2">Week 2</h2>
+<div class="outline-text-2" id="text-org952dff2">
 <p>
 The week began with a meeting on tuesday, during which a number of points were brought up
 </p>
@@ -1126,7 +1282,7 @@ goal of them is to spark discussions, which it was very effective at.
 </p>
 
 <p>
-Because Cao only returned on thursday, the contract wasn't sent to our
+Because Cao only returned on thursday, the contract wasn&rsquo;t sent to our
 supervisor until Friday evening, after the meeting. The contract is now
 considered finished.
 </p>
@@ -1145,9 +1301,9 @@ Next week will be focused on the project plan and another research meeting.
 </div>
 </div>
 
-<div id="outline-container-org5328390" class="outline-2">
-<h2 id="org5328390">Week 1</h2>
-<div class="outline-text-2" id="text-org5328390">
+<div id="outline-container-org364d607" class="outline-2">
+<h2 id="org364d607">Week 1</h2>
+<div class="outline-text-2" id="text-org364d607">
 <p>
 Since this is the first week of the project, the majority of it has been
 discussing the project and reading up on research papers. We started the week
