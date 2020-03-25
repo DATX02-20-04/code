@@ -6,8 +6,11 @@ import data.process as pro
 from models.transformer.model import Transformer
 import tensorflow_datasets as tfds
 
+''' #TODO '''
 
 def generate(transformer, epoch, seed):
+    ''' generate
+        #TODO '''
     output = seed
     print(output)
     outputs = []
@@ -20,6 +23,8 @@ def generate(transformer, epoch, seed):
 
 
 def start(hparams):
+    ''' start
+        #TODO '''
     input_vocab_size  = 128+128+100+100
     target_vocab_size = 128+128+100+100
 

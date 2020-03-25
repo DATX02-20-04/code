@@ -1,5 +1,7 @@
 import tensorflow as tf
 
+# Mask all the pad tokens in the batch of sequence.
+# It ensures that the model does not treat padding as the input.
 def create_padding_mask(seq):
     seq = tf.cast(tf.math.equal(seq, 0), tf.float32)
 
