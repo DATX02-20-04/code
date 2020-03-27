@@ -84,6 +84,9 @@ train 50 epochs of our VAE implementation. We do not yet have any results of thi
      - Tried to figure out why the transformer is copying the prior with a lot of trial and error
      - Tried hyperparameter optimization
    - *Carl*:
+     - Some infrastructure and tech support
+     - Work on report, mainly overall style and front pages, but also some content
+     - Made some plots with pgfplots, but probably going to give that up
    - *Lovisa*:
      - Took over some of the email communications, have been writing to
        Arne Linde about our computer at chalmers and communicating with examinator
