@@ -7,6 +7,7 @@ class Trainer():
         self.dataset = dataset
         self.hparams = hparams
         self.step = tf.Variable(0)
+        self.ckpt = None
 
     def init_checkpoint(self, ckpt):
         self.ckpt = ckpt

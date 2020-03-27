@@ -34,11 +34,12 @@ def on_epoch_complete(epoch, step, duration):
     print(f"Epoch: {epoch}, Step: {step}, Loss: {train_loss.result()}, Accuracy: {train_accuracy.result()}, Duration: {duration:.3f}")
 
 def create_model(hp):
+    print(hp)
     return Transformer(input_vocab_size=input_vocab_size,
                        target_vocab_size=target_vocab_size,
                        pe_input=input_vocab_size,
                        pe_target=target_vocab_size,
-                       hparams=hparams)
+                       hparams=hp)
 
 def evaluate(dataset, hparams):
     def _eval(model):
@@ -49,19 +50,24 @@ def evaluate(dataset, hparams):
         trainer.on_step = on_step
         trainer.on_epoch_complete = on_epoch_complete
 
-        loss, _, _ = trainer.run()
-        return tf.reduce_mean(loss)
+
+        stats = trainer.run()
+        if stats is not None:
+            loss, _, _ = stats
+            return 1 / tf.reduce_mean(loss).numpy()
+        else:
+            return 0
     return _eval
 
 def start(hparams):
     print(hparams)
-    pool = Pool(create_model, hparams)
+    # pool = Pool(create_model, hparams)
 
     dataset = tf.data.Dataset.list_files(os.path.join(hparams['dataset_root'] if 'dataset_root' in hparams else './maestro-v2.0.0/', '**/*.midi'))
 
     dataset_single = pro.pipeline([
         pro.midi(),
-        pro.frame(hparams['frame_size'], hparams['frame_size'], True),
+        pro.frame(hparams['frame_size'], 1, True),
         pro.unbatch(),
     ])(dataset)
 
@@ -82,23 +88,36 @@ def start(hparams):
         pro.prefetch(),
     ])(dataset_single)
 
-    pop_size = 10
-    generations = 10
-    mutation_rate = 0.2
-    pool.populate(pop_size, 1)
+    transformer = Transformer(input_vocab_size=input_vocab_size,
+                              target_vocab_size=target_vocab_size,
+                              pe_input=input_vocab_size,
+                              pe_target=target_vocab_size,
+                              hparams=hparams)
 
-    for generation in range(generations):
-        (pool
-         .evaluate(evaluate(dataset, hparams))
-         .select(pop_size)
-         .populate(pop_size, mutation_rate))
+    # pop_size = 10
+    # generations = 100
+    # mutation_rate = 0.2
+    # pool.populate(pop_size, 1)
 
-    print("BEST:", pool.best)
+    # for generation in range(generations):
+    #     pool.evaluate(evaluate(dataset, hparams))
+    #     print(f"--- GENERATION: {generation} ---")
+    #     print("BEST:", pool.best, pool.fitness)
+    #     pool.select(pop_size)
+    #     pool.populate(pop_size, mutation_rate)
 
-    # ckpt = tf.train.Checkpoint(
-    #     step=trainer.step,
-    #     transformer=transformer,
-    #     optimizer=transformer.optimizer
-    # )
+    trainer = Trainer(dataset, hparams)
+    ckpt = tf.train.Checkpoint(
+        step=trainer.step,
+        transformer=transformer,
+        optimizer=transformer.optimizer
+    )
 
-    # trainer.init_checkpoint(ckpt)
+    trainer.init_checkpoint(ckpt)
+    trainer.set_train_step(transformer.train_step)
+    trainer.on_epoch_start = on_epoch_start
+    trainer.on_step = on_step
+    trainer.on_epoch_complete = on_epoch_complete
+
+
+    trainer.run()

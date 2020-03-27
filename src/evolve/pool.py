@@ -27,10 +27,12 @@ class Pool():
         return self
 
     def select(self, count):
-        selected = []
+        # Always keep best one
+        f, i_best = self.fitness[0]
+        selected = [i_best]
 
         # Tournament selection
-        for _ in range(count):
+        for _ in range(count-1):
             f1, i1 = self.fitness[random.randrange(len(self.fitness))]
             f2, i2 = self.fitness[random.randrange(len(self.fitness))]
             if f1 > f2:
