@@ -9,10 +9,10 @@ class VAE():
     def __init__(self, hparams):
         self.hparams = hparams
         self.prior = tfd.Independent(tfd.Normal(loc=tf.zeros((self.hparams['latent_size'])), scale=1), reinterpreted_batch_ndims=1)
-        self.negloglik = lambda x, rv_x: -rv_x.log_prob(x)
+        self.negloglik = lambda y_pred, y_target: -y_pred.log_prob(y_target)
 
         self.vae, self.encoder, self.decoder = self.create_vae()
-        self.optimizer = tf.keras.optimizers.SGD(self.hparams['lr'], decay=1e-4)
+        self.optimizer = tf.keras.optimizers.RMSprop(self.hparams['lr'])
 
     @tf.function
     def train_step(self, x):
@@ -20,7 +20,8 @@ class VAE():
         with tf.GradientTape() as tape:
             y = self.vae(x, training=True)
 
-            loss = self.negloglik(y_target, y)
+            reg_loss = self.encoder.losses[0]
+            loss = self.negloglik(y, y_target) + reg_loss
 
         gradients = tape.gradient(loss, self.vae.trainable_variables)
 
@@ -78,3 +79,12 @@ class VAE():
         vae = tfk.Model(inputs=encoder.inputs, outputs=decoder(encoder.outputs[0]))
 
         return vae, encoder, decoder
+
+    def sample(self, num_samples):
+        zs = tf.random.normal([num_samples, self.hparams['latent_size']])
+        output = []
+        for z in tf.unstack(zs):
+            decoded = tf.reshape(self.decoder(tf.reshape(z, [1, -1]), training=False).mean(), [-1])
+            output.append(decoded)
+
+        return tf.concat(output, axis=0)

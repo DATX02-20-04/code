@@ -42,7 +42,7 @@ class Trainer():
             start = time.time()
             self.on_epoch_start(epoch, self.step.numpy())
 
-            d = self.dataset.take(steps_per_epoch) if steps_per_epoch > 0 else self.dataset
+            d = self.dataset.take(steps_per_epoch).cache().repeat().take(steps_per_epoch) if steps_per_epoch > 0 else self.dataset
 
             for batch in d:
                 self.step.assign_add(1)

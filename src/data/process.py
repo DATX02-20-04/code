@@ -61,11 +61,20 @@ def filter_transform(fn):
 def parse_tfrecord(features):
     return map_transform(lambda x: tf.io.parse_single_example(x, features))
 
+def resample(orig_sr, target_sr, dtype=None):
+    return map_transform(lambda x: tf.reshape(tf.py_function(lambda x: librosa.core.resample(x.numpy(), orig_sr=orig_sr, target_sr=target_sr), [tf.reshape(x, [-1])], x.dtype if dtype is None else dtype), [-1]))
+
 def read_file():
     return map_transform(lambda x: tf.io.read_file(x))
 
 def decode_wav(desired_channels=-1, desired_samples=-1):
-    return map_transform(lambda x: tf.audio.decode_wav(x, desired_channels, desired_samples))
+    return map_transform(lambda x: tf.audio.decode_wav(x, desired_channels, desired_samples).audio)
+
+def wav(desired_channels=-1, desired_samples=-1):
+    return pipeline([
+        read_file(),
+        decode_wav(desired_channels, desired_samples)
+    ])
 
 def one_hot(depth):
     return map_transform(lambda x: tf.one_hot(x, depth))
