@@ -4,6 +4,7 @@ from tensorflow_probability import layers as tfpl
 from tensorflow_probability import distributions as tfd
 import tensorflow.keras as tfk
 import tensorflow.keras.layers as tfkl
+import math
 
 class VAE():
     def __init__(self, hparams):
@@ -21,7 +22,7 @@ class VAE():
             y = self.vae(x, training=True)
 
             reg_loss = self.encoder.losses[0]
-            loss = self.negloglik(y, y_target) + reg_loss
+            loss = tf.keras.losses.MSE(y, y_target) + reg_loss
 
         gradients = tape.gradient(loss, self.vae.trainable_variables)
 
@@ -30,53 +31,45 @@ class VAE():
         return loss
 
     def create_vae(self):
-        i = tfkl.Input(shape=(self.hparams['window_samples'], 1))
+        input_size = self.hparams['window_samples']
+        scale = self.hparams['model_scale']
+        n_layers = math.ceil(math.log2(input_size))
 
-        o = tfkl.Conv1D(self.hparams['model_scale'], kernel_size=8, strides=8, dilation_rate=1)(i)
-        o = tfkl.BatchNormalization(axis=1)(o)
-        o = tfkl.ReLU()(o)
-
-        o = tfkl.Conv1D(2 * self.hparams['model_scale'], kernel_size=3, strides=2)(o)
-        o = tfkl.BatchNormalization(axis=1)(o)
-        o = tfkl.ReLU()(o)
+        i = tfkl.Input(shape=(input_size, 1))
+        o = i
+        for n in range(1,n_layers+1):
+            o = tfkl.Conv1D(scale*(n+1), kernel_size=2, strides=2, padding='same')(o)
+            o = tfkl.BatchNormalization(axis=1)(o)
+            o = tfkl.ReLU()(o)
 
         o = tfkl.Flatten()(o)
 
-        o = tfkl.Dense(tfpl.MultivariateNormalTriL.params_size(self.hparams['latent_size']), activation=None)(o)
-        o = tfpl.MultivariateNormalTriL(self.hparams['latent_size'], activity_regularizer=tfpl.KLDivergenceRegularizer(self.prior))(o)
+        o = tfkl.Dense(tfpl.IndependentNormal.params_size(self.hparams['latent_size']), activation=None)(o)
+        o = tfpl.IndependentNormal(self.hparams['latent_size'], activity_regularizer=tfpl.KLDivergenceRegularizer(self.prior, weight=2.0))(o)
 
         encoder = tfk.Model(inputs=i, outputs=o)
-
-        s = self.hparams['window_samples'] // 4
+        encoder.summary()
 
         i = tfkl.Input(shape=(self.hparams['latent_size'],))
-
+        s = scale*(n_layers+1)
         o = tfkl.Dense(s, activation='relu')(i)
-        o = tfkl.Reshape(target_shape=(s, 1))(o)
+        o = tfkl.Reshape(target_shape=(1, s))(o)
 
-        o = tfkl.UpSampling1D(size=2)(o)
-        o = tfkl.Conv1D(2 * self.hparams['model_scale'], kernel_size=3, strides=1, padding='SAME')(o)
-        o = tfkl.BatchNormalization(axis=1)(o)
-        o = tfkl.ReLU()(o)
+        for n in range(1,n_layers+1):
+            o = tfkl.UpSampling1D(size=2)(o)
+            o = tfkl.Conv1D(scale*(n_layers+1-n), kernel_size=2, strides=1, padding='same')(o)
+            o = tfkl.BatchNormalization(axis=1)(o)
+            o = tfkl.ReLU()(o)
 
-        o = tfkl.UpSampling1D(size=2)(o)
-        o = tfkl.Conv1D(self.hparams['model_scale'], kernel_size=3, strides=1, padding='SAME')(o)
-        o = tfkl.BatchNormalization(axis=1)(o)
-        o = tfkl.ReLU()(o)
+        o = tfkl.Cropping1D((0,o.shape[1]-input_size))(o)
+        o = tfkl.Conv1D(1, kernel_size=1, strides=1, padding='same')(o)
 
-        o = tfkl.Conv1D(1, kernel_size=3, strides=1, padding='SAME')(o)
-        o = tfkl.BatchNormalization(axis=1)(o)
-        o = tfkl.ReLU()(o)
-
-        o = tfkl.Flatten()(o)
-
-        o = tfkl.Dense(tfpl.IndependentNormal.params_size((self.hparams['window_samples'], 1)), activation='tanh')(o)
-
-        o = tfpl.IndependentNormal((self.hparams['window_samples'],1))(o)
-
+        
         decoder = tfk.Model(inputs=i, outputs=o)
+        decoder.summary()
 
         vae = tfk.Model(inputs=encoder.inputs, outputs=decoder(encoder.outputs[0]))
+        vae.summary()
 
         return vae, encoder, decoder
 
@@ -84,7 +77,7 @@ class VAE():
         zs = tf.random.normal([num_samples, self.hparams['latent_size']])
         output = []
         for z in tf.unstack(zs):
-            decoded = tf.reshape(self.decoder(tf.reshape(z, [1, -1]), training=False).mean(), [-1])
+            decoded = tf.reshape(self.decoder(tf.reshape(z, [1, -1]), training=False), [-1])
             output.append(decoded)
 
         return tf.concat(output, axis=0)
