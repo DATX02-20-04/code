@@ -2,10 +2,10 @@ hparams:
   name: 'vae'
   epochs: 100
   steps: 2000
-  sample_rate: 4000
+  sample_rate: 16000
   window_samples: 4000
   batch_size: 256
-  buffer_size: 10000
+  buffer_size: 40000
   latent_size: 256
   model_scale: 32
   lr: 0.001
