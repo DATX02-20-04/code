@@ -253,7 +253,7 @@ class EncoderLayer(tfkl.Layer):
 
 class DecoderLayer(tfkl.Layer):
     ''' DecoderLayer consists of sublayers:
-        - Masked multi-head attention (with look ahead mask and padding mask)
+        - Relative global attention
         - Multi-head attention (with padding mask). V (value) and K (key) receive the encoder output as inputs.
           Q (query) receives the output from the masked multi-head attention sublayer.
         - Point wise feed forward networks
