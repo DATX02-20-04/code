@@ -6,11 +6,11 @@ import data.process as pro
 from models.transformer.model import Transformer
 import tensorflow_datasets as tfds
 
-''' #TODO '''
+''' Initilization for an instance of the transformer model '''
 
 def generate(transformer, epoch, seed):
-    ''' generate
-        #TODO '''
+    ''' generate:
+        initialize a transfomer '''
     output = seed
     print(output)
     outputs = []
@@ -24,7 +24,8 @@ def generate(transformer, epoch, seed):
 
 def start(hparams):
     ''' start
-        #TODO '''
+        - Set up hyperparameters
+        - Initialize a transfomer '''
     input_vocab_size  = 128+128+100+100
     target_vocab_size = 128+128+100+100
 

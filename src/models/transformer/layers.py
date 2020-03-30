@@ -33,7 +33,7 @@ class PositionalEncoding(tfkl.Layer):
 
 class ScaledAttention(tfkl.Layer):
     ''' Scaled Attenion:
-        #TODO '''
+        A component of the MultiHeadAttention '''
     def __init__(self):
         super(ScaledAttention, self).__init__()
 
@@ -54,7 +54,7 @@ class ScaledAttention(tfkl.Layer):
 
 class RelativeAttention(tfkl.Layer):
     ''' Relative Attention:
-        #TODO '''
+        Is used for relative global attention '''
     def __init__(self, max_seq, depth):
         super(RelativeAttention, self).__init__()
         self.max_seq = max_seq
@@ -115,7 +115,10 @@ class RelativeAttention(tfkl.Layer):
 
 class MultiHeadAttention(tfkl.Layer):
     ''' Multi-Head Attention
-        #TODO '''
+        - Linear layers and split into heads
+        - Scaled Dot-product attention
+        - Concatenation of heads
+        - Final layer'''
     def __init__(self, d_model, num_heads):
         super(MultiHeadAttention, self).__init__()
         self.d_model = d_model
@@ -159,7 +162,7 @@ class MultiHeadAttention(tfkl.Layer):
 
 class RelativeGlobalAttention(tfkl.Layer):
     ''' RelativeRelativeGlobalAttention
-        #TODO '''
+        a component of the encoder layer '''
     def __init__(self, d_model, num_heads, max_seq):
         super(RelativeGlobalAttention, self).__init__()
         self.d_model = d_model
@@ -203,7 +206,7 @@ class RelativeGlobalAttention(tfkl.Layer):
 
 class PointWiseFF(tfkl.Layer):
     ''' PointWiseFF
-        #TODO '''
+        Point wise feed forward network consists of two fully-connected layers with a ReLU activation in between.'''
     def __init__(self, d_model, dff):
         super(PointWiseFF, self).__init__()
         self.d1 = tfkl.Dense(dff, activation='relu')
@@ -217,7 +220,7 @@ class PointWiseFF(tfkl.Layer):
 
 class EncoderLayer(tfkl.Layer):
     ''' EncoderLayer consists of sublayers:
-        - Multi-head attention (with padding mask)
+        - Relative global attention
         - Point wise feed forward networks
         Each of these sublayers has a residual connection around it followed by a layer normalization.
         Residual connections help in avoiding the vanishing gradient problem in deep networks. '''
