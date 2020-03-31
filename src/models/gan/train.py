@@ -5,16 +5,10 @@ from data.nsynth import nsynth_from_tfrecord, instruments, nsynth_to_melspec
 from models.gan.model import GAN
 import tensorflow_datasets as tfds
 
-import datetime
 
 # Define some metrics to be used in the training
 gen_loss_avg = tf.keras.metrics.Mean()
 disc_loss_avg = tf.keras.metrics.Mean()
-
-# Tensorfboard logging
-current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-train_log_dir = f'./logs/gradient_tape/{current_time}/train/'
-train_summary_writer = tf.summary.create_file_writer(train_log_dir)
 
 
 def instrument_filter(hparams):
@@ -23,25 +17,25 @@ def instrument_filter(hparams):
     return _filter
 
 # This runs at the start of every epoch
-def on_epoch_start(epoch, step):
+def on_epoch_start(epoch, step, tsw):
     gen_loss_avg = tf.keras.metrics.Mean()
     disc_loss_avg = tf.keras.metrics.Mean()
 
 
 
 # This runs at every step in the training (for each batch in dataset)
-def on_step(epoch, step, stats):
+def on_step(epoch, step, stats, tsw):
     gen_loss, disc_loss = stats
     gen_loss_avg(gen_loss)
     disc_loss_avg(disc_loss)
-    with train_summary_writer.as_default():
+    with tsw.as_default():
         tf.summary.scalar('gen_loss', gen_loss_avg.result(), step=step)
         tf.summary.scalar('disc_loss', disc_loss_avg.result(), step=step)
     if step % 100 == 0:
         print(f"Epoch: {epoch}, Step: {step}, Gen Loss: {gen_loss_avg.result()}, Disc Loss: {disc_loss_avg.result()}")
 
 # This runs at the end of every epoch and is used to display metrics
-def on_epoch_complete(epoch, step, duration):
+def on_epoch_complete(epoch, step, duration, tsw):
     #display.clear_output(wait=True)
     print(f"Epoch: {epoch}, Step: {step}, Gen Loss: {gen_loss_avg.result()}, Disc Loss: {disc_loss_avg.result()}, Duration: {duration} s")
 
@@ -85,6 +79,7 @@ def start(hparams):
     )
 
     trainer.init_checkpoint(ckpt)
+    trainer.init_tensorboard()
     trainer.set_train_step(gan.train_step)
     trainer.on_epoch_start = on_epoch_start
     trainer.on_step = on_step
