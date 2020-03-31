@@ -1,7 +1,7 @@
 import tensorflow as tf
 from models.common.training import Trainer
 from models.vae.model import VAE
-from scipy.io import wavfile
+import librosa
 
 
 def start(hparams):
@@ -18,6 +18,6 @@ def start(hparams):
 
     trainer.init_checkpoint(ckpt)
 
-    samples = tf.reshape(vae.sample(10), [-1]).numpy()
+    samples = tf.reshape(vae.sample(100), [-1]).numpy()
 
-    wavfile.write('vae_sample2.wav', hparams['sample_rate'], samples)
+    librosa.output.write_wav('vae_sample2.wav', samples, hparams['sample_rate'], norm=False)

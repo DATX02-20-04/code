@@ -32,11 +32,11 @@ class VAE():
     def create_vae(self):
         i = tfkl.Input(shape=(self.hparams['window_samples'], 1))
 
-        o = tfkl.Conv1D(self.hparams['model_scale'], kernel_size=8, strides=8, dilation_rate=1)(i)
+        o = tfkl.Conv1D(self.hparams['model_scale'], kernel_size=32, strides=256, dilation_rate=1)(i)
         o = tfkl.BatchNormalization(axis=1)(o)
         o = tfkl.ReLU()(o)
 
-        o = tfkl.Conv1D(2 * self.hparams['model_scale'], kernel_size=3, strides=2)(o)
+        o = tfkl.Conv1D(2 * self.hparams['model_scale'], kernel_size=16, strides=16)(o)
         o = tfkl.BatchNormalization(axis=1)(o)
         o = tfkl.ReLU()(o)
 

@@ -68,12 +68,14 @@ def read_file():
     return map_transform(lambda x: tf.io.read_file(x))
 
 def decode_wav(desired_channels=-1, desired_samples=-1):
-    return map_transform(lambda x: tf.audio.decode_wav(x, desired_channels, desired_samples).audio)
+    return map_transform(lambda x: tf.audio.decode_wav(x, desired_channels, desired_samples))
 
 def wav(desired_channels=-1, desired_samples=-1):
     return pipeline([
         read_file(),
-        decode_wav(desired_channels, desired_samples)
+        decode_wav(desired_channels, desired_samples),
+        map_transform(lambda x: x[0]),
+        reshape([-1]),
     ])
 
 def one_hot(depth):

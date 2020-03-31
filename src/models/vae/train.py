@@ -22,18 +22,21 @@ def start(hparams):
     # dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=True)
     dataset = tf.data.Dataset.list_files('/home/big/datasets/maestro-v2.0.0/**/*.wav')
     dataset = pro.pipeline([
-        pro.wav(desired_channels=1),
-        pro.resample(16000, hparams['sample_rate'], tf.float32),
+        pro.wav(),
+        # pro.resample(16000, hparams['sample_rate'], tf.float32),
+        pro.normalize(),
         pro.frame(hparams['window_samples'], hparams['window_samples']),
         pro.unbatch(),
         pro.set_channels(1),
         pro.dupe(),
-        # pro.shuffle(hparams['buffer_size']),
+        pro.shuffle(hparams['buffer_size']),
         pro.batch(hparams['batch_size']),
         pro.prefetch()
     ])(dataset)
 
     vae = VAE(hparams)
+
+    vae.vae.summary()
 
     trainer = Trainer(dataset, hparams)
 
