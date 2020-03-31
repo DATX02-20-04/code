@@ -19,14 +19,17 @@ class GAN():
     @tf.function
     def train_step(self, x):
         noise = tf.random.normal([self.hparams['batch_size'], self.hparams['latent_size']])
-        spec = x['audio']
-        pitch = x['pitch']
+        pitches = tf.random.uniform(self.hparams['batch_size'], 0, self.hparams['cond_vector_size'] - 1, dtype=tf.int32)
+        fake_pitch = tf.one_hot(pitches, axis=1)
+
+        real_spec = x['audio']
+        real_pitch = x['pitch']
 
         with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
-            generated_x = self.generator(noise, training=True)
+            fake_spec = self.generator([noise, fake_pitch], training=True)
 
-            real_output = self.discriminator(x, training=True)
-            fake_output = self.discriminator(generated_x, training=True)
+            real_output = self.discriminator([real_spec, real_pitch], training=True)
+            fake_output = self.discriminator([fake_spec, fake_pitch], training=True)
 
             gen_loss = self.generator_loss(fake_output)
             disc_loss = self.discriminator_loss(real_output, fake_output)
