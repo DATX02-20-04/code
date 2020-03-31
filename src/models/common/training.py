@@ -54,10 +54,14 @@ class Trainer():
 
             for batch in d:
                 self.step.assign_add(1)
+                s = self.step.numpy()
                 stats = self.train_step(batch)
-                self.on_step(epoch, self.step.numpy(), stats, tsw=self.train_summary_writer)
+                self.on_step(epoch, s, stats, tsw=self.train_summary_writer)
+                if 'ckpt_every_step' in self.hparams and s % self.hparams['ckpt_every_step'] == 0:
+                    if self.ckpt is not None:
+                        self.manager.save()
 
-            if self.ckpt is not None:
+            if 'ckpt_every_step' not in self.hparams and self.ckpt is not None:
                 self.manager.save()
 
             end = time.time()

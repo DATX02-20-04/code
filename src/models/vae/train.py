@@ -8,14 +8,15 @@ import tensorflow_datasets as tfds
 loss_avg = tf.keras.metrics.Mean()
 
 
-def on_epoch_start(epoch, step):
+def on_epoch_start(epoch, step, tsw):
     loss_avg.reset_states()
 
-def on_step(epoch, step, loss):
+def on_step(epoch, step, loss, tsw):
     loss_avg(loss)
     if step % 100 == 0:
         print(f"Epoch: {epoch}, Step: {step}, Loss: {loss_avg.result()}")
-
+    with tsw.as_default():
+        tf.summary.scalar('loss', loss_avg.result(), step=step)
 
 def start(hparams):
     # Load nsynth dataset
@@ -50,6 +51,7 @@ def start(hparams):
     trainer.on_epoch_start = on_epoch_start
     trainer.on_step = on_step
 
+    trainer.init_tensorboard()
     trainer.init_checkpoint(ckpt)
     trainer.set_train_step(vae.train_step)
     trainer.run()
