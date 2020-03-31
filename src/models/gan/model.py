@@ -19,6 +19,8 @@ class GAN():
     @tf.function
     def train_step(self, x):
         noise = tf.random.normal([self.hparams['batch_size'], self.hparams['latent_size']])
+        spec = x['audio']
+        pitch = x['pitch']
 
         with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
             generated_x = self.generator(noise, training=True)
@@ -52,6 +54,9 @@ class GAN():
 
     def create_generator(self):
         i = tfkl.Input(shape=(self.hparams['latent_size'],))
+        cond = tfkl.Input(shape=(self.hparams['cond_vector_size']),)
+
+        o = tfkl.Concatenate()([i, cond])
 
         o = tfkl.Dense((self.shape[0]//4)*(self.shape[1]//4)*self.hparams['generator_scale'])(i)
         o = tfkl.BatchNormalization()(o)
@@ -71,7 +76,7 @@ class GAN():
         o = tfkl.UpSampling2D(size=(2, 2))(o)
         o = tfkl.Conv2D(1, (5, 5), strides=(1, 1), padding='same', use_bias=False, activation='tanh')(o)
 
-        return tf.keras.Model(inputs=i, outputs=o)
+        return tf.keras.Model(inputs=[i, cond], outputs=o)
 
 
     def create_discriminator(self):
@@ -90,9 +95,21 @@ class GAN():
         # o = tfkl.Conv2D(8, (4, 4), strides=(2, 2), padding='same')(o)
         # o = tfkl.BatchNormalization()(o)
         # o = tfkl.LeakyReLU()(o)
+        #
+        cond = tfkl.Input(shape=(self.hparams['cond_vector_size'],))
 
         o = tfkl.Dropout(0.4)(o)
         o = tfkl.Flatten()(o)
+        o = tfkl.Concatenate()([o, cond])
+
+        o = tfkl.Dense(32)(o)
+        o = tfkl.BatchNormalization()(o)
+        o = tfkl.LeakyReLU()(o)
+
+        o = tfkl.Dense(16)(o)
+        o = tfkl.BatchNormalization()(o)
+        o = tfkl.LeakyReLU()(o)
+
         o = tfkl.Dense(1)(o)
 
-        return tf.keras.Model(inputs=i, outputs=o)
+        return tf.keras.Model(inputs=[i, cond], outputs=o)

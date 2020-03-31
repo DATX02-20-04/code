@@ -3,6 +3,7 @@ import data.process as pro
 from models.common.training import Trainer
 from data.nsynth import nsynth_from_tfrecord, instruments, nsynth_to_melspec
 from models.gan.model import GAN
+import data.process as pro
 import tensorflow_datasets as tfds
 
 # Define some metrics to be used in the training
@@ -37,7 +38,14 @@ def start(hparams):
     # Load nsynth dataset from tfds
     dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=True)
 
-    dataset = nsynth_to_melspec(dataset, hparams)
+    dataset = pro.index_map('pitch', pro.one_hot(hparams['cond_vector_size']))(dataset)
+
+    dataset = pro.index_map('audio', pro.pipeline([
+        pro.melspec(sr=hparams['sample_rate']),
+        pro.pad([[0, 0], [0, 4]], 'CONSTANT', constant_values=hparams['log_amin']),
+        pro.amp_to_log(amin=hparams['log_amin']),
+        pro.normalize(),
+    ]))(dataset)
 
     # Determine shape of the spectograms in the dataset
     spec_shape = None
