@@ -34,15 +34,15 @@ def on_step(epoch, step, stats):
     gen_loss, disc_loss = stats
     gen_loss_avg(gen_loss)
     disc_loss_avg(disc_loss)
+    with train_summary_writer.as_default():
+        tf.summary.scalar('gen_loss', gen_loss_avg.result(), step=step)
+        tf.summary.scalar('disc_loss', disc_loss_avg.result(), step=step)
     if step % 100 == 0:
         print(f"Epoch: {epoch}, Step: {step}, Gen Loss: {gen_loss_avg.result()}, Disc Loss: {disc_loss_avg.result()}")
 
 # This runs at the end of every epoch and is used to display metrics
 def on_epoch_complete(epoch, step, duration):
     #display.clear_output(wait=True)
-    with train_summary_writer.as_default():
-        tf.summary.scalar('gen_loss', gen_loss_avg, step=epoch)
-        tf.summary.scalar('disc_loss', disc_loss_avg, step=epoch)
     print(f"Epoch: {epoch}, Step: {step}, Gen Loss: {gen_loss_avg.result()}, Disc Loss: {disc_loss_avg.result()}, Duration: {duration} s")
 
 def start(hparams):
