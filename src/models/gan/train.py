@@ -27,9 +27,6 @@ def on_epoch_start(epoch, step):
     gen_loss_avg = tf.keras.metrics.Mean()
     disc_loss_avg = tf.keras.metrics.Mean()
 
-    with train_summary_writer.as_default():
-        tf.summary.scalar('gen_loss', gen_loss_avg, step=epoch)
-        tf.summary.scalar('disc_loss', disc_loss_avg, step=epoch)
 
 
 # This runs at every step in the training (for each batch in dataset)
@@ -43,6 +40,9 @@ def on_step(epoch, step, stats):
 # This runs at the end of every epoch and is used to display metrics
 def on_epoch_complete(epoch, step, duration):
     #display.clear_output(wait=True)
+    with train_summary_writer.as_default():
+        tf.summary.scalar('gen_loss', gen_loss_avg, step=epoch)
+        tf.summary.scalar('disc_loss', disc_loss_avg, step=epoch)
     print(f"Epoch: {epoch}, Step: {step}, Gen Loss: {gen_loss_avg.result()}, Disc Loss: {disc_loss_avg.result()}, Duration: {duration} s")
 
 def start(hparams):
