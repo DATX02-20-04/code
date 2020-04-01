@@ -52,5 +52,5 @@ def start(hparams):
     trainer.init_checkpoint(ckpt)
 
 
-    generate(transformer, 4, seed)
+    generate(transformer, 5, seed)
     print('Generated sample')

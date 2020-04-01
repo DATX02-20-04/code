@@ -9,6 +9,7 @@ class Trainer():
         self.hparams = hparams
         self.step = tf.Variable(0)
         self.train_summary_writer = None
+        self.ckpt = None
 
     def init_tensorboard(self):
         # Tensorfboard logging
@@ -45,6 +46,7 @@ class Trainer():
             raise Exception("No train_step specified, call set_train_step on the trainer with your training step.")
 
         steps_per_epoch = self.hparams['steps'] if 'steps' in self.hparams else None
+        stats = None
 
         for epoch in range(1, self.hparams['epochs']+1):
             start = time.time()
@@ -67,3 +69,4 @@ class Trainer():
             end = time.time()
             duration = end - start
             self.on_epoch_complete(epoch, self.step.numpy(), duration, tsw=self.train_summary_writer)
+        return stats
