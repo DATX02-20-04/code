@@ -9,6 +9,7 @@ import tensorflow_datasets as tfds
 from evolve.hparams import HParams
 from evolve.pool import Pool
 
+
 train_loss = tfk.metrics.Mean(name='train_loss')
 train_accuracy = tfk.metrics.SparseCategoricalAccuracy(name='train_accuracy')
 
@@ -68,6 +69,16 @@ def start(hparams):
     dataset_single = pro.pipeline([
         pro.midi(),
         pro.frame(hparams['frame_size'], 1, True),
+
+def start(hparams):
+    input_vocab_size  = 128+128+100+100
+    target_vocab_size = 128+128+100+100
+
+    dataset = tf.data.Dataset.list_files('/home/big/datasets/maestro-v2.0.0/**/*.midi')
+
+    dataset_single = pro.pipeline([
+        pro.midi(),
+        pro.frame(hparams['frame_size'], hparams['frame_size'], True),
         pro.unbatch(),
     ])(dataset)
 
@@ -88,6 +99,9 @@ def start(hparams):
         pro.prefetch(),
     ])(dataset_single)
 
+
+    dataset_single = dataset_single.as_numpy_iterator()
+
     transformer = Transformer(input_vocab_size=input_vocab_size,
                               target_vocab_size=target_vocab_size,
                               pe_input=input_vocab_size,
@@ -106,6 +120,9 @@ def start(hparams):
     #     pool.select(pop_size)
     #     pool.populate(pop_size, mutation_rate)
 
+
+    seed = next(dataset_single)
+
     trainer = Trainer(dataset, hparams)
     ckpt = tf.train.Checkpoint(
         step=trainer.step,
@@ -118,6 +135,5 @@ def start(hparams):
     trainer.on_epoch_start = on_epoch_start
     trainer.on_step = on_step
     trainer.on_epoch_complete = on_epoch_complete
-
 
     trainer.run()
