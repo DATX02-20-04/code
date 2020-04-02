@@ -1,9 +1,7 @@
 import tensorflow as tf
 import librosa
-import mido
-import math
-import numpy as np
-import itertools
+from fractions import Fraction
+import data.midi
 
 def index_map(index, f):
     # Carl: I don't think this parallelizes very well, but I'm not sure
@@ -225,91 +223,77 @@ def invert_log_melspec(sr, n_fft=1024, hop_length=512, win_length=None, amin=1e-
     ])
 
 def load_midi():
-    return map_transform(lambda x: mido.MidiFile(x))
+    def load_midi_(fn):
+        with open(fn, "rb") as f:
+            return data.midi.read_midi(f)
+    return map_transform(load_midi_)
 
 
-def encode_midi(note_count=128, time_shift_count=100, time_shift_ms=10, velocity_count=100):
-    _event_start = {
-        'note_on': 0,
-        'note_off': note_count,
-        'time_shift': note_count * 2,
-        'velocity': note_count * 2 + time_shift_count,
-    }
+def encode_midi(max_time_shift=8, time_shift=Fraction(1, 12)):
+    """
+    Encodes a midi into a sequence of integers, suitable for one-hot encoding
+    and usage for a neural network. The integers are as follows:
 
+    000.. Note down event
+    128.. Note up event
+    256.. Velocity for the previous note down event
+    384.. Time skip, each a multiple of 'time_skip'
+
+    The maximal possible output is 384+max_time_shift/time_shift, which for the
+    default settings is 480.
+
+    This is a lossy transformation: it quantizes time, and also flattens
+    tracks/channels into a single one.
+    """
+
+    assert max_time_shift % time_shift == 0
     def _midi(x):
-        midi = []
-        prev_note = 0
-        for msg in x:
-            if not msg.is_meta:
-                time_shift = min(int(msg.time*1000) // time_shift_ms, time_shift_count-1)
+        current_time = 0
+        for event in sorted((event for track in x.tracks for event in track), key=lambda x: x.time):
+            if isinstance(event, data.midi.Midi.BaseNoteEvent):
+                time = event.time // time_shift
+                while current_time < time:
+                    step = min(time - current_time, max_time_shift // time_shift)
+                    yield 384+step
+                    current_time += step
 
-                if msg.type == 'note_on':
-                    midi.append(min(msg.note, note_count-1) + _event_start['note_on'])
-                    midi.append(min(msg.velocity, velocity_count-1) + _event_start['velocity'])
-                    prev_note = msg.note
-                else:# msg.type == 'note_off':
-                    midi.append(min(prev_note, note_count-1) + _event_start['note_off'])
+                if isinstance(event, data.midi.Midi.NoteEvent):
+                    yield 0+event.pitch
+                    yield 256+event.velocity
+                if isinstance(event, data.midi.Midi.NoteUpEvent):
+                    yield 128+event.pitch
 
-                midi.append(time_shift+_event_start['time_shift'])
+    return map_transform(lambda x: tf.convert_to_tensor(list(_midi(x))))
 
-        return tf.cast(tf.stack(midi), dtype=tf.int64)
-    return map_transform(_midi)
-
-def decode_midi(note_count=128, time_shift_count=100, time_shift_ms=10, velocity_count=100):
-    note_on_range = range(0, note_count)
-    note_off_range = range(note_count, note_count*2)
-    time_shift_range = range(note_count*2, note_count*2+time_shift_count)
-
+def decode_midi(time_shift=Fraction(1, 12)):
+    """
+    Decodes an integer sequence, of the format given by encode_midi, back into
+    a midi file.
+    """
     def _midi(x):
-        mid = mido.MidiFile()
-        track = mido.MidiTrack()
-        mid.tracks.append(track)
-
-        msgs = []
-        prev_msg = None
-        for e in x.numpy():
-            print(e)
-            e = int(e)
-            print(e)
-            if e in note_on_range:
-                msg = {'type': 'note_on', 'note': e}
-                msgs.append(msg)
-                prev_msg = msg
-            elif e in note_off_range:
-                msg = {'type': 'note_off'}
-                msgs.append(msg)
-                prev_msg = msg
-            elif e in time_shift_range and prev_msg is not None:
-                prev_msg['time_shift'] = e - note_count*2
-            elif prev_msg is not None:
-                prev_msg['velocity'] = e - note_count*2 - time_shift_count
-
-        print(msgs)
-        note_on = False
-        for msg in msgs:
-            if msg['type'] == 'note_on':
-                # if 'velocity' not in msg and 'time_shift' not in msg:
-                #     break
-                track.append(mido.Message('note_on',
-                                          note=msg['note'],
-                                          velocity=msg['velocity'] if 'velocity' in msg else 20,
-                                          time=msg['time_shift']*time_shift_ms if 'time_shift' in msg else 50))
-                note_on = True
+        time = time_shift * 0
+        for i, event in enumerate(x):
+            if event < 128:
+                nextE = x[i+1] if i+1 < len(x) else -1
+                if 256 <= nextE < 384:
+                    vel = nextE - 256
+                else:
+                    print("Note event not followed by velocity, using default")
+                    vel = 0x40
+                yield data.midi.Midi.NoteEvent(time, 0, event-0, vel)
+            elif event < 256:
+                yield data.midi.Midi.NoteUpEvent(time, 0, event-128, 0x40)
+            elif event < 384:
+                pass # Velocity events handled above
             else:
-                # if 'time_shift' not in msg:
-                #     break
-                track.append(mido.Message('note_off',
-                                          time=msg['time_shift']*time_shift_ms if 'time_shift' in msg else 50))
-                note_on = False
-        print(track)
+                time += (event-384) * time_shift
 
-        return mid
-    return map_transform(_midi)
+    return map_transform(lambda x: data.midi.Midi(0, time_shift.denominator, [list(_midi(x.numpy().tolist()))]))
 
-def midi(note_count=128, max_time_shift=100, time_shift_m=10):
+def midi(max_time_shift=8, time_shift=Fraction(1,12)):
     return pipeline([
         numpy(),
         load_midi(),
-        encode_midi(note_count, max_time_shift, time_shift_m),
+        encode_midi(max_time_shift=max_time_shift, time_shift=time_shift),
         tensor(tf.int64),
     ])
