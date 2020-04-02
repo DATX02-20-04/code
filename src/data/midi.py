@@ -38,7 +38,7 @@ class Midi:
 
     @dataclass
     class NoteEvent(BaseNoteEvent):
-        end: "Midi.NoteUpEvent" = None # This only exists as an utility, it's not used by the writer and is not dynamically updated
+        pass
 
     @dataclass
     class NoteUpEvent(BaseNoteEvent):
@@ -66,7 +66,6 @@ def read_midi_track(rate, data):
         return x
 
     t = 0
-    notes = [{} for _ in range(16)]
     command = None
     while data:
         t += Fraction(varint(), rate)
@@ -83,11 +82,6 @@ def read_midi_track(rate, data):
                 if type == 0x80:  e = Midi.NoteUpEvent(t, chan, pitch, vel)
                 elif vel == 0:    e = Midi.NoteUpEvent(t, chan, pitch, 0x40)
                 else:             e = Midi.NoteEvent  (t, chan, pitch, vel)
-                prev = notes[chan].pop(pitch, None)
-                if prev is not None:
-                    prev.end = e
-                if isinstance(e, Midi.NoteEvent):
-                    notes[chan][pitch] = e
                 yield e
             # Ax: aftertouch (pitch, pressure)
             elif type == 0xB0:
