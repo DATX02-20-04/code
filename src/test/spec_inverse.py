@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import librosa
 
 
-dataset = tf.data.Dataset.list_files('test.wav')
+dataset = tf.data.Dataset.list_files('src/audio/*.wav')
 
 
 hparams = {
@@ -18,6 +18,9 @@ dataset = pro.pipeline([
     pro.melspec(hparams['sample_rate']),
     pro.numpy(),
 ])(dataset)
+x = next(dataset)
+plt.imshow(x)
+plt.savefig('result.png')
 
 dataset = pro.pipeline([
     pro.invert_log_melspec(hparams['sample_rate'])
