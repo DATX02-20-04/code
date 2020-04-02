@@ -1,8 +1,7 @@
 hparams:
   name: 'gan'
-  plot: False
   epochs: 100
-  steps: 1000
+  steps: 0
   sample_rate: 16000
   batch_size: 32
   buffer_size: 1000

@@ -39,16 +39,16 @@ class GAN():
 
     def discriminator_loss(self, real_output, fake_output):
         real_loss = self.cross_entropy(
-            tf.zeros_like(real_output)+tf.random.uniform(real_output.shape, 0, 0.1), # Add random to smooth real labels
+            tf.ones_like(real_output)-tf.random.uniform(real_output.shape, 0, 0.1), # Add random to smooth real labels
             real_output)
         fake_loss = self.cross_entropy(
-            tf.ones_like(fake_output)-tf.random.uniform(fake_output.shape, 0, 0.1), # Subtract random to smooth fake labels
+            tf.zeros_like(fake_output)+tf.random.uniform(fake_output.shape, 0, 0.1), # Subtract random to smooth fake labels
             fake_output)
         total_loss = real_loss + fake_loss
         return total_loss
 
     def generator_loss(self, fake_output):
-        return self.cross_entropy(tf.zeros_like(fake_output), fake_output)
+        return self.cross_entropy(tf.ones_like(fake_output), fake_output)
 
     def create_generator(self):
         i = tfkl.Input(shape=(self.hparams['latent_size'],))

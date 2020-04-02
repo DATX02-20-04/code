@@ -11,16 +11,10 @@ gen_loss_avg = tf.keras.metrics.Mean()
 disc_loss_avg = tf.keras.metrics.Mean()
 
 
-def instrument_filter(hparams):
-    def _filter(x):
-        return tf.reshape(tf.math.equal(x['instrument_family'], instruments[hparams['instrument']]), [])
-    return _filter
-
 # This runs at the start of every epoch
 def on_epoch_start(epoch, step, tsw):
     gen_loss_avg = tf.keras.metrics.Mean()
     disc_loss_avg = tf.keras.metrics.Mean()
-
 
 
 # This runs at every step in the training (for each batch in dataset)
@@ -60,7 +54,7 @@ def start(hparams):
 
     # Create preprocessing pipeline for shuffling and batching
     dataset = pro.pipeline([
-        pro.set_channels(1),
+        pro.reshape([*spec_shape, 1]),
         pro.shuffle(hparams['buffer_size']),
         pro.batch(hparams['batch_size']),
         pro.prefetch()

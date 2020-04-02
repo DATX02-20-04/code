@@ -90,8 +90,8 @@ def extract(key):
 def reshape(shape):
     return map_transform(lambda x: tf.reshape(x, shape))
 
-def set_channels(channels):
-    return map_transform(lambda x: tf.reshape(x, [*x.shape, channels]))
+# def set_channels(channels):
+#     return map_transform(lambda x: tf.reshape(x, [-1, channels]))
 
 def cache(filename=''):
     return lambda dataset: dataset.cache(filename)

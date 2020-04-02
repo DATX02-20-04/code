@@ -28,8 +28,7 @@ def nsynth_to_melspec(dataset, hparams):
     return pro.pipeline([
         pro.extract('audio'),
         pro.melspec(sr=hparams['sample_rate']),
-        pro.pad([[0, 0], [0, 4]], 'CONSTANT', constant_values=hparams['log_amin']),
-        pro.amp_to_log(amin=hparams['log_amin']),
+        pro.pad([[0, 0], [0, 2]], 'CONSTANT', constant_values=hparams['log_amin']),
         pro.normalize(),
     ])(dataset)
 
