@@ -35,7 +35,7 @@ def on_epoch_complete(epoch, step, duration, tsw):
 
 def start(hparams):
     # Load nsynth dataset from tfds
-    dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=True)
+    dataset = tfds.load('nsynth/gansynth_subset', split='test', shuffle_files=True)
 
     dataset = nsynth_to_melspec(dataset, hparams)
 
@@ -52,17 +52,25 @@ def start(hparams):
     # This is because the generator is going to upscale it's state twice with a factor of 2.
     assert spec_shape[0] % 4 == 0 and spec_shape[1] % 4 == 0, "Spectogram dimensions is not divisible by 4"
 
-    # Create preprocessing pipeline for shuffling and batching
-    dataset = pro.pipeline([
-        pro.reshape([*spec_shape, 1]),
-        pro.shuffle(hparams['buffer_size']),
-        pro.batch(hparams['batch_size']),
-        pro.prefetch()
-    ])(dataset)
+    def create_dataset():
+        # Load nsynth dataset from tfds
+        dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=True)
+
+        dataset = nsynth_to_melspec(dataset, hparams)
+
+        # Create preprocessing pipeline for shuffling and batching
+        dataset = pro.pipeline([
+            pro.reshape([*spec_shape, 1]),
+            pro.shuffle(hparams['buffer_size']),
+            pro.batch(hparams['batch_size']),
+            pro.prefetch()
+        ])(dataset)
+
+        return dataset
 
     gan = GAN(spec_shape, hparams)
 
-    trainer = Trainer(dataset, hparams)
+    trainer = Trainer(create_dataset, hparams)
 
     ckpt = tf.train.Checkpoint(
         step=trainer.step,

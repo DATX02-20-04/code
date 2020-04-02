@@ -4,8 +4,8 @@ import time
 import datetime
 
 class Trainer():
-    def __init__(self, dataset, hparams):
-        self.dataset = dataset
+    def __init__(self, create_dataset, hparams):
+        self.create_dataset = create_dataset
         self.hparams = hparams
         self.step = tf.Variable(0)
         self.train_summary_writer = None
@@ -52,6 +52,7 @@ class Trainer():
             start = time.time()
             self.on_epoch_start(epoch, self.step.numpy(), tsw=self.train_summary_writer)
 
+            self.dataset = self.create_dataset()
             d = self.dataset.take(steps_per_epoch) if steps_per_epoch > 0 else self.dataset
 
             for batch in d:
