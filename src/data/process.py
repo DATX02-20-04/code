@@ -61,11 +61,22 @@ def filter_transform(fn):
 def parse_tfrecord(features):
     return map_transform(lambda x: tf.io.parse_single_example(x, features))
 
+def resample(orig_sr, target_sr, dtype=None):
+    return map_transform(lambda x: tf.reshape(tf.py_function(lambda x: librosa.core.resample(x.numpy(), orig_sr=orig_sr, target_sr=target_sr), [tf.reshape(x, [-1])], x.dtype if dtype is None else dtype), [-1]))
+
 def read_file():
     return map_transform(lambda x: tf.io.read_file(x))
 
 def decode_wav(desired_channels=-1, desired_samples=-1):
     return map_transform(lambda x: tf.audio.decode_wav(x, desired_channels, desired_samples))
+
+def wav(desired_channels=-1, desired_samples=-1):
+    return pipeline([
+        read_file(),
+        decode_wav(desired_channels, desired_samples),
+        map_transform(lambda x: x[0]),
+        reshape([-1]),
+    ])
 
 def one_hot(depth):
     return map_transform(lambda x: tf.one_hot(x, depth))
@@ -98,7 +109,20 @@ def prefetch():
     return lambda dataset: dataset.prefetch(tf.data.experimental.AUTOTUNE)
 
 def pad(paddings, mode, constant_values=0, name=None):
-    return map_transform(lambda x: tf.pad(x, paddings, mode, constant_values, name))
+    return map_transform(_pad(paddings, mode, constant_values, name))
+
+def _pad(paddings, mode, constant_values=0, name=None):
+    def _p(x):
+        if type(constant_values) == str:
+            if constant_values == 'min':
+                values = tf.reduce_min(x)
+            elif constant_values == 'max':
+                values = tf.reduce_max(x)
+        else:
+            values = constant_values
+        return tf.pad(x, paddings, mode, values, name)
+    return _p
+
 
 def frame(frame_length, frame_step, pad_end=False, pad_value=0, axis=-1, name=None):
     return map_transform(lambda x: tf.signal.frame(x, frame_length,
@@ -130,13 +154,18 @@ def abs():
 def dupe():
     return map_transform(lambda x: (x, x))
 
-def _normalize(x):
-    _max = tf.reduce_max(x)
-    _min = tf.reduce_min(x)
-    return ((x - _min) / (_max - _min)) * 2 - 1
+def _normalize(normalization='neg_one_to_one'):
+    def _n(x):
+        _max = tf.reduce_max(x)
+        _min = tf.reduce_min(x)
+        if normalization == 'neg_one_to_one':
+            return ((x - _min) / (_max - _min)) * 2 - 1
+        elif normalization == 'zero_to_one':
+            return ((x - _min) / (_max - _min))
+    return _n
 
-def normalize():
-    return map_transform(_normalize)
+def normalize(normalization='neg_one_to_one'):
+    return map_transform(_normalize(normalization))
 
 def amp_to_log(amin=1e-5):
     return map_transform(lambda x: tf.math.log(x + amin))
@@ -167,25 +196,32 @@ def spec(fft_length=1024, frame_step=512, frame_length=None, **kwargs):
         transpose2d()
     ])
 
-def melspec(sr, fft_length=1024, frame_step=512, frame_length=None, **kwargs):
-    if frame_length is None:
-        frame_length = fft_length
+def melspec(sr, n_fft=1024, hop_length=512, win_length=None, **kwargs):
     return pipeline([
-        stft(frame_length, frame_step, fft_length),
-        abs(),
-        mels(sr, fft_length//2+1, **kwargs),
-        transpose2d()
+        numpy(),
+        map_transform(lambda x: librosa.feature.melspectrogram(x, sr=sr, n_fft=n_fft, hop_length=hop_length, win_length=win_length)),
+        map_transform(lambda x: librosa.core.power_to_db(x, ref=1.0)),
+        tensor(tf.float32),
+        # stft(frame_length, frame_step, fft_length),
+        # abs(),
+        # mels(sr, fft_length//2+1, **kwargs),
+        # transpose2d()
     ])
 
-def invert_melspec(sr, fft_length=1024, frame_step=512, frame_length=None):
-    if frame_length is None:
-        frame_length = fft_length
-    return map_transform(lambda x: librosa.feature.inverse.mel_to_audio(x.numpy(), sr=sr, n_fft=fft_length, hop_length=frame_step, win_length=frame_length))
+def denormalize(denorm_amin=-20, denorm_amax=0, normalization='neg_one_to_one'):
+    if normalization == 'neg_one_to_one':
+        return map_transform(lambda x: (((x+1)*0.5)*(denorm_amax-denorm_amin)+denorm_amin))
+    elif normalization == 'zero_to_one':
+        return map_transform(lambda x: (x*(denorm_amax-denorm_amin)+denorm_amin))
+    else:
+        raise Exception(f"No normalization type named '{normalization}'.")
 
-def invert_log_melspec(sr, fft_length=1024, frame_step=512, frame_length=None, amin=1e-5):
+def invert_log_melspec(sr, n_fft=1024, hop_length=512, win_length=None, amin=1e-5, denorm_amin=-38, denorm_amax=0):
     return pipeline([
-        log_to_amp(amin),
-        invert_melspec(sr, fft_length, frame_step, frame_length)
+        # denormalize(denorm_amin, denorm_amax),
+        # log_to_amp(amin),
+        map_transform(lambda x: librosa.core.db_to_power(x, ref=1.0)),
+        map_transform(lambda x: librosa.feature.inverse.mel_to_audio(x, sr=sr, n_fft=n_fft, hop_length=hop_length, win_length=win_length))
     ])
 
 def load_midi():

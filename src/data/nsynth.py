@@ -15,9 +15,14 @@ def nsynth_from_tfrecord(nsynth_tfrecord_path):
         }),
     ])(dataset)
 
+def instrument_filter(instrument):
+    def _filter(x):
+        return tf.reshape(tf.math.equal(x['instrument_family'], instruments[instrument]), [])
+    return _filter
+
 def nsynth_to_melspec(dataset, hparams):
     if 'instrument' in hparams and hparams['instrument'] is not None:
-        dataset = pro.filter_transform(instrument_filter)(dataset)
+        dataset = pro.filter_transform(instrument_filter(hparams['instrument']))(dataset)
 
     # Create preprocessing pipeline for the melspectograms
     return pro.pipeline([
