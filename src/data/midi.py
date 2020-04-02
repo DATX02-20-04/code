@@ -4,8 +4,8 @@ from fractions import Fraction
 import subprocess
 import base64
 import struct
-from yattag import Doc
-import IPython.display as display
+# from yattag import Doc
+# import IPython.display as display
 
 @dataclass
 class Midi:
@@ -154,6 +154,7 @@ def write_midi(f, midi):
     for track in midi.tracks:
         chunk("MTrk", write_midi_track(midi.rate, track))
 
+"""
 
 #
 # = Rendering to html (really svg)
@@ -214,3 +215,4 @@ def play_midi(midi):
     proc.wait()
     b64 = base64.b64encode(data).decode("ascii")
     return display.HTML(f'<audio controls><source src="data:audio/wav;base64,{b64}" /></audio>')
+"""
