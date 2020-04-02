@@ -5,24 +5,19 @@ import matplotlib.pyplot as plt
 import librosa
 
 
-dataset = tf.data.Dataset.list_files('src/audio')
+dataset = tf.data.Dataset.list_files('test.wav')
 
 
 hparams = {
     'sample_rate': 16000,
     'log_amin': 1e-6,
-    'instrument': 'keyboard',
 }
 
-dataset = nsynth_to_melspec(dataset, hparams)
-
 dataset = pro.pipeline([
+    pro.wav(),
     pro.melspec(hparams['sample_rate']),
     pro.numpy(),
 ])(dataset)
-
-x = next(dataset)
-plt.imshow(x)
 
 dataset = pro.pipeline([
     pro.invert_log_melspec(hparams['sample_rate'])
