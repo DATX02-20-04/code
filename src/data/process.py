@@ -249,7 +249,7 @@ def encode_midi(max_time_shift=8, time_shift=Fraction(1, 12)):
     assert max_time_shift % time_shift == 0
     def _midi(x):
         current_time = 0
-        for event in sorted((event for track in x.tracks for event in track), key=lambda x: x.time):
+        for event in sorted((event for track in x.tracks for event in track)):
             if isinstance(event, data.midi.Midi.BaseNoteEvent):
                 time = event.time // time_shift
                 while current_time < time:

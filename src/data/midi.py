@@ -13,6 +13,11 @@ class Midi:
     class Event:
         time: Fraction
 
+        def __lt__(a, b): return a.time < b.time
+        def __le__(a, b): return a.time <= b.time
+        def __ge__(a, b): return a.time >= b.time
+        def __gt__(a, b): return a.time > b.time
+
     @dataclass
     class MetaEvent(Event):
         type: int
