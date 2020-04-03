@@ -24,8 +24,12 @@ def start(hparams):
 
     trainer.init_checkpoint(ckpt)
 
-    seed = tf.random.normal((4, hparams['latent_size']))
-    samples = tf.reshape(gan.generator(seed, training=False), [-1, 128, 128])
+    count = 10
+    seed = tf.random.normal((count, hparams['latent_size']))
+    mid = hparams['cond_vector_size']//2
+    pitches = tf.one_hot(range(mid-count//2, mid+count//2), hparams['cond_vector_size'])
+
+    samples = tf.reshape(gan.generator([seed, pitches], training=False), [-1, 128, 128])
     x = tf.unstack(samples)
     plt.imshow(tf.concat(x, axis=1))
     plt.show()
@@ -37,4 +41,4 @@ def start(hparams):
 
     output = np.concatenate(list(audio))
 
-    librosa.output.write_wav('gan_sample.wav', output, hparams['sample_rate'], norm=False)
+    librosa.output.write_wav('gan_sample.wav', output, hparams['sample_rate'], norm=True)
