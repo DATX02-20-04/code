@@ -165,11 +165,9 @@ def _normalize(normalization='neg_one_to_one', **kwargs):
         elif normalization == 'specgan':
             stats = kwargs['stats']
             std = tf.math.sqrt(stats['variance'])
-            norm = (x - stats['mean']) / std
-            clipped = tf.math.minimum(tf.math.maximum(norm, -std*3), std*3)
-            _max = tf.math.reduce_max(clipped)
-            _min = tf.math.reduce_min(clipped)
-            return ((clipped - _min) / (_max - _min)) * 2 - 1
+            norm = (x - stats['mean']) / (3*std)
+            clipped = tf.math.minimum(tf.math.maximum(norm, -1), 1)
+            return clipped
     return _n
 
 def normalize(normalization='neg_one_to_one', **kwargs):
