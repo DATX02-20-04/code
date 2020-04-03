@@ -47,8 +47,7 @@ def start(hparams):
     dataset = pro.index_map('audio', pro.pipeline([
         pro.melspec(sr=hparams['sample_rate']),
         pro.pad([[0, 0], [0, 2]], 'CONSTANT', constant_values=hparams['log_amin']),
-        pro.amp_to_log(amin=hparams['log_amin']),
-        pro.normalize(),
+        pro.normalize(normalize='specgan'),
     ]))(dataset)
     # gan_stats = calculate_dataset_stats(hparams, dataset)
 
