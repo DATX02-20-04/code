@@ -156,12 +156,18 @@ def dupe():
 
 def _normalize(normalization='neg_one_to_one'):
     def _n(x):
-        _max = tf.reduce_max(x)
-        _min = tf.reduce_min(x)
+        _max = tf.math.reduce_max(x)
+        _min = tf.math.reduce_min(x)
+        variance = tf.math.reduce_variance(x)
+        mean = tf.math.reduce_mean(x)
+        std = tf.math.reduce_std(x)
         if normalization == 'neg_one_to_one':
             return ((x - _min) / (_max - _min)) * 2 - 1
         elif normalization == 'zero_to_one':
             return ((x - _min) / (_max - _min))
+        elif normalization == 'specgan':
+            norm = (x - mean) / variance
+            return tf.math.minimum(tf.math.maximum(norm, -std*3), std*3)
     return _n
 
 def normalize(normalization='neg_one_to_one'):
@@ -198,17 +204,15 @@ def spec(fft_length=1024, frame_step=512, frame_length=None, **kwargs):
 
 def melspec(sr, n_fft=1024, hop_length=512, win_length=None, **kwargs):
     return pipeline([
-        numpy(),
-        map_transform(lambda x: librosa.feature.melspectrogram(x, sr=sr, n_fft=n_fft, hop_length=hop_length, win_length=win_length)),
-        map_transform(lambda x: librosa.core.power_to_db(x, ref=1.0)),
-        tensor(tf.float32),
+        map_transform(lambda x: tf.py_function(lambda x: librosa.feature.melspectrogram(x.numpy(), sr=sr, n_fft=n_fft, hop_length=hop_length, win_length=win_length), [x], x.dtype)),
+        map_transform(lambda x: tf.py_function(lambda x: librosa.core.power_to_db(x.numpy(), ref=1.0), [x], x.dtype)),
         # stft(frame_length, frame_step, fft_length),
         # abs(),
         # mels(sr, fft_length//2+1, **kwargs),
         # transpose2d()
     ])
 
-def denormalize(denorm_amin=-20, denorm_amax=0, normalization='neg_one_to_one'):
+def denormalize(denorm_amin=-100, denorm_amax=0, normalization='neg_one_to_one'):
     if normalization == 'neg_one_to_one':
         return map_transform(lambda x: (((x+1)*0.5)*(denorm_amax-denorm_amin)+denorm_amin))
     elif normalization == 'zero_to_one':
