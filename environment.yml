@@ -18,3 +18,4 @@ dependencies:
       - tensorflow-probability==0.9.0
       - tensorboard-plugin-wit==1.6.0.post2
       - tensorflow-datasets==2.1.0
+      - pyyaml==3.5.1
