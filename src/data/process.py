@@ -61,11 +61,22 @@ def filter_transform(fn):
 def parse_tfrecord(features):
     return map_transform(lambda x: tf.io.parse_single_example(x, features))
 
+def resample(orig_sr, target_sr, dtype=None):
+    return map_transform(lambda x: tf.reshape(tf.py_function(lambda x: librosa.core.resample(x.numpy(), orig_sr=orig_sr, target_sr=target_sr), [tf.reshape(x, [-1])], x.dtype if dtype is None else dtype), [-1]))
+
 def read_file():
     return map_transform(lambda x: tf.io.read_file(x))
 
 def decode_wav(desired_channels=-1, desired_samples=-1):
     return map_transform(lambda x: tf.audio.decode_wav(x, desired_channels, desired_samples))
+
+def wav(desired_channels=-1, desired_samples=-1):
+    return pipeline([
+        read_file(),
+        decode_wav(desired_channels, desired_samples),
+        map_transform(lambda x: x[0]),
+        reshape([-1]),
+    ])
 
 def one_hot(depth):
     return map_transform(lambda x: tf.one_hot(x, depth))
@@ -82,8 +93,11 @@ def reshape(shape):
 def set_channels(channels):
     return map_transform(lambda x: tf.reshape(x, [*x.shape, channels]))
 
-def batch(batch_size):
-    return lambda dataset: dataset.batch(batch_size)
+def cache(filename=''):
+    return lambda dataset: dataset.cache(filename)
+
+def batch(batch_size, drop_remainder=False):
+    return lambda dataset: dataset.batch(batch_size, drop_remainder)
 
 def unbatch():
     return lambda dataset: dataset.unbatch()
@@ -95,7 +109,20 @@ def prefetch():
     return lambda dataset: dataset.prefetch(tf.data.experimental.AUTOTUNE)
 
 def pad(paddings, mode, constant_values=0, name=None):
-    return map_transform(lambda x: tf.pad(x, paddings, mode, constant_values, name))
+    return map_transform(_pad(paddings, mode, constant_values, name))
+
+def _pad(paddings, mode, constant_values=0, name=None):
+    def _p(x):
+        if type(constant_values) == str:
+            if constant_values == 'min':
+                values = tf.reduce_min(x)
+            elif constant_values == 'max':
+                values = tf.reduce_max(x)
+        else:
+            values = constant_values
+        return tf.pad(x, paddings, mode, values, name)
+    return _p
+
 
 def frame(frame_length, frame_step, pad_end=False, pad_value=0, axis=-1, name=None):
     return map_transform(lambda x: tf.signal.frame(x, frame_length,
@@ -105,6 +132,13 @@ def frame(frame_length, frame_step, pad_end=False, pad_value=0, axis=-1, name=No
 def split(num_or_size_splits, axis=0, num=None, name='split'):
     return map_transform(lambda x: tf.split(x, num_or_size_splits,
                                                    axis, num, name))
+
+def debug():
+    return map_transform(lambda x: tf.py_function(_debug, [x], x.dtype))
+
+def _debug(x):
+    print(x)
+    return x
 
 def stft(frame_length, frame_step, fft_length=None):
     return map_transform(lambda x: tf.signal.stft(x, frame_length,
@@ -120,13 +154,18 @@ def abs():
 def dupe():
     return map_transform(lambda x: (x, x))
 
-def _normalize(x):
-    _max = tf.reduce_max(x)
-    _min = tf.reduce_min(x)
-    return ((x - _min) / (_max - _min)) * 2 - 1
+def _normalize(normalization='neg_one_to_one'):
+    def _n(x):
+        _max = tf.reduce_max(x)
+        _min = tf.reduce_min(x)
+        if normalization == 'neg_one_to_one':
+            return ((x - _min) / (_max - _min)) * 2 - 1
+        elif normalization == 'zero_to_one':
+            return ((x - _min) / (_max - _min))
+    return _n
 
-def normalize():
-    return map_transform(_normalize)
+def normalize(normalization='neg_one_to_one'):
+    return map_transform(_normalize(normalization))
 
 def amp_to_log(amin=1e-5):
     return map_transform(lambda x: tf.math.log(x + amin))
@@ -157,79 +196,112 @@ def spec(fft_length=1024, frame_step=512, frame_length=None, **kwargs):
         transpose2d()
     ])
 
-def melspec(sr, fft_length=1024, frame_step=512, frame_length=None, **kwargs):
-    if frame_length is None:
-        frame_length = fft_length
+def melspec(sr, n_fft=1024, hop_length=512, win_length=None, **kwargs):
     return pipeline([
-        stft(frame_length, frame_step, fft_length),
-        abs(),
-        mels(sr, fft_length//2+1, **kwargs),
-        transpose2d()
+        numpy(),
+        map_transform(lambda x: librosa.feature.melspectrogram(x, sr=sr, n_fft=n_fft, hop_length=hop_length, win_length=win_length)),
+        map_transform(lambda x: librosa.core.power_to_db(x, ref=1.0)),
+        tensor(tf.float32),
+        # stft(frame_length, frame_step, fft_length),
+        # abs(),
+        # mels(sr, fft_length//2+1, **kwargs),
+        # transpose2d()
     ])
 
-def invert_melspec(sr, fft_length=1024, frame_step=512, frame_length=None):
-    if frame_length is None:
-        frame_length = fft_length
-    return map_transform(lambda x: librosa.feature.inverse.mel_to_audio(x.numpy(), sr=sr, n_fft=fft_length, hop_length=frame_step, win_length=frame_length))
+def denormalize(denorm_amin=-20, denorm_amax=0, normalization='neg_one_to_one'):
+    if normalization == 'neg_one_to_one':
+        return map_transform(lambda x: (((x+1)*0.5)*(denorm_amax-denorm_amin)+denorm_amin))
+    elif normalization == 'zero_to_one':
+        return map_transform(lambda x: (x*(denorm_amax-denorm_amin)+denorm_amin))
+    else:
+        raise Exception(f"No normalization type named '{normalization}'.")
 
-def invert_log_melspec(sr, fft_length=1024, frame_step=512, frame_length=None, amin=1e-5):
+def invert_log_melspec(sr, n_fft=1024, hop_length=512, win_length=None, amin=1e-5, denorm_amin=-38, denorm_amax=0):
     return pipeline([
-        log_to_amp(amin),
-        invert_melspec(sr, fft_length, frame_step, frame_length)
+        # denormalize(denorm_amin, denorm_amax),
+        # log_to_amp(amin),
+        map_transform(lambda x: librosa.core.db_to_power(x, ref=1.0)),
+        map_transform(lambda x: librosa.feature.inverse.mel_to_audio(x, sr=sr, n_fft=n_fft, hop_length=hop_length, win_length=win_length))
     ])
 
 def load_midi():
     return map_transform(lambda x: mido.MidiFile(x))
 
-def encode_midi(note_count=128, max_time_shift=100, time_shift_ms=10, velocity_count=100):
+
+def encode_midi(note_count=128, time_shift_count=100, time_shift_ms=10, velocity_count=100):
+    _event_start = {
+        'note_on': 0,
+        'note_off': note_count,
+        'time_shift': note_count * 2,
+        'velocity': note_count * 2 + time_shift_count,
+    }
+
     def _midi(x):
         midi = []
+        prev_note = 0
         for msg in x:
             if not msg.is_meta:
-                time_shift = min(int(msg.time*1000) // time_shift_ms, max_time_shift)-1
-                time_enc = tf.reshape(tf.one_hot(np.array([time_shift]), max_time_shift), [-1])
-                note = None
-                velocity = None
-                etype = None
+                time_shift = min(int(msg.time*1000) // time_shift_ms, time_shift_count-1)
 
                 if msg.type == 'note_on':
-                    note = tf.reshape(tf.one_hot(np.array([msg.note]), note_count), [-1])
-                    velocity = tf.reshape(tf.one_hot(np.array([msg.velocity]), velocity_count), [-1])
-                    etype = [1]
+                    midi.append(min(msg.note, note_count-1) + _event_start['note_on'])
+                    midi.append(min(msg.velocity, velocity_count-1) + _event_start['velocity'])
+                    prev_note = msg.note
                 else:# msg.type == 'note_off':
-                    note = tf.zeros((note_count,))
-                    velocity = tf.zeros((velocity_count,))
-                    etype = [0]
+                    midi.append(min(prev_note, note_count-1) + _event_start['note_off'])
 
-                if note is not None:
-                    midi.append(tf.concat([etype, note, velocity, time_enc], axis=0))
+                midi.append(time_shift+_event_start['time_shift'])
 
-        return tf.stack(midi)
+        return tf.cast(tf.stack(midi), dtype=tf.int64)
     return map_transform(_midi)
 
-def decode_midi(note_count=128, max_time_shift=100, time_shift_ms=10, velocity_count=100):
+def decode_midi(note_count=128, time_shift_count=100, time_shift_ms=10, velocity_count=100):
+    note_on_range = range(0, note_count)
+    note_off_range = range(note_count, note_count*2)
+    time_shift_range = range(note_count*2, note_count*2+time_shift_count)
+
     def _midi(x):
         mid = mido.MidiFile()
         track = mido.MidiTrack()
         mid.tracks.append(track)
 
-        for e in tf.unstack(x):
-            [mtype, note, velocity, time] = tf.split(e, [1, note_count, velocity_count, max_time_shift])
-            if mtype == 1:
-                mtype = 'note_on'
-            else:
-                mtype = 'note_off'
+        msgs = []
+        prev_msg = None
+        for e in x.numpy():
+            print(e)
+            e = int(e)
+            print(e)
+            if e in note_on_range:
+                msg = {'type': 'note_on', 'note': e}
+                msgs.append(msg)
+                prev_msg = msg
+            elif e in note_off_range:
+                msg = {'type': 'note_off'}
+                msgs.append(msg)
+                prev_msg = msg
+            elif e in time_shift_range and prev_msg is not None:
+                prev_msg['time_shift'] = e - note_count*2
+            elif prev_msg is not None:
+                prev_msg['velocity'] = e - note_count*2 - time_shift_count
 
-            note = tf.argmax(note, axis=-1).numpy()
-            velocity = tf.argmax(velocity, axis=-1).numpy()
-            time = tf.argmax(time, axis=-1)
-            time = ((time+1)*time_shift_ms)/1000
-            time = int(round(mido.second2tick(time.numpy(), mid.ticks_per_beat, 500000)))
-
-            if mtype == 'note_on':
-                track.append(mido.Message(mtype, note=note, velocity=velocity, time=time))
+        print(msgs)
+        note_on = False
+        for msg in msgs:
+            if msg['type'] == 'note_on':
+                # if 'velocity' not in msg and 'time_shift' not in msg:
+                #     break
+                track.append(mido.Message('note_on',
+                                          note=msg['note'],
+                                          velocity=msg['velocity'] if 'velocity' in msg else 20,
+                                          time=msg['time_shift']*time_shift_ms if 'time_shift' in msg else 50))
+                note_on = True
             else:
-                track.append(mido.Message(mtype, time=time))
+                # if 'time_shift' not in msg:
+                #     break
+                track.append(mido.Message('note_off',
+                                          time=msg['time_shift']*time_shift_ms if 'time_shift' in msg else 50))
+                note_on = False
+        print(track)
 
         return mid
     return map_transform(_midi)
@@ -239,5 +311,5 @@ def midi(note_count=128, max_time_shift=100, time_shift_m=10):
         numpy(),
         load_midi(),
         encode_midi(note_count, max_time_shift, time_shift_m),
-        tensor(tf.float32),
+        tensor(tf.int64),
     ])
