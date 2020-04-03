@@ -42,16 +42,9 @@ def start(hparams):
     # Load nsynth dataset from tfds
     dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=True)
 
-    dataset = pro.index_map('pitch', pro.one_hot(hparams['cond_vector_size']))(dataset)
+    gan_stats = calculate_dataset_stats(hparams, dataset)
 
-    dataset = pro.index_map('audio', pro.pipeline([
-        pro.melspec(sr=hparams['sample_rate']),
-        pro.pad([[0, 0], [0, 2]], 'CONSTANT', constant_values=hparams['log_amin']),
-        pro.normalize(normalize='specgan'),
-    ]))(dataset)
-    # gan_stats = calculate_dataset_stats(hparams, dataset)
-
-    # dataset = nsynth_to_melspec(dataset, hparams, gan_stats)
+    dataset = nsynth_to_melspec(dataset, hparams, gan_stats)
 
     # Determine shape of the spectograms in the dataset
     spec_shape = None
@@ -106,6 +99,7 @@ def calculate_dataset_stats(hparams, dataset):
 
     megabatch = dataset.batch(100000).as_numpy_iterator()
     x = next(megabatch)
+    x = x['audio']
     mean = x.mean(axis=0)
     min_ = x.min(axis=0)
     max_ = x.max(axis=0)

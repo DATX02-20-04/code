@@ -34,14 +34,15 @@ def nsynth_to_melspec(dataset, hparams, stats=None):
         if 'source' in hparams and hparams['source'] is not None:
             dataset = pro.filter(instrument_sources_filter(instrument['source']))(dataset)
 
-    dataset = pro.pipeline([
-        pro.extract('audio'),
+    dataset = pro.index_map('pitch', pro.one_hot(hparams['cond_vector_size']))(dataset)
+
+    dataset = pro.index_map('audio', pro.pipeline([
         pro.melspec(sr=hparams['sample_rate']),
         pro.pad([[0, 0], [0, 2]], 'CONSTANT', constant_values=hparams['log_amin']),
-    ])(dataset)
+    ]))(dataset)
 
     if stats is not None:
-        dataset = pro.normalize(normalization='specgan', stats=stats)(dataset)
+        dataset = pro.index_map('audio', pro.normalize(normalization='specgan', stats=stats))(dataset)
 
     # Create preprocessing pipeline for the melspectograms
     return dataset
