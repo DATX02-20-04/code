@@ -1,27 +1,24 @@
 import tensorflow as tf
+import json
+import numpy as np
+import functools
 import data.process as pro
 from models.common.training import Trainer
-from data.nsynth import nsynth_from_tfrecord, instruments, nsynth_to_melspec
+from data.nsynth import nsynth_from_tfrecord, nsynth_to_melspec
 from models.gan.model import GAN
 import data.process as pro
 import tensorflow_datasets as tfds
-
+import matplotlib.pyplot as plt
 
 # Define some metrics to be used in the training
 gen_loss_avg = tf.keras.metrics.Mean()
 disc_loss_avg = tf.keras.metrics.Mean()
 
 
-def instrument_filter(hparams):
-    def _filter(x):
-        return tf.reshape(tf.math.equal(x['instrument_family'], instruments[hparams['instrument']]), [])
-    return _filter
-
 # This runs at the start of every epoch
 def on_epoch_start(epoch, step, tsw):
     gen_loss_avg = tf.keras.metrics.Mean()
     disc_loss_avg = tf.keras.metrics.Mean()
-
 
 
 # This runs at every step in the training (for each batch in dataset)
@@ -41,6 +38,7 @@ def on_epoch_complete(epoch, step, duration, tsw):
     print(f"Epoch: {epoch}, Step: {step}, Gen Loss: {gen_loss_avg.result()}, Disc Loss: {disc_loss_avg.result()}, Duration: {duration} s")
 
 def start(hparams):
+
     # Load nsynth dataset from tfds
     dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=True)
 
@@ -52,6 +50,9 @@ def start(hparams):
         pro.amp_to_log(amin=hparams['log_amin']),
         pro.normalize(),
     ]))(dataset)
+    # gan_stats = calculate_dataset_stats(hparams, dataset)
+
+    # dataset = nsynth_to_melspec(dataset, hparams, gan_stats)
 
     # Determine shape of the spectograms in the dataset
     spec_shape = None
@@ -68,7 +69,8 @@ def start(hparams):
 
     # Create preprocessing pipeline for shuffling and batching
     dataset = pro.pipeline([
-        pro.set_channels(1),
+        pro.reshape([*spec_shape, 1]),
+        pro.cache(),
         pro.shuffle(hparams['buffer_size']),
         pro.batch(hparams['batch_size']),
         pro.prefetch()
@@ -94,3 +96,25 @@ def start(hparams):
     trainer.on_epoch_complete = on_epoch_complete
 
     trainer.run()
+
+def calculate_dataset_stats(hparams, dataset):
+    print("Calculating dataset stats...")
+    dataset = nsynth_to_melspec(dataset, hparams)
+
+    megabatch = dataset.batch(100000).as_numpy_iterator()
+    x = next(megabatch)
+    mean = x.mean(axis=0)
+    min_ = x.min(axis=0)
+    max_ = x.max(axis=0)
+    variance = x.var(axis=0)
+
+    np.savez('gan_stats.npz', mean=mean, min=min_, max=max_, variance=variance)
+
+    print("Calculating dataset stats, done.")
+
+    return {
+        'mean': mean,
+        'min': min_,
+        'max': max_,
+        'variance': variance,
+    }
