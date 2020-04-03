@@ -23,8 +23,10 @@ def map_transform(fn):
     def transform(dataset):
         if isinstance(dataset, tf.data.Dataset):
             return dataset.map(fn, num_parallel_calls=tf.data.experimental.AUTOTUNE)
-        else:
+        elif not isinstance(dataset, tf.Tensor):
             return map(fn, dataset)
+        else:
+            return fn(dataset)
     return transform
 
 def numpy():
