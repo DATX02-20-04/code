@@ -1,16 +1,19 @@
 hparams:
   name: 'gan'
-  plot: False
+  instrument:
+    family: keyboard
+    source: acoustic
   epochs: 100
-  steps: 1000
+  steps: 0
   sample_rate: 16000
   batch_size: 32
   buffer_size: 1000
   latent_size: 100
+  cond_vector_size: 88
   generator_scale: 128
   gen_lr: 0.0001
   disc_lr: 0.0004
-  log_amin: 0.00001
+  log_amin: 0.00000000001
   num_examples: 16
   save_dir: './'
   save_images: False

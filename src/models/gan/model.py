@@ -19,12 +19,17 @@ class GAN():
     @tf.function
     def train_step(self, x):
         noise = tf.random.normal([self.hparams['batch_size'], self.hparams['latent_size']])
+        pitches = tf.random.uniform([self.hparams['batch_size']], 0, self.hparams['cond_vector_size'] - 1, dtype=tf.int32)
+        fake_pitch = tf.one_hot(pitches, self.hparams['cond_vector_size'], axis=1)
+
+        real_spec = x['audio']
+        real_pitch = x['pitch']
 
         with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
-            generated_x = self.generator(noise, training=True)
+            fake_spec = self.generator([noise, fake_pitch], training=True)
 
-            real_output = self.discriminator(x, training=True)
-            fake_output = self.discriminator(generated_x, training=True)
+            real_output = self.discriminator([real_spec, real_pitch], training=True)
+            fake_output = self.discriminator([fake_spec, fake_pitch], training=True)
 
             gen_loss = self.generator_loss(fake_output)
             disc_loss = self.discriminator_loss(real_output, fake_output)
@@ -39,19 +44,22 @@ class GAN():
 
     def discriminator_loss(self, real_output, fake_output):
         real_loss = self.cross_entropy(
-            tf.zeros_like(real_output)+tf.random.uniform(real_output.shape, 0, 0.1), # Add random to smooth real labels
+            tf.ones_like(real_output)-tf.random.uniform(real_output.shape, 0, 0.1), # Add random to smooth real labels
             real_output)
         fake_loss = self.cross_entropy(
-            tf.ones_like(fake_output)-tf.random.uniform(fake_output.shape, 0, 0.1), # Subtract random to smooth fake labels
+            tf.zeros_like(fake_output)+tf.random.uniform(fake_output.shape, 0, 0.1), # Subtract random to smooth fake labels
             fake_output)
         total_loss = real_loss + fake_loss
         return total_loss
 
     def generator_loss(self, fake_output):
-        return self.cross_entropy(tf.zeros_like(fake_output), fake_output)
+        return self.cross_entropy(tf.ones_like(fake_output), fake_output)
 
     def create_generator(self):
         i = tfkl.Input(shape=(self.hparams['latent_size'],))
+        cond = tfkl.Input(shape=(self.hparams['cond_vector_size']),)
+
+        o = tfkl.Concatenate()([i, cond])
 
         o = tfkl.Dense((self.shape[0]//4)*(self.shape[1]//4)*self.hparams['generator_scale'])(i)
         o = tfkl.BatchNormalization()(o)
@@ -71,7 +79,7 @@ class GAN():
         o = tfkl.UpSampling2D(size=(2, 2))(o)
         o = tfkl.Conv2D(1, (5, 5), strides=(1, 1), padding='same', use_bias=False, activation='tanh')(o)
 
-        return tf.keras.Model(inputs=i, outputs=o)
+        return tf.keras.Model(inputs=[i, cond], outputs=o)
 
 
     def create_discriminator(self):
@@ -90,9 +98,21 @@ class GAN():
         # o = tfkl.Conv2D(8, (4, 4), strides=(2, 2), padding='same')(o)
         # o = tfkl.BatchNormalization()(o)
         # o = tfkl.LeakyReLU()(o)
+        #
+        cond = tfkl.Input(shape=(self.hparams['cond_vector_size'],))
 
         o = tfkl.Dropout(0.4)(o)
         o = tfkl.Flatten()(o)
+        o = tfkl.Concatenate()([o, cond])
+
+        o = tfkl.Dense(32)(o)
+        o = tfkl.BatchNormalization()(o)
+        o = tfkl.LeakyReLU()(o)
+
+        o = tfkl.Dense(16)(o)
+        o = tfkl.BatchNormalization()(o)
+        o = tfkl.LeakyReLU()(o)
+
         o = tfkl.Dense(1)(o)
 
-        return tf.keras.Model(inputs=i, outputs=o)
+        return tf.keras.Model(inputs=[i, cond], outputs=o)
