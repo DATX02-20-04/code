@@ -19,8 +19,8 @@ class GAN():
     @tf.function
     def train_step(self, x):
         noise = tf.random.normal([self.hparams['batch_size'], self.hparams['latent_size']])
-        pitches = tf.random.uniform(self.hparams['batch_size'], 0, self.hparams['cond_vector_size'] - 1, dtype=tf.int32)
-        fake_pitch = tf.one_hot(pitches, axis=1)
+        pitches = tf.random.uniform([self.hparams['batch_size']], 0, self.hparams['cond_vector_size'] - 1, dtype=tf.int32)
+        fake_pitch = tf.one_hot(pitches, self.hparams['cond_vector_size'], axis=1)
 
         real_spec = x['audio']
         real_pitch = x['pitch']

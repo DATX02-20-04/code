@@ -46,7 +46,7 @@ def start(hparams):
 
     dataset = pro.index_map('audio', pro.pipeline([
         pro.melspec(sr=hparams['sample_rate']),
-        pro.pad([[0, 0], [0, 4]], 'CONSTANT', constant_values=hparams['log_amin']),
+        pro.pad([[0, 0], [0, 2]], 'CONSTANT', constant_values=hparams['log_amin']),
         pro.amp_to_log(amin=hparams['log_amin']),
         pro.normalize(),
     ]))(dataset)
@@ -56,8 +56,11 @@ def start(hparams):
 
     # Determine shape of the spectograms in the dataset
     spec_shape = None
-    for e in dataset.take(1):
+    for x in dataset.take(1):
+        e = x['audio']
+        cond = x['pitch']
         spec_shape = e.shape
+        print(cond)
         print(f'Spectogram shape: {spec_shape}')
 
     # Make sure we got a shape before continuing
@@ -67,9 +70,10 @@ def start(hparams):
     # This is because the generator is going to upscale it's state twice with a factor of 2.
     assert spec_shape[0] % 4 == 0 and spec_shape[1] % 4 == 0, "Spectogram dimensions is not divisible by 4"
 
+    dataset = pro.index_map('audio', pro.reshape([*spec_shape, 1]))(dataset)
+
     # Create preprocessing pipeline for shuffling and batching
     dataset = pro.pipeline([
-        pro.reshape([*spec_shape, 1]),
         pro.cache(),
         pro.shuffle(hparams['buffer_size']),
         pro.batch(hparams['batch_size']),
