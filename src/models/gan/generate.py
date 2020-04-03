@@ -8,6 +8,8 @@ import numpy as np
 
 
 def start(hparams):
+    gan_stats = np.load('gan_stats.npz')
+
     gan = GAN((128, 128), hparams)
 
     trainer = Trainer(None, hparams)
@@ -24,11 +26,14 @@ def start(hparams):
 
     seed = tf.random.normal((4, hparams['latent_size']))
     samples = tf.reshape(gan.generator(seed, training=False), [-1, 128, 128])
-    plt.imshow(samples[0])
-    plt.show()
     x = tf.unstack(samples)
+    plt.imshow(tf.concat(x, axis=1))
+    plt.show()
     print(x)
-    audio = pro.invert_log_melspec(hparams['sample_rate'])(x)
+    audio = pro.pipeline([
+        pro.denormalize(normalization='specgan', stats=gan_stats),
+        pro.invert_log_melspec(hparams['sample_rate'])
+    ])(x)
 
     output = np.concatenate(list(audio))
 

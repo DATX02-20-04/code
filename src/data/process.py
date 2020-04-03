@@ -23,8 +23,10 @@ def map_transform(fn):
     def transform(dataset):
         if isinstance(dataset, tf.data.Dataset):
             return dataset.map(fn, num_parallel_calls=tf.data.experimental.AUTOTUNE)
-        else:
+        elif not isinstance(dataset, tf.Tensor):
             return map(fn, dataset)
+        else:
+            return fn(dataset)
     return transform
 
 def numpy():
@@ -90,8 +92,8 @@ def extract(key):
 def reshape(shape):
     return map_transform(lambda x: tf.reshape(x, shape))
 
-def set_channels(channels):
-    return map_transform(lambda x: tf.reshape(x, [*x.shape, channels]))
+# def set_channels(channels):
+#     return map_transform(lambda x: tf.reshape(x, [-1, channels]))
 
 def cache(filename=''):
     return lambda dataset: dataset.cache(filename)
@@ -154,18 +156,24 @@ def abs():
 def dupe():
     return map_transform(lambda x: (x, x))
 
-def _normalize(normalization='neg_one_to_one'):
+def _normalize(normalization='neg_one_to_one', **kwargs):
     def _n(x):
-        _max = tf.reduce_max(x)
-        _min = tf.reduce_min(x)
+        _max = tf.math.reduce_max(x)
+        _min = tf.math.reduce_min(x)
         if normalization == 'neg_one_to_one':
             return ((x - _min) / (_max - _min)) * 2 - 1
         elif normalization == 'zero_to_one':
             return ((x - _min) / (_max - _min))
+        elif normalization == 'specgan':
+            stats = kwargs['stats']
+            std = tf.math.sqrt(stats['variance'])
+            norm = (x - stats['mean']) / (3*std)
+            clipped = tf.math.minimum(tf.math.maximum(norm, -1), 1)
+            return clipped
     return _n
 
-def normalize(normalization='neg_one_to_one'):
-    return map_transform(_normalize(normalization))
+def normalize(normalization='neg_one_to_one', **kwargs):
+    return map_transform(_normalize(normalization, **kwargs))
 
 def amp_to_log(amin=1e-5):
     return map_transform(lambda x: tf.math.log(x + amin))
@@ -198,21 +206,23 @@ def spec(fft_length=1024, frame_step=512, frame_length=None, **kwargs):
 
 def melspec(sr, n_fft=1024, hop_length=512, win_length=None, **kwargs):
     return pipeline([
-        numpy(),
-        map_transform(lambda x: librosa.feature.melspectrogram(x, sr=sr, n_fft=n_fft, hop_length=hop_length, win_length=win_length)),
-        map_transform(lambda x: librosa.core.power_to_db(x, ref=1.0)),
-        tensor(tf.float32),
+        map_transform(lambda x: tf.py_function(lambda x: librosa.feature.melspectrogram(x.numpy(), sr=sr, n_fft=n_fft, hop_length=hop_length, win_length=win_length), [x], x.dtype)),
+        map_transform(lambda x: tf.py_function(lambda x: librosa.core.power_to_db(x.numpy(), ref=1.0), [x], x.dtype)),
         # stft(frame_length, frame_step, fft_length),
         # abs(),
         # mels(sr, fft_length//2+1, **kwargs),
         # transpose2d()
     ])
 
-def denormalize(denorm_amin=-20, denorm_amax=0, normalization='neg_one_to_one'):
+def denormalize(normalization='neg_one_to_one', **kwargs):
     if normalization == 'neg_one_to_one':
-        return map_transform(lambda x: (((x+1)*0.5)*(denorm_amax-denorm_amin)+denorm_amin))
+        return map_transform(lambda x: (((x+1)*0.5)*(kwargs['denorm_amax']-kwargs['denorm_amin'])+kwargs['denorm_amin']))
     elif normalization == 'zero_to_one':
-        return map_transform(lambda x: (x*(denorm_amax-denorm_amin)+denorm_amin))
+        return map_transform(lambda x: (x*(kwargs['denorm_amax']-kwargs['denorm_amin'])+kwargs['denorm_amin']))
+    elif normalization == 'specgan':
+        stats = kwargs['stats']
+        std = tf.math.sqrt(stats['variance'])
+        return map_transform(lambda x: (x * (3.0 * std)) + stats['mean'])
     else:
         raise Exception(f"No normalization type named '{normalization}'.")
 
