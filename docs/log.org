@@ -22,6 +22,107 @@
   A time log can be found at Google Sheets: https://bit.ly/2PRKRl8
 
   The time log has exact tasks worked on each entry, for each
+* Week 11
+No great audio results for this week unfortunately.
+** Progress
+*** Report
+We have made good progress on the report, though we feel that since our
+implementation is so advanced compared to the typical bachelor thesis, the
+theory section has to be really large. As such, we have primarily been writing
+theory and a bit on implementation.
+
+We came up with a good structure with our supervisor and are right now focusing
+on making each chapter have roughly the same amount of pages. We could easily
+write too much for this report, so we have to find a balance of what is actually
+required to explain to understand the implementation. An example is: how do you
+explain how a transformer with attention work? This topic could easily take ~20
+pages but leaving it too short would make understanding difficult for the reader
+who we target as our coursemates.
+
+*** Note generation
+In order to connect this component to the final system, we need to condition it
+on pitch so we can controlling which pitch/note the generator generates. This is
+what we have been working on this week. The main idea is to append a one-hot
+vector representation of notes (size of 88 which are the number of keys on a
+standard piano or number of tones in MIDI). The hope is that the generator then
+learns to generate random sounding tones according to that vector.
+
+Pitch conditioning is almost done but we cannot be sure it is entirely right.
+We may have to add another loss component to the discriminator called an
+/auxillary classifier/ that would encourage the generator to care more about the
+conditioning vector.
+
+This idea came from the GANSynth paper. They do a lot of other things as well,
+including adding a phase channel to the network, allowing it to generate its own
+phase instead of having to reconstruct it using the Griffin-lim algorithm. They
+call this Instantaneous Frequency, which is the derivative of phase. We also
+want to implement this because even though our processing nad inversion sounds
+"good enough", this could improve it.
+
+Due to limited training, we do not have a lot of great sounding examples yet so
+but hopefully we will have some by next week.
+
+*** Structure generation
+Structure generation is since last week pretty much done, maybe we could train
+it a bit more but our main concern is fixing note generation so that we can
+connect the two.
+
+*** Training
+We started using Bayes but we are not quite sure if we are using it correctly.
+The canvas course page states to ensure there are not more threads running than
+designated CPU cores, so the main concern is configuring tensorflow to not spawn
+~200 threads.
+
+We also set up tensorboard to better log our results. We will most likely start
+auto generating our images and audio samples but it's not a priority.
+
+** Last weeks' goals
+- We did some extensive training on Bayes
+- Spectrogram processing is for the most part done (there are still some issues
+  with normalization)
+- Wasserstein not implemented yet due to wanting to focus on processing, who we
+  deemd to be the thing making the note generation sound off.
+- Posterior collapse still an issue
+- We've come a good way with the report but there is a lot of theory
+** Summary of each member
+- *Christoffer*:
+  - Spent most of my time structuring and writing the report.
+  - Also worked with Eric and Elias to implement pitch conditioning on the
+    GAN.
+  - Also helped debug our spectrogram processing though most of that work was
+    Eric.
+  - Been really digging into the GANSynth details, even though they don't do
+    a great job of explaining their model.
+  - Finally, did some training on Bayes and attempted to configure
+    tensorflow/numpy to only use x amount of threads.
+- *Eric*:
+  - I mostly worked on the VAE(which is starting to look like a dead-end to
+    me)
+  - Worked on GAN to add the pitch conditioning and fix normalization.
+- *Carl*:
+  - Wrote on a few sections including ethics and music transformer, rewrote
+    midi pipeline
+- *Lovisa*:
+  - Working on Wasserstein GAN and the math behind it.
+  - Have been reviewing github issues and added content to the report.
+- *Cao*:
+  - Did some reading and expanded some of the subsections for the final
+    report.
+  - Also reviewed the specgan/ pipeline for more understanding so id be able
+    to help with writing the implementation section/ documentation for the
+    code.
+- *Elias*:
+  - Worked on getting pitch conditioning to work together with Christoffer and
+  Eric.
+  - Also worked on implemented an alternative GAN training scheme which
+  has some similarities to Wasserstein GAN.
+** Next week
+- Auxillary classifier for the SpecGAN
+- Maybe incorporate WGAN if results are not great
+- Work on connecting structure and note, even if note is not on par with
+  structure yet.
+- Keep adding to the report, particularly the implementation sections.
+
 * Week 10
 ** Progress
 *** Report
@@ -650,4 +751,5 @@ Still exam week so some members haven't gotten a lot donech memeber
 
   For personal reasons, Cao was absent for part of the week, but this was notified well in advance.
 
-  For next week, we are looking to finish the group contract, continue researching and starting work on the project plan.
+  For next week, we are looking to finish the group contract, continue
+  researching and starting work on the project plan
