@@ -27,12 +27,12 @@ def start(hparams):
     count = 10
     seed = tf.random.normal((count, hparams['latent_size']))
     mid = hparams['cond_vector_size']//2
-    pitches = tf.one_hot(range(mid-count//2, mid+count//2), hparams['cond_vector_size'])
+    pitches = range(mid-count//2, mid+count//2)
 
     samples = tf.reshape(gan.generator([seed, pitches], training=False), [-1, 128, 128])
     x = tf.unstack(samples)
     plt.imshow(tf.concat(x, axis=1))
-    plt.show()
+    plt.savefig('output.png')
     print(x)
     audio = pro.pipeline([
         pro.denormalize(normalization='specgan', stats=gan_stats),

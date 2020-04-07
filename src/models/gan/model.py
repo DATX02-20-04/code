@@ -20,7 +20,7 @@ class GAN():
     @tf.function
     def train_step(self, x):
         noise = tf.random.normal([self.hparams['batch_size'], self.hparams['latent_size']])
-        fake_pitch_index = tf.random.uniform([self.hparams['batch_size']], 0, self.hparams['cond_vector_size'] - 1, dtype=tf.int32)
+        fake_pitch_index = tf.random.uniform([self.hparams['batch_size']], 24, self.hparams['cond_vector_size'] + 24 + 1, dtype=tf.int32)
         # fake_pitch = tf.one_hot(pitches, self.hparams['cond_vector_size'], axis=1)
 
         real_spec = x['audio']
@@ -65,16 +65,16 @@ class GAN():
         return source_loss + fake_aux_loss
 
     def create_generator(self):
-        latent = tfkl.Input(shape=(self.hparams['latent_size'],))
+        latent = tfkl.Input(shape=(self.hparams['latent_size'],1))
         pitch_class = tfkl.Input(shape=(1,))
 
-        cls = tfkl.Embedding(self.hparams['cond_vector_size'], self.hparams['latent_size'],
+        cls = tfkl.Embedding(self.hparams['cond_vector_size'] + 24 + 1, self.hparams['latent_size'],
                         embeddings_initializer='glorot_normal')(pitch_class)
 
         hadamard = tfkl.multiply([latent, cls])
 
         o = tfkl.Dense((self.shape[0]//4)*(self.shape[1]//4)*self.hparams['generator_scale'])(hadamard)
-        o = tfkl.BatchNormalization()(o)
+        # o = tfkl.BatchNormalization()(o)
         o = tfkl.LeakyReLU()(o)
 
         o = tfkl.Reshape((self.shape[0]//4, self.shape[1]//4, self.hparams['generator_scale']))(o)
@@ -123,6 +123,6 @@ class GAN():
         o = tfkl.LeakyReLU()(o)
 
         fake = tfkl.Dense(1)(o)
-        aux = tfkl.Dense(self.hparams['cond_vector_size'], activation='softmax', name='auxillary')(o)
+        aux = tfkl.Dense(self.hparams['cond_vector_size'] + 24 + 1, activation='softmax', name='auxillary')(o)
 
         return tf.keras.Model(inputs=image, outputs=[fake, aux])
