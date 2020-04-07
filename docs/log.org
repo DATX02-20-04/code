@@ -115,7 +115,7 @@ auto generating our images and audio samples but it's not a priority.
   - Worked on getting pitch conditioning to work together with Christoffer and
     Eric.
   - Also worked on implemented an alternative GAN training scheme which
-  has some similarities to Wasserstein GAN.
+    has some similarities to Wasserstein GAN.
 ** Next week
 - Auxillary classifier for the SpecGAN
 - Maybe incorporate WGAN if results are not great
