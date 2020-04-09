@@ -120,40 +120,33 @@ class GAN():
         o = tfkl.BatchNormalization()(o)
         o = tfkl.LeakyReLU()(o)
 
-        o = tfkl.MaxPool2D()(o)
-        o = tfkl.Conv2D(64, (3, 3), strides=(1, 1), padding='same')(o)
+        o = tfkl.Conv2D(64, (3, 3), strides=(2, 2), padding='same')(o)
         o = tfkl.BatchNormalization()(o)
         o = tfkl.LeakyReLU()(o)
 
-        o = tfkl.MaxPool2D()(o)
-        o = tfkl.Conv2D(32, (3, 3), strides=(1, 1), padding='same')(o)
-        o = tfkl.BatchNormalization()(o)
-        o = tfkl.LeakyReLU()(o)
-        o = tfkl.Dropout(0.3)(o)
-
-        o = tfkl.MaxPool2D()(o)
-        o = tfkl.Conv2D(16, (4, 4), strides=(1, 1), padding='same')(o)
+        o = tfkl.Conv2D(32, (3, 3), strides=(2, 2), padding='same')(o)
         o = tfkl.BatchNormalization()(o)
         o = tfkl.LeakyReLU()(o)
         o = tfkl.Dropout(0.3)(o)
 
-        o = tfkl.MaxPool2D()(o)
-        o = tfkl.Conv2D(8, (4, 4), strides=(1, 1), padding='same')(o)
+        o = tfkl.Conv2D(16, (4, 4), strides=(2, 2), padding='same')(o)
+        o = tfkl.BatchNormalization()(o)
+        o = tfkl.LeakyReLU()(o)
+        o = tfkl.Dropout(0.3)(o)
+
+        o = tfkl.Conv2D(8, (4, 4), strides=(2, 2), padding='same')(o)
         o = tfkl.BatchNormalization()(o)
         o = tfkl.LeakyReLU()(o)
 
-        o = tfkl.MaxPool2D()(o)
-        o = tfkl.Conv2D(4, (4, 4), strides=(1, 1), padding='same')(o)
+        o = tfkl.Conv2D(4, (4, 4), strides=(2, 2), padding='same')(o)
         o = tfkl.BatchNormalization()(o)
         o = tfkl.LeakyReLU()(o)
 
-        o = tfkl.MaxPool2D()(o)
-        o = tfkl.Conv2D(2, (4, 4), strides=(1, 1), padding='same')(o)
+        o = tfkl.Conv2D(2, (4, 4), strides=(2, 2), padding='same')(o)
         o = tfkl.BatchNormalization()(o)
         o = tfkl.LeakyReLU()(o)
 
-        o = tfkl.MaxPool2D()(o)
-        o = tfkl.Conv2D(1, (4, 4), strides=(1, 1), padding='same')(o)
+        o = tfkl.Conv2D(1, (4, 4), strides=(2, 2), padding='same')(o)
         o = tfkl.BatchNormalization()(o)
         o = tfkl.LeakyReLU()(o)
 
