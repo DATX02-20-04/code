@@ -349,7 +349,7 @@ to work on and ensuring everyone is on the same page.
 
 *** Exam week
 Still exam week so some members haven't gotten a lot done
-   - *Christoffer*: Work on issues in the github like structuring repo, Also
+   - *Christoffer*: Work on issues in the GitHub like structuring repo, Also
      structured and started writing the report (signal processing in theory). A
      lot of the time is writing scripts to generate plots we can use in the
      report. Wrote guide on how to use training computer.
@@ -357,12 +357,12 @@ Still exam week so some members haven't gotten a lot done
      (refactor project and split parts of code into separate runnable scripts).
      Big issue for transformers is memory to train for long sequences and the
      model copying it’s prior (initial input).
-   - *Carl*: Deploy script, refactoring and reviewing github pull requests. Wrote
-     a progressbar module for our training scripts, showing progress of training.
+   - *Carl*: Deploy script, refactoring and reviewing GitHub pull requests. Wrote
+     a progress bar module for our training scripts, showing progress of training.
    - *Lovisa*: Skeleton/outline of report and also started on implementing
-     wasserstein loss for specgan(math heavy so complete study mode of the
-     math). Progress in understanding the subject so will add to report. Had
-     trouble setting up repo (our repo) on laptop, carl helped with that.
+     wasserstein loss for specgan(maths heavy so complete study mode of the
+     maths). Progress in understanding the subject so will add to report. Had
+     trouble setting up repo (our repo) on laptop, Carl helped with that.
    - *Cao*: Set up things for the remote computer. Has been busy with other
      courses to really participate much. Also as been missing an assigned task
      which us in the group are working on fixing for next week.
@@ -372,7 +372,7 @@ Still exam week so some members haven't gotten a lot done
 - Keep writing report
 - Continue work on music transformer
 - More extensive training with training computer and potentially Bayes
-- Create more throrough tests (unit and integration) (from last week)
+- Create more thorough tests (unit and integration) (from last week)
 - Write a bunch of utility functions (flags, plotting etc). (from last week)
 - Continue work on the VAE and maybe begin connecting everything
 
@@ -397,7 +397,7 @@ Still exam week so some members haven't gotten a lot done
 *** MIDI framework
     We now have a MIDI pipeline and library written, so we can now use this to
     create our models (as we've already begun to some extent).
-** Summary of each memeber
+** Summary of each member
    - *Christoffer*: Wrote code for flags used in specgan for training. Started
      training gansynth specgan on training computer. Kept communication for
      access to training resources.
@@ -406,7 +406,7 @@ Still exam week so some members haven't gotten a lot done
      transformer.
    - *Carl*: Work on MIDI tools and get the music transformer repo running.
    - *Lovisa*: Been busy with other course, but worked on trello planning for the whole group.
-   - *Cao*: Been busy with other course, kept up with work by other gorup memebers
+   - *Cao*: Been busy with other course, kept up with work by other group members
    - *Elias*: Work on gan vae hybrid.
 ** Next week
    - Keep writing report
@@ -416,7 +416,7 @@ Still exam week so some members haven't gotten a lot done
 * Week 7
 ** Important info
    We've migrated to a new drive, which means larger storage capacity but also
-   means the timelog link has been updated to a new link. Our progress will not
+   means the time log link has been updated to a new link. Our progress will not
    be updated on the old link so make sure you check the new one!
 
    Also regarding the time log feedback about members not putting in enough
@@ -432,7 +432,7 @@ Still exam week so some members haven't gotten a lot done
     project.
 *** SpecGAN
     All we've done on specGAN this week is to setup training environment and
-    checkpointing so that we can train it for a longer period of time.
+    check pointing so that we can train it for a longer period of time.
 
     Below are some results of training the model on all kinds of guitar sounds
     in the NSynth dataset. Note that this set includes both acoustic and
@@ -452,7 +452,7 @@ Still exam week so some members haven't gotten a lot done
 
     - X axis is the sample (time in discrete sense)
     - Y is the frequency, or tone if you will
-    - Color is the magnitude of the short-term fourier transform
+    - Color is the magnitude of the short-term Fourier transform
 
     The straight horizontal lines indicate a frequency or note was played for a long
     time. The reason for many horizontal lines are overtones of the note. These
@@ -487,7 +487,7 @@ Still exam week so some members haven't gotten a lot done
     gets an additional loss that ensures that the new encoding is similar to the encoding of the original image.
 
 *** Transformer and MIDI
-    In the transoformer regard, we are working on getting the MIDI pipeline done
+    In the transformer regard, we are working on getting the MIDI pipeline done
     so that we can train the transformers on midi data. The dataset for this is
     MAESTRO, which includes both raw audio and MIDI of recordings.
 
@@ -500,11 +500,11 @@ Still exam week so some members haven't gotten a lot done
     have encoded MIDI for use with machine learning.
 
 *** Problems
-    - *Resources*: Still no reply about resources for training on chalmers. Sent
+    - *Resources*: Still no reply about resources for training on Chalmers. Sent
       another mail asking for a response since it has been a week.
     - *Ambitions and scope of project*: We will discuss this more in the next
       meeting.
-    - *Low hours carl*: He has 3 other courses that take his time, which makes
+    - *Low hours Carl*: He has 3 other courses that take his time, which makes
       distributing the hours difficult.
 
 ** Summary of each member
@@ -522,7 +522,7 @@ Still exam week so some members haven't gotten a lot done
    - *Lovisa*: Helped a bit with preparing presentation (along with the rest of
      the group), continued work on spectrogram GAN, started working on
      transformers with Elias and Christoffer. Mainly tried to get the Music
-     Transformer by Magenta on github to work, as well as collected some
+     Transformer by Magenta on GitHub to work, as well as collected some
      research relevant to the subject.
    - *Cao*: Worked on the presentation with the group and presented it with Elias.
      Did some light reading about wave2midi2wave.
@@ -552,11 +552,11 @@ Still exam week so some members haven't gotten a lot done
 
 
     Eric managed to generate something loosely sounding like a flute using this
-    model. Loosely as in it's clearly a wind instrument and it is a recognizable
+    model. Loosely as in it's clearly a wind instrument and it is a recognisable
     note with overtones but it still needs some work/training.
 
 *** SpecGAN
-    Unfortuneately, the results from this model look decent, but sound terrible.
+    Unfortunately, the results from this model look decent, but sound terrible.
     It doesn't quite follow the implementation specGAN used, so that is an area we could improve.
 
     #+CAPTION: First specGAN generation using 2dConvTranspose layers and 20 epochs with the NSynth dataset.
@@ -593,7 +593,7 @@ Still exam week so some members haven't gotten a lot done
 ** Summary of each member
    - Christoffer: Mostly worked on plan and the specGAN model. Also started a
      bit on final report and helped with presentation. Also been handling
-     communication wih examiner and sent mails about computing resources
+     communication with examiner and sent mails about computing resources
    - Eric: I started with training an existing model called WaveRNN where I
      managed to generate something that sounds like a flute note. I did the
      training on my personal computer at home which is not optimal. We need
@@ -633,7 +633,7 @@ Still exam week so some members haven't gotten a lot done
    Most of the feedback applies to the entire plan, but here are some key points:
    - *Background*: Does not explain or motivate the problem well enough. It is meant to capture the reader but our background lacks a lot of passion required for that.
    - *Aim*: Same here generally, does not explain why this is an important and interesting field.
-   - *Timeplan*: Does not tell a story, how will we accomplish these things. Try and detail every week and what happens if we discover hurdles. It also has to detail consistent deliveries, ie if the project suddenly had to stop for whatever reason, what do we have to show for our work?
+   - *Time plan*: Does not tell a story, how will we accomplish these things. Try and detail every week and what happens if we discover hurdles. It also has to detail consistent deliveries, ie if the project suddenly had to stop for whatever reason, what do we have to show for our work?
 
    Deadline for the rewritten plan is Wednesday, <2020-02-26 Wed> at 12:00. We
    will also try to send it to our supervisor by Monday/Tuesday.
@@ -665,7 +665,7 @@ Still exam week so some members haven't gotten a lot done
     signal processing. This did not have to be done manually, as there are
     plenty of libraries to use, but the challenge is to ensure all images of the
     entire dataset represent the same thing and have the same format and size.
-    As such, the data preprocessing has been one of the subtasks for this.
+    As such, the data preprocessing has been one of the sub tasks for this.
 
     The other task is to implement the actual model. There are many guides on
     implementing a GAN using the MNIST dataset (dataset consisting of
@@ -675,7 +675,7 @@ Still exam week so some members haven't gotten a lot done
 ** Meetings and workshops
    Meetings and workshops were spent working on the two models in groups of
    three people. Working in groups ensures everyone is learning and are helping
-   eachother.
+   each other.
 
 ** Summary of each member
    - Christoffer: Work on the SpecGAN model, specifically the part of converting the entire NSynth dataset into spectrograph images
@@ -716,13 +716,13 @@ Still exam week so some members haven't gotten a lot done
    should be easier to write as more individual tasks will be delegated.
 
 ** Meetings and workshops
-  A meeting with chalmers writing was booked, but since that required two groups
+  A meeting with Chalmers writing was booked, but since that required two groups
   to sign up, the meeting never went through. We will try to book another one,
   but since the plan now is delivered, getting feedback for it seems unneccesary.
 
-  On wednesday, the first draft was sent to the supervisor, with feedback
-  presented to the group on friday morning. The meeting and workshop held on
-  friday was primarily spent on refining the plan after the feedback received.
+  On Wednesday, the first draft was sent to the supervisor, with feedback
+  presented to the group on Friday morning. The meeting and workshop held on
+  Friday was primarily spent on refining the plan after the feedback received.
   All in all, the group is happy with how the plan turned out considering the
   project is very open and at a slightly more advanced level than common for
   bachelor theses.
@@ -730,7 +730,7 @@ Still exam week so some members haven't gotten a lot done
 ** Project so far
    The project plan is complete. Some initial trial and error has been
    performed, though generating anything close to music is far off. According to
-   the timeplan, we are now in the phase of generating a musical note using
+   the time plan, we are now in the phase of generating a musical note using
    machine learning.
 
    A issue we currently face seems to be storage space. Datasets take a fair
@@ -741,15 +741,15 @@ Still exam week so some members haven't gotten a lot done
    components or software), so that will have to be investigated.
 
 ** Summary of each member
-   We will use this section to detail problemsolving/tasks delegated to members.
+   We will use this section to detail problem solving/tasks delegated to members.
    Besides everyone working on the project plan, here are some tasks solved by each member
-   - Christoffer: So far been tasked with documentation, project log writing and generally being the secretary. Otherwise been learning tensorflow
+   - Christoffer: So far been tasked with documentation, project log writing and generally being the secretary. Otherwise been learning TensorFlow
    - Eric: Took on the challenge of creating a gantt chart, which he completed by
-     writing his own javascript script. Also have been very active in initial
+     writing his own JavaScript script. Also have been very active in initial
      development and testing of ideas using google colab.
    - Carl: Ensured our latex documents have proper systems for commenting and change requesting, which helped writing the plan immensely.
-   - Lovisa: Contacted AIVA (AI music company) for info on how their product worked but didn't get much back from them. Also went through tensorflow guides.
-   - Cao: Research autoencoders and attempted implementing and training basic models using Keras and tensorflow
+   - Lovisa: Contacted AIVA (AI music company) for info on how their product worked but didn't get much back from them. Also went through TensorFlow guides.
+   - Cao: Research autoencoders and attempted implementing and training basic models using Keras and TensorFlow
    - Elias: Made an architecture proposal (shown below), which we will look into more next week.
 
      #+CAPTION: Architecture proposal by Elias
@@ -760,23 +760,23 @@ Still exam week so some members haven't gotten a lot done
 * Week 3
   As per usual, the week began with a meeting on Tuesday followed by a longer
   workshop. During the meeting, the members went through what they had worked on
-  since last friday. For the most part, that was research on tensorflow and a
+  since last Friday. For the most part, that was research on TensorFlow and a
   paper published by Spotify creator group.
 
   For the workshop, it was decided that the majority of time
   would be spent on writing the project plan. Basic outlining was conducted to
   ensure everyone was on the same page regarding the content.
 
-  On friday, there was a meeting with the supervisor where the group quickly
+  On Friday, there was a meeting with the supervisor where the group quickly
   went through some research notes they had taken from the presentations held
   last week. Additionally the focus of this meeting was on the project plan.
   There were a fair amount of criticism of the current rough draft.
 
   After this meeting, the rest of the day involved a long workshop on writing
   the plan according to the criticism received earlier. A lot was changed and
-  this brought the draft much closer to the final writeup.
+  this brought the draft much closer to the final write up.
 
-  There is still work to be done on the plan. The deadline is next friday with
+  There is still work to be done on the plan. The deadline is next Friday with
   the groups' deadline being set to Wednesday. Therefore, the next week will
   primarily deal with finishing the project plan.
 
@@ -791,24 +791,24 @@ Still exam week so some members haven't gotten a lot done
    that there is available time later on.
 
 * Week 2
-  The week began with a meeting on tuesday, during which a number of points were brought up
+  The week began with a meeting on Tuesday, during which a number of points were brought up
   - Decide report language and register that on canvas
   - Began talk about the project report
-  - Discussions on the current writeup of the contract
+  - Discussions on the current write up of the contract
 
   The meeting was immediately followed by a workshop, where how to efficiently
   structure out research was determined. we concluded that the
   group would divide into subgroups with the intent of each reading and
-  summarizing papers. Machine learning is a wide field, beyond basic concepts,
+  summarising papers. Machine learning is a wide field, beyond basic concepts,
   learning everything will take away too much time from the actual project.
 
-  After a meeting with the supervisor on friday, a research meeting was held.
+  After a meeting with the supervisor on Friday, a research meeting was held.
   The idea was to take the subgroups determined earlier and have them present
   their findings for the group. This process will be evaluated for future
   research meetings, but we felt it was a good start. If anything, the primary
   goal of them is to spark discussions, which it was very effective at.
 
-  Because Cao only returned on thursday, the contract wasn't sent to our
+  Because Cao only returned on Thursday, the contract wasn't sent to our
   supervisor until Friday evening, after the meeting. The contract is now
   considered finished.
 
