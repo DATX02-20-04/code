@@ -5,7 +5,9 @@
 
 #+EXPORT_FILE_NAME: index
 
-#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://gongzhitaao.org/orgcss/org.css"/>
+# #+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://gongzhitaao.org/orgcss/org.css"/>
+# Prettier stylesheet
+#+SETUPFILE: https://fniessen.github.io/org-html-themes/setup/theme-readtheorg.setup
 
 #+LATEX_HEADER: \usepackage[margin=3cm]{geometry}
 #+LATEX: \setlength{\parindent}{0pt}
