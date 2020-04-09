@@ -24,11 +24,11 @@ class GAN():
         fake_pitch_index = tf.one_hot(pitches, self.hparams['cond_vector_size'], axis=1)
         # fake_pitch = tf.one_hot(pitches, self.hparams['cond_vector_size'], axis=1)
 
-        real_spec = x['audio'] + tf.random.uniform(noise.shape, 0, 0.1)
+        real_spec = x['audio']
         real_pitch_index = x['pitch']
 
         with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
-            fake_spec = self.generator([noise, fake_pitch_index], training=True) + tf.random.uniform(noise.shape, 0, 0.1)
+            fake_spec = self.generator([noise, fake_pitch_index], training=True)
 
             real_output, real_aux = self.discriminator(real_spec, training=True)
             fake_output, fake_aux = self.discriminator(fake_spec, training=True)
