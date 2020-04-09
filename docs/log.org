@@ -42,8 +42,7 @@ classifier loss to the network.
 #+NAME: fig:aux_overview
 [[./img/aux_class_overview.png]]
 
-The /ACGAN/ in figure [[fig:aux_overview]] shows pitch class as $c$, noise input as
-$z$, and pitch embedding as $x$. shows pitch class as $c$, noise input as $z$,
+The /ACGAN/ in figure [[fig:aux_overview]] shows pitch class as $c$, noise input as $z$,
 and the real image as x (which also needs a pitch class)
 
 Without explaining exactly how a GAN work, there are two networks, a generator
