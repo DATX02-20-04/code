@@ -34,7 +34,10 @@ def nsynth_to_melspec(dataset, hparams, stats=None):
         if 'source' in hparams and hparams['source'] is not None:
             dataset = pro.filter(instrument_sources_filter(instrument['source']))(dataset)
 
-    #dataset = pro.index_map('pitch', pro.one_hot(hparams['cond_vector_size']))(dataset)
+    dataset = pro.index_map('pitch', pro.pipeline([
+        pro.one_hot(hparams['cond_vector_size']),
+        pro.map_transform(lambda x: tf.cast(x, tf.float32)),
+    ]))(dataset)
 
     dataset = pro.index_map('audio', pro.pipeline([
         pro.melspec(sr=hparams['sample_rate']),

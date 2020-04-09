@@ -15,12 +15,13 @@ class GAN():
         self.discriminator = self.create_discriminator()
 
         self.cross_entropy = tfk.losses.BinaryCrossentropy(from_logits=True)
-        self.sparse_categorical_cross_entropy = tfk.losses.SparseCategoricalCrossentropy()
+        self.categorical_cross_entropy = tfk.losses.CategoricalCrossentropy()
 
     @tf.function
     def train_step(self, x):
         noise = tf.random.normal([self.hparams['batch_size'], self.hparams['latent_size']])
-        fake_pitch_index = tf.random.uniform([self.hparams['batch_size']], 24, self.hparams['cond_vector_size'] + 24 + 1, dtype=tf.int32)
+        pitches = tf.random.uniform([self.hparams['batch_size']], 0, self.hparams['cond_vector_size'], dtype=tf.int32)
+        fake_pitch_index = tf.one_hot(pitches, self.hparams['cond_vector_size'], axis=1)
         # fake_pitch = tf.one_hot(pitches, self.hparams['cond_vector_size'], axis=1)
 
         real_spec = x['audio']
@@ -50,26 +51,27 @@ class GAN():
         fake_loss = self.cross_entropy(
             tf.zeros_like(fake_output)+tf.random.uniform(fake_output.shape, 0, 0.1), # Subtract random to smooth fake labels
             fake_output)
-        real_aux_loss = self.sparse_categorical_cross_entropy(
+        real_aux_loss = self.categorical_cross_entropy(
             real_pitch_index, real_aux)
-        fake_aux_loss = self.sparse_categorical_cross_entropy(
+        fake_aux_loss = self.categorical_cross_entropy(
             fake_pitch_index, fake_aux)
 
         total_loss = real_loss + fake_loss + real_aux_loss + fake_aux_loss
         return total_loss
 
     def generator_loss(self, fake_output, fake_aux, fake_pitch_index):
-        fake_aux_loss = self.sparse_categorical_cross_entropy(
+        fake_aux_loss = self.categorical_cross_entropy(
             fake_pitch_index, fake_aux)
         source_loss = self.cross_entropy(tf.ones_like(fake_output), fake_output)
         return source_loss + fake_aux_loss
 
     def create_generator(self):
-        latent = tfkl.Input(shape=(self.hparams['latent_size'], 1))
+        latent = tfkl.Input(shape=(self.hparams['latent_size']))
         # One hot vector of size <cond_vector_size>
         pitch_class = tfkl.Input(shape=(self.hparams['cond_vector_size']))
 
-        inp = tfkl.concat([latent, pitch_class])
+        inp = tfkl.concatenate([latent, pitch_class])
+        inp = tfkl.Reshape((1, 1, 161))(inp)
 
         o = tfkl.Conv2D(128, (5, 5), strides=(1, 1), padding='same', use_bias=False)(inp)
         o = tfkl.BatchNormalization()(o)
@@ -77,6 +79,31 @@ class GAN():
 
         o = tfkl.UpSampling2D(size=(2, 2))(o)
         o = tfkl.Conv2D(64, (5, 5), strides=(1, 1), padding='same', use_bias=False)(o)
+        o = tfkl.BatchNormalization()(o)
+        o = tfkl.LeakyReLU()(o)
+
+        o = tfkl.UpSampling2D(size=(2, 2))(o)
+        o = tfkl.Conv2D(32, (5, 5), strides=(1, 1), padding='same', use_bias=False)(o)
+        o = tfkl.BatchNormalization()(o)
+        o = tfkl.LeakyReLU()(o)
+
+        o = tfkl.UpSampling2D(size=(2, 2))(o)
+        o = tfkl.Conv2D(16, (5, 5), strides=(1, 1), padding='same', use_bias=False)(o)
+        o = tfkl.BatchNormalization()(o)
+        o = tfkl.LeakyReLU()(o)
+
+        o = tfkl.UpSampling2D(size=(2, 2))(o)
+        o = tfkl.Conv2D(8, (5, 5), strides=(1, 1), padding='same', use_bias=False)(o)
+        o = tfkl.BatchNormalization()(o)
+        o = tfkl.LeakyReLU()(o)
+
+        o = tfkl.UpSampling2D(size=(2, 2))(o)
+        o = tfkl.Conv2D(4, (5, 5), strides=(1, 1), padding='same', use_bias=False)(o)
+        o = tfkl.BatchNormalization()(o)
+        o = tfkl.LeakyReLU()(o)
+
+        o = tfkl.UpSampling2D(size=(2, 2))(o)
+        o = tfkl.Conv2D(2, (5, 5), strides=(1, 1), padding='same', use_bias=False)(o)
         o = tfkl.BatchNormalization()(o)
         o = tfkl.LeakyReLU()(o)
 
@@ -89,32 +116,48 @@ class GAN():
     def create_discriminator(self):
         image = tfkl.Input(shape=[*self.shape, 1])
 
-        o = tfkl.Conv2D(32, (3, 3), strides=(1, 1), padding='same')(image)
+        o = tfkl.Conv2D(128, (3, 3), strides=(1, 1), padding='same')(image)
+        o = tfkl.BatchNormalization()(o)
+        o = tfkl.LeakyReLU()(o)
+
+        o = tfkl.MaxPool2D()(o)
+        o = tfkl.Conv2D(64, (3, 3), strides=(1, 1), padding='same')(o)
+        o = tfkl.BatchNormalization()(o)
+        o = tfkl.LeakyReLU()(o)
+
+        o = tfkl.MaxPool2D()(o)
+        o = tfkl.Conv2D(32, (3, 3), strides=(1, 1), padding='same')(o)
         o = tfkl.BatchNormalization()(o)
         o = tfkl.LeakyReLU()(o)
         # o = tfkl.Dropout(0.3)(o)
 
-        o = tfkl.Conv2D(16, (4, 4), strides=(2, 2), padding='same')(o)
+        o = tfkl.MaxPool2D()(o)
+        o = tfkl.Conv2D(16, (4, 4), strides=(1, 1), padding='same')(o)
         o = tfkl.BatchNormalization()(o)
         o = tfkl.LeakyReLU()(o)
         # o = tfkl.Dropout(0.3)(o)
 
-        # o = tfkl.Conv2D(8, (4, 4), strides=(2, 2), padding='same')(o)
-        # o = tfkl.BatchNormalization()(o)
-        # o = tfkl.LeakyReLU()(o)
-        #
-        o = tfkl.Dropout(0.4)(o)
-        o = tfkl.Flatten()(o)
-
-        o = tfkl.Dense(32)(o)
+        o = tfkl.MaxPool2D()(o)
+        o = tfkl.Conv2D(8, (4, 4), strides=(1, 1), padding='same')(o)
         o = tfkl.BatchNormalization()(o)
         o = tfkl.LeakyReLU()(o)
 
-        o = tfkl.Dense(16)(o)
+        o = tfkl.MaxPool2D()(o)
+        o = tfkl.Conv2D(4, (4, 4), strides=(1, 1), padding='same')(o)
+        o = tfkl.BatchNormalization()(o)
+        o = tfkl.LeakyReLU()(o)
+
+        o = tfkl.MaxPool2D()(o)
+        o = tfkl.Conv2D(2, (4, 4), strides=(1, 1), padding='same')(o)
+        o = tfkl.BatchNormalization()(o)
+        o = tfkl.LeakyReLU()(o)
+
+        o = tfkl.MaxPool2D()(o)
+        o = tfkl.Conv2D(1, (4, 4), strides=(1, 1), padding='same')(o)
         o = tfkl.BatchNormalization()(o)
         o = tfkl.LeakyReLU()(o)
 
         fake = tfkl.Dense(1)(o)
-        aux = tfkl.Dense(self.hparams['cond_vector_size'] + 24 + 1, activation='softmax', name='auxillary')(o)
+        aux = tfkl.Dense(self.hparams['cond_vector_size'], activation='softmax', name='auxillary')(o)
 
         return tf.keras.Model(inputs=image, outputs=[fake, aux])

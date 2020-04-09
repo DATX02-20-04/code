@@ -27,7 +27,7 @@ def start(hparams):
     count = 10
     seed = tf.random.normal((count, hparams['latent_size']))
     mid = hparams['cond_vector_size']//2
-    pitches = range(mid-count//2, mid+count//2)
+    pitches = tf.one_hot(range(mid-count//2, mid+count//2), hparams['cond_vector_size'], axis=1)
 
     samples = tf.reshape(gan.generator([seed, pitches], training=False), [-1, 128, 128])
     x = tf.unstack(samples)
