@@ -29,16 +29,16 @@
 We are currently working hard on getting pitch conditioning to work since that
 is the bottleneck for connecting with structure. To accomplish this, we are
 constantly reading about ways of conditioning GANs, one of which is using an
-/auxillary classifier/.
+/auxiliary classifier/.
 
-*** Pitch conditioning and Auxillary Classifier
+*** Pitch conditioning and Auxiliary Classifier
 As explained last week, we require this step to be able to choose which notes
 are being played. However, from our research and from limited testing, we found
-that the generator rarely if ever made use of the additonal pitch information.
-To encourage the generator to actually use it, we implement an auxillary
+that the generator rarely if ever made use of the additional pitch information.
+To encourage the generator to actually use it, we implement an auxiliary
 classifier loss to the network.
 
-#+CAPTION: Overview of how a Auxillary Classifier GAN works (ACGAN)
+#+CAPTION: Overview of how a Auxiliary Classifier GAN works (ACGAN)
 #+NAME: fig:aux_overview
 [[./img/aux_class_overview.png]]
 
@@ -52,9 +52,9 @@ normally only has the job of determining fake vs real images from its input
 classifier, there is a second loss, depending on if the discriminator can
 correctly label the pitch of the generated image.
 
-The discriminators (D) job is then to maximize $$L_{D} = L_{C} + L_{S}$$ where
-$L_{C}$ is the log-likelyhood of correct class (or pitch in this case), and
-$L_{S}$ is the log-likelyhood of correct source (real vs fake image).
+The discriminators (D) job is then to maximise $$L_{D} = L_{C} + L_{S}$$ where
+$L_{C}$ is the log-likelihood of correct class (or pitch in this case), and
+$L_{S}$ is the log-likelihood of correct source (real vs fake image).
 
 The generators (G) job is then to maximise $$L_{G} = L_{C} - L_{S}$$ or in
 words, get D to determine the class label right, but fail at determining real vs
@@ -66,8 +66,8 @@ still experimenting with getting it entirely correct., but are still
 experimenting with getting it entirely correct.
 
 *** Training
-Our required time to train has gone up drasticly. For example, the pitch
-conditioning with an auxillary classifier (but probably without one as well)
+Our required time to train has gone up drastically. For example, the pitch
+conditioning with an auxiliary classifier (but probably without one as well)
 required 2.5 days to train. That is around 1.5M steps. We may have been able
 to decrease this but that is still a lot of time spent on waiting for results
 that may or may not be great. This is after we decreased each epoch (~200 steps)
@@ -80,7 +80,7 @@ from 40 seconds to 11 seconds by caching all images from the dataset into memory
 Figure [[fig:class_aux]] shows that it does reach an equilibrium, which is where the
 training is optimal. It does reach this stage, but determining when to stop is a
 difficult thing. Another issue that arises with longer training periods is
-overfitting on the dataset, which is not idea either.
+over-fitting on the dataset, which is not idea either.
 
 *** Current Results of Note Generation with Conditioning and Classifier
 The following results were taken from the above training session at the last
@@ -99,8 +99,8 @@ skip and at the end. (steps 600K and 1500K). The pitches used are increasing.
 {{{AUDIO(audio/1500k_steps.wav)}}}
 
 The main issue in this seems to be mode collapse, the generator no matter pitch
-or noise input generates the same or similiar examples. In the case of figure
-[[fig:1500k_steps]], there are three kidns of images, of which only one of them
+or noise input generates the same or similar examples. In the case of figure
+[[fig:1500k_steps]], there are three kinds of images, of which only one of them
 resembles a keyboard (which is what we are training on). Arguably, you could
 have noticed mode collapse in figure [[fig:600k_steps]], but we thought we would
 give it a try anyway.
@@ -120,7 +120,7 @@ write too much for this report, so we have to find a balance of what is actually
 required to explain to understand the implementation. An example is: how do you
 explain how a transformer with attention work? This topic could easily take ~20
 pages but leaving it too short would make understanding difficult for the reader
-who we target as our coursemates.
+who we target as our course mates.
 
 *** Note generation
 In order to connect this component to the final system, we need to condition it
@@ -132,14 +132,14 @@ learns to generate random sounding tones according to that vector.
 
 Pitch conditioning is almost done but we cannot be sure it is entirely right.
 We may have to add another loss component to the discriminator called an
-/auxillary classifier/ that would encourage the generator to care more about the
+/auxiliary classifier/ that would encourage the generator to care more about the
 conditioning vector.
 
 This idea came from the GANSynth paper. They do a lot of other things as well,
 including adding a phase channel to the network, allowing it to generate its own
 phase instead of having to reconstruct it using the Griffin-lim algorithm. They
 call this Instantaneous Frequency, which is the derivative of phase. We also
-want to implement this because even though our processing nad inversion sounds
+want to implement this because even though our processing and inversion sounds
 "good enough", this could improve it.
 
 Due to limited training, we do not have a lot of great sounding examples yet so
@@ -153,7 +153,7 @@ connect the two.
 *** Training
 We started using Bayes but we are not quite sure if we are using it correctly.
 The canvas course page states to ensure there are not more threads running than
-designated CPU cores, so the main concern is configuring tensorflow to not spawn
+designated CPU cores, so the main concern is configuring TensorFlow to not spawn
 ~200 threads.
 
 We also set up tensorboard to better log our results. We will most likely start
@@ -162,9 +162,9 @@ auto generating our images and audio samples but it's not a priority.
 ** Last weeks' goals
 - We did some extensive training on Bayes
 - Spectrogram processing is for the most part done (there are still some issues
-  with normalization)
+  with normalisation)
 - Wasserstein not implemented yet due to wanting to focus on processing, who we
-  deemd to be the thing making the note generation sound off.
+  deemed to be the thing making the note generation sound off.
 - Posterior collapse still an issue
 - We've come a good way with the report but there is a lot of theory
 ** Summary of each member
@@ -177,17 +177,17 @@ auto generating our images and audio samples but it's not a priority.
   - Been really digging into the GANSynth details, even though they don't do
     a great job of explaining their model.
   - Finally, did some training on Bayes and attempted to configure
-    tensorflow/numpy to only use x amount of threads.
+    TensorFlow/numpy to only use x amount of threads.
 - *Eric*:
   - I mostly worked on the VAE(which is starting to look like a dead-end to
     me)
-  - Worked on GAN to add the pitch conditioning and fix normalization.
+  - Worked on GAN to add the pitch conditioning and fix normalisation.
 - *Carl*:
   - Wrote on a few sections including ethics and music transformer, rewrote
     midi pipeline
 - *Lovisa*:
-  - Working on Wasserstein GAN and the math behind it.
-  - Have been reviewing github issues and added content to the report.
+  - Working on Wasserstein GAN and the maths behind it.
+  - Have been reviewing GitHub issues and added content to the report.
 - *Cao*:
   - Did some reading and expanded some of the subsections for the final
     report.
@@ -200,7 +200,7 @@ auto generating our images and audio samples but it's not a priority.
   - Also worked on implemented an alternative GAN training scheme which
   has some similarities to Wasserstein GAN.
 ** Next week
-- Auxillary classifier for the SpecGAN
+- Auxiliary classifier for the SpecGAN
 - Maybe incorporate WGAN if results are not great
 - Work on connecting structure and note, even if note is not on par with
   structure yet.
@@ -231,7 +231,7 @@ the same data pipeline:
 
 {{{AUDIO(audio/actual_inverted_spec_fixed.wav)}}}
 
-There are similiar results indicating that there is an issue. Whether this is
+There are similar results indicating that there is an issue. Whether this is
 due to errors in spectrogram generation or from inverting back, we have not
 concluded yet.
 
@@ -262,19 +262,19 @@ train 50 epochs of our VAE implementation. We do not yet have any results of thi
      - Read up on how to use Bayes for scheduling running tasks
      - Review of pull requests and issues in our git report repo
      - Did some basic reading on Wasserstein GANs, but nothing major.
-     - Looked into getting Tensorboard to work (required us to uninstall other versions of tensorflow.
+     - Looked into getting Tensorboard to work (required us to uninstall other versions of TensorFlow.
    - *Eric*:
      - Wrote on experiments section in report
      - Tried to figure out why the transformer is copying the prior with a lot of trial and error
-     - Tried hyperparameter optimization
+     - Tried hyperparameter optimisation
    - *Carl*:
      - Some infrastructure and tech support
      - Work on report, mainly overall style and front pages, but also some content
      - Made some plots with pgfplots, but probably going to give that up
    - *Lovisa*:
      - Took over some of the email communications, have been writing to
-       Arne Linde about our computer at chalmers and communicating with examinator
-       and supervisor too. Tried to be mor active on github, reading comments and
+       Arne Linde about our computer at Chalmers and communicating with examinator
+       and supervisor too. Tried to be More active on git hub, reading comments and
        making more reviews. Also kept working on wgan and the report.
    - *Cao*:
      - Read about RNN, LSTM, Transformer.
@@ -284,7 +284,7 @@ train 50 epochs of our VAE implementation. We do not yet have any results of thi
    - *Elias*:
      - Added ability to generate samples of real and autoencoded audio samples
        to the vae gan. Found that the results are very different so spent a lot
-       of time tweaking hyperparameters, modifying the training algortihm and
+       of time tweaking hyperparameters, modifying the training algorithm and
        training to improve the results. Still no good results unfortunately.
      - Also wrote on the report. Specifically about transformers, wavenet, and
        musenet.
@@ -292,7 +292,7 @@ train 50 epochs of our VAE implementation. We do not yet have any results of thi
 - More extensive training of models on Bayes
 - Fix spectrogram processing
 - Implement Wasserstein GAN (already in progress)
-- Fix posterior collapse in the VAE (similiar to mode collapse in GANS)
+- Fix posterior collapse in the VAE (similar to mode collapse in GANS)
 - Keep adding content to report
 
 * Week 9
@@ -310,7 +310,7 @@ hope.
 
 *** VAE
 Elias and cao were assigned to this task, but since exams, not a lot of progress
-in this area wasmade this week. The model has however had similiar results to
+in this area was made this week. The model has however had similar results to
 SpecGan, so we are still researching this.
 
 *** Transformer
@@ -348,7 +348,7 @@ how much we meet in person. It is still challenging ensuring everyone has tasks
 to work on and ensuring everyone is on the same page.
 
 *** Exam week
-Still exam week so some members haven't gotten a lot donech memeber
+Still exam week so some members haven't gotten a lot done
    - *Christoffer*: Work on issues in the github like structuring repo, Also
      structured and started writing the report (signal processing in theory). A
      lot of the time is writing scripts to generate plots we can use in the
