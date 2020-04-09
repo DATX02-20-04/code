@@ -24,6 +24,88 @@
   A time log can be found at Google Sheets: https://bit.ly/2PRKRl8
 
   The time log has exact tasks worked on each entry, for each
+* Week 12
+** Progress
+We are currently working hard on getting pitch conditioning to work since that
+is the bottleneck for connecting with structure. To accomplish this, we are
+constantly reading about ways of conditioning GANs, one of which is using an
+/auxillary classifier/.
+
+*** Pitch conditioning and Auxillary Classifier
+As explained last week, we require this step to be able to choose which notes
+are being played. However, from our research and from limited testing, we found
+that the generator rarely if ever made use of the additonal pitch information.
+To encourage the generator to actually use it, we implement an auxillary
+classifier loss to the network.
+
+#+CAPTION: Overview of how a Auxillary Classifier GAN works (ACGAN)
+#+NAME: fig:aux_overview
+[[./img/aux_class_overview.png]]
+
+The /ACGAN/ in figure [[fig:aux_overview]] shows pitch class as $c$, noise input as
+$z$, and pitch embedding as $x$. shows pitch class as $c$, noise input as $z$,
+and the real image as x (which also needs a pitch class)
+
+Without explaining exactly how a GAN work, there are two networks, a generator
+and a discriminator. The aux classifier comes in at the discriminator, who
+normally only has the job of determining fake vs real images from its input
+(either an image from the dataset or form the generator). With an aux
+classifier, there is a second loss, depending on if the discriminator can
+correctly label the pitch of the generated image.
+
+The discriminators (D) job is then to maximize $$L_{D} = L_{C} + L_{S}$$ where
+$L_{C}$ is the log-likelyhood of correct class (or pitch in this case), and
+$L_{S}$ is the log-likelyhood of correct source (real vs fake image).
+
+The generators (G) job is then to maximise $$L_{G} = L_{C} - L_{S}$$ or in
+words, get D to determine the class label right, but fail at determining real vs
+fake.
+
+With an actual loss to the discriminator and generator, the hope is they won't
+ignore the pitch vectors anymore. We have almost implemented all this, but are
+still experimenting with getting it entirely correct., but are still
+experimenting with getting it entirely correct.
+
+*** Training
+Our required time to train has gone up drasticly. For example, the pitch
+conditioning with an auxillary classifier (but probably without one as well)
+required 2.5 days to train. That is around 1.5M steps. We may have been able
+to decrease this but that is still a lot of time spent on waiting for results
+that may or may not be great. This is after we decreased each epoch (~200 steps)
+from 40 seconds to 11 seconds by caching all images from the dataset into memory.
+
+#+CAPTION: Training of Aux classifier, shows the Nash Equilibrium. The skips are due to pausing training to try generating.
+#+NAME: fig:class_aux
+[[./img/aux_class_training.png]]
+
+Figure [[fig:class_aux]] shows that it does reach an equilibrium, which is where the
+training is optimal. It does reach this stage, but determining when to stop is a
+difficult thing. Another issue that arises with longer training periods is
+overfitting on the dataset, which is not idea either.
+
+*** Current Results of Note Generation with Conditioning and Classifier
+The following results were taken from the above training session at the last
+skip and at the end. (steps 600K and 1500K). The pitches used are increasing.
+
+#+CAPTION: Result at 600K steps
+#+NAME: fig:600k_steps
+[[./img/600k_steps.png]]
+
+{{{AUDIO(audio/600k_steps.wav)}}}
+
+#+CAPTION: Result at 1500K steps
+#+NAME: fig:1500k_steps
+[[./img/1500k_steps.png]]
+
+{{{AUDIO(audio/1500k_steps.wav)}}}
+
+The main issue in this seems to be mode collapse, the generator no matter pitch
+or noise input generates the same or similiar examples. In the case of figure
+[[fig:1500k_steps]], there are three kidns of images, of which only one of them
+resembles a keyboard (which is what we are training on). Arguably, you could
+have noticed mode collapse in figure [[fig:600k_steps]], but we thought we would
+give it a try anyway.
+
 * Week 11
 No great audio results for this week unfortunately.
 ** Progress
