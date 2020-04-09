@@ -35,6 +35,7 @@ def nsynth_to_melspec(dataset, hparams, stats=None):
             dataset = pro.filter(instrument_sources_filter(instrument['source']))(dataset)
 
     dataset = pro.index_map('pitch', pro.pipeline([
+        pro.map_transform(lambda x: x - 24),
         pro.one_hot(hparams['cond_vector_size']),
         pro.map_transform(lambda x: tf.cast(x, tf.float32)),
     ]))(dataset)
