@@ -63,7 +63,7 @@ class GAN():
         fake_aux_loss = self.categorical_cross_entropy(
             fake_pitch_index, fake_aux)
         source_loss = self.cross_entropy(tf.ones_like(fake_output), fake_output)
-        return source_loss + fake_aux_loss
+        return source_loss + fake_aux_loss * self.hparams['aux_loss_weight']
 
     def create_generator(self):
         latent = tfkl.Input(shape=(self.hparams['latent_size']))
@@ -71,7 +71,7 @@ class GAN():
         pitch_class = tfkl.Input(shape=(self.hparams['cond_vector_size']))
 
         inp = tfkl.concatenate([latent, pitch_class])
-        inp = tfkl.Reshape((1, 1, 161))(inp)
+        inp = tfkl.Reshape((1, 1, 161))(inp) # TODO: Fix this to correctly reshape depending on inputs
 
         o = tfkl.Conv2D(128, (5, 5), strides=(1, 1), padding='same', use_bias=False)(inp)
         o = tfkl.BatchNormalization()(o)
@@ -129,13 +129,13 @@ class GAN():
         o = tfkl.Conv2D(32, (3, 3), strides=(1, 1), padding='same')(o)
         o = tfkl.BatchNormalization()(o)
         o = tfkl.LeakyReLU()(o)
-        # o = tfkl.Dropout(0.3)(o)
+        o = tfkl.Dropout(0.3)(o)
 
         o = tfkl.MaxPool2D()(o)
         o = tfkl.Conv2D(16, (4, 4), strides=(1, 1), padding='same')(o)
         o = tfkl.BatchNormalization()(o)
         o = tfkl.LeakyReLU()(o)
-        # o = tfkl.Dropout(0.3)(o)
+        o = tfkl.Dropout(0.3)(o)
 
         o = tfkl.MaxPool2D()(o)
         o = tfkl.Conv2D(8, (4, 4), strides=(1, 1), padding='same')(o)
