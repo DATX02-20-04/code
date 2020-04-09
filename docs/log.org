@@ -1,4 +1,6 @@
 #+TITLE: Project Log
+#+AUTHOR: Christoffer Arvidsson
+#+DESCRIPTION: This document logs project progress for a bachelor thesis at Chalmers University in Computer Science.
 
 #+OPTIONS: num:nil
 #+OPTIONS: html-postamble:nil
@@ -8,6 +10,7 @@
 # #+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://gongzhitaao.org/orgcss/org.css"/>
 # Prettier stylesheet
 #+SETUPFILE: https://fniessen.github.io/org-html-themes/setup/theme-readtheorg.setup
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="./style.css" />
 
 #+LATEX_HEADER: \usepackage[margin=3cm]{geometry}
 #+LATEX: \setlength{\parindent}{0pt}
@@ -15,6 +18,7 @@
 #+LATEX_CLASS: article
 
 #+MACRO: AUDIO @@html:<audio controls="controls" src="$1"></audio>@@
+
 
 * Introduction
   This page is a shared log detailing the work the group has done and what
@@ -84,7 +88,7 @@ over-fitting on the dataset, which is not idea either.
 
 *** Current Results of Note Generation with Conditioning and Classifier
 The following results were taken from the above training session at the last
-skip and at the end. (steps 600K and 1500K). The pitches used are increasing.
+skip and at the end. (steps 600K and 1600K). The pitches used are increasing.
 
 #+CAPTION: Result at 600K steps
 #+NAME: fig:600k_steps
@@ -92,15 +96,15 @@ skip and at the end. (steps 600K and 1500K). The pitches used are increasing.
 
 {{{AUDIO(audio/600k_steps.wav)}}}
 
-#+CAPTION: Result at 1500K steps
-#+NAME: fig:1500k_steps
-[[./img/1500k_steps.png]]
+#+CAPTION: Result at 1600K steps
+#+NAME: fig:1600k_steps
+[[./img/1600k_steps.png]]
 
-{{{AUDIO(audio/1500k_steps.wav)}}}
+{{{AUDIO(audio/1600k_steps.wav)}}}
 
 The main issue in this seems to be mode collapse, the generator no matter pitch
 or noise input generates the same or similar examples. In the case of figure
-[[fig:1500k_steps]], there are three kinds of images, of which only one of them
+[[fig:1600k_steps]], there are three kinds of images, of which only one of them
 resembles a keyboard (which is what we are training on). Arguably, you could
 have noticed mode collapse in figure [[fig:600k_steps]], but we thought we would
 give it a try anyway.
