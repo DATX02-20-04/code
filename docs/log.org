@@ -52,11 +52,11 @@ normally only has the job of determining fake vs real images from its input
 classifier, there is a second loss, depending on if the discriminator can
 correctly label the pitch of the generated image.
 
-The discriminators (D) job is then to maximise $$L_{D} = L_{C} + L_{S}$$ where
+The discriminators $D$ job is then to maximise $$L_{D} = L_{C} + L_{S}$$ where
 $L_{C}$ is the log-likelihood of correct class (or pitch in this case), and
 $L_{S}$ is the log-likelihood of correct source (real vs fake image).
 
-The generators (G) job is then to maximise $$L_{G} = L_{C} - L_{S}$$ or in
+The generators $G$ job is then to maximise $$L_{G} = L_{C} - L_{S}$$ or in
 words, get D to determine the class label right, but fail at determining real vs
 fake.
 
