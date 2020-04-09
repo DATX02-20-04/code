@@ -9,7 +9,7 @@ hparams:
   batch_size: 32
   buffer_size: 1000
   latent_size: 100
-  cond_vector_size: 60
+  cond_vector_size: 61
   generator_scale: 128
   gen_lr: 0.0001
   disc_lr: 0.0004

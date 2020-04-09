@@ -73,6 +73,8 @@ def start(hparams):
     ])(dataset)
 
     gan = GAN(spec_shape, hparams)
+    gan.discriminator.summary()
+    gan.generator.summary()
 
     trainer = Trainer(dataset, hparams)
 

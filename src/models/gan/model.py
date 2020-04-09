@@ -65,21 +65,13 @@ class GAN():
         return source_loss + fake_aux_loss
 
     def create_generator(self):
-        latent = tfkl.Input(shape=(self.hparams['latent_size'],1))
-        pitch_class = tfkl.Input(shape=(1,))
+        latent = tfkl.Input(shape=(self.hparams['latent_size'], 1))
+        # One hot vector of size <cond_vector_size>
+        pitch_class = tfkl.Input(shape=(self.hparams['cond_vector_size']))
 
-        cls = tfkl.Embedding(self.hparams['cond_vector_size'] + 24 + 1, self.hparams['latent_size'],
-                        embeddings_initializer='glorot_normal')(pitch_class)
+        inp = tfkl.concat([latent, pitch_class])
 
-        hadamard = tfkl.multiply([latent, cls])
-
-        o = tfkl.Dense((self.shape[0]//4)*(self.shape[1]//4)*self.hparams['generator_scale'])(hadamard)
-        # o = tfkl.BatchNormalization()(o)
-        o = tfkl.LeakyReLU()(o)
-
-        o = tfkl.Reshape((self.shape[0]//4, self.shape[1]//4, self.hparams['generator_scale']))(o)
-
-        o = tfkl.Conv2D(128, (5, 5), strides=(1, 1), padding='same', use_bias=False)(o)
+        o = tfkl.Conv2D(128, (5, 5), strides=(1, 1), padding='same', use_bias=False)(inp)
         o = tfkl.BatchNormalization()(o)
         o = tfkl.LeakyReLU()(o)
 
