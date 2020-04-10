@@ -268,7 +268,7 @@ This week was Easter, so many group members were busy elsewhere.
 - *Carl*:
 - *Lovisa*:
 - *Cao*: I did abit of pull request review and final report but mostly was sick
-- *Elias*:
+- *Elias*: Worked with Christoffer on ACGAN. Minor work on the report.
 ** Next week
 - Fine tune conditioning and figure out a way of reliably choosing which pitch
   it generates. Also try improve audio quality so it sounds like more than just bells.
