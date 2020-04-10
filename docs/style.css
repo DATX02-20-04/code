@@ -45,7 +45,7 @@ body {
 
 .columns .column {
   flex: 1 1 0%;
-  padding: 0 1rem;
+  padding: 0 0.5rem;
 }
 
 .notice-warning {

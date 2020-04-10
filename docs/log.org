@@ -76,14 +76,27 @@ to decrease this but that is still a lot of time spent on waiting for results
 that may or may not be great. This is after we decreased each epoch (~200 steps)
 from 40 seconds to 11 seconds by caching all images from the dataset into memory.
 
-#+CAPTION: Training of Aux classifier, shows the Nash Equilibrium. The skips are due to pausing training to try generating.
-#+NAME: fig:class_aux
-[[./img/aux_class_training.png]]
+#+begin_columns
+#+begin_column
+#+CAPTION: Generator loss when training with an embedding
+#+NAME: fig:emb_gen_loss
+[[./img/embedding_gen_loss.svg]]
+#+end_column
 
-Figure [[fig:class_aux]] shows that it does reach an equilibrium, which is where the
-training is optimal. It does reach this stage, but determining when to stop is a
-difficult thing. Another issue that arises with longer training periods is
-over-fitting on the dataset, which is not idea either.
+#+begin_column
+#+CAPTION: Discriminator loss when training with an embedding.
+#+NAME: fig:emb_disc_loss
+[[./img/embedding_disc_loss.svg]]
+#+end_column
+#+end_columns
+
+
+Figures [[fig:emb_gen_loss]] and [[fig:emb_disc_loss]] shows that it does reach an
+equilibrium, which is where the training is optimal. It does reach this stage,
+but determining when to stop is a difficult thing. Another issue that arises
+with longer training periods is over-fitting on the dataset, which is not idea
+either. The skips in the figure are due to us requiring to stop the training to
+use the GPUs to generate results.
 
 *** Current Results of Note Generation with Conditioning and Classifier
 The following results were taken from the above training session at the last
@@ -148,34 +161,45 @@ experiment, we also added logging images in tensorboard so we didn't have to
 stop training while seeing model progress.
 
 #+begin_columns
+#+begin_column
 #+CAPTION:Generator loss from the shallower network, with one-hot encoding and a weighted aux loss.
 #+NAME: fig:shallow_gen_loss
 [[./img/shallow_gen_loss.svg]]
+#+end_column
 
+#+begin_column
 #+CAPTION: Discriminator loss from the shallower network, with one-hot encoding and a weighted aux loss.
 #+NAME: fig:shallow_disc_loss
 [[./img/shallow_disc_loss.svg]]
+#+end_column
 #+end_columns
 
 #+begin_columns
+#+begin_column
 #+CAPTION:Early images at step count ~30K
 #+NAME: fig:shallow_spec_early
 [[./img/shallow_spec_early.png]]
+#+end_column
+#+begin_column
 #+CAPTION:Early images at step count ~50K
 #+NAME: fig:shallow_spec_mid
 [[./img/shallow_spec_mid.png]]
+#+end_column
+#+begin_column
 #+CAPTION:Later images at step count ~xxK
 #+NAME: fig:shallow_spec_late
 [[./img/shallow_spec_mid.png]]
+#+end_column
 #+end_columns
 
 The loss graphs in figures [[fig:shallow_gen_loss]] and [[fig:shallow_disc_loss]] look
-much better than before. Not visualised in them is that the the discriminator
-starts from ~10, while the generator stars from ~40. This is because of the
-weighted aux loss described earlier. Figure [[fig:shallow_spec_early]] shows to us
-almost random noise but at this point almost all loss from the aux is
-eliminated. At around step ~40K the generator starts generating images that
-resembles spectrograms, shown in figure [[fig:shallow_spec_mid]].
+much better than before. Not visualised in them is that the discriminator starts
+from ~10, while the generator stars from ~40. This is because of the weighted
+aux loss described earlier. Figure [[fig:shallow_spec_early]] shows to us almost
+random noise but at this point almost all loss from the aux is eliminated. At
+around step ~40K the generator starts generating images that resembles
+spectrograms, shown in figure [[fig:shallow_spec_mid]].
+
 
 
 
