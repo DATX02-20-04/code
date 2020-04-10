@@ -248,7 +248,7 @@ theory and implementation portions.
 - *Introduction*: Drafted the background.
 - *Theory*: We improved our explanations of things, mostly the transformer.
 - *Implementation*: Start describing all the various parts, many that we worked on
-  last week like conditioning. Also worked on the theory portion.
+  last week like conditioning. Also worked on the transformer portion.
 
 We also made figures that helps describe some of the complex things
 (particularly the transformer). We think they are preferable over text.
