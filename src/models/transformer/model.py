@@ -5,12 +5,15 @@ from models.transformer.layers import Encoder, Decoder
 from models.transformer.mask import create_padding_mask, create_look_ahead_mask
 from models.transformer.optimizer import TransformerLRSchedule
 
+''' Transformer class. Initialize components of the transformer nerual network architecture '''
 
 class Transformer(tfk.Model):
+    ''' Transformer model'''
     def __init__(self, input_vocab_size, target_vocab_size, pe_input, pe_target, hparams):
         super(Transformer, self).__init__()
         self.hparams = hparams
 
+        # Encoder
         self.encoder = Encoder(hparams['num_layers'],
                                hparams['d_model'],
                                hparams['num_heads'],
@@ -19,6 +22,7 @@ class Transformer(tfk.Model):
                                pe_input,
                                hparams['dropout_rate'])
 
+        # Decoder
         self.decoder = Decoder(hparams['num_layers'],
                                hparams['d_model'],
                                hparams['num_heads'],
@@ -35,6 +39,7 @@ class Transformer(tfk.Model):
                                              beta_1=hparams['beta_1'],
                                              beta_2=hparams['beta_2'],
                                              epsilon=hparams['epsilon'])
+
 
     def call(self, inp, tar, training, enc_padding_mask, look_ahead_mask, dec_padding_mask):
         eo = self.encoder(inp, training, enc_padding_mask)
@@ -66,7 +71,6 @@ class Transformer(tfk.Model):
 
         return loss, tar_real, predictions
 
-
     def loss_function(self, real, pred):
         mask = tf.math.logical_not(tf.math.equal(real, 0))
         loss = self.loss_obj(real, pred)
@@ -87,6 +91,12 @@ class Transformer(tfk.Model):
         return enc_padding_mask, combined_mask, dec_padding_mask
 
     def evaluate(self, inp_sentence):
+        ''' evaluate:
+            - encode the input sequence
+            - calculate padding masks and look ahead masks
+            - decoder outputs predictions by looking at the endocer outpunt and its own output (self-attention)
+            - select last  prediction and calulate argmax of that
+            - decoder makes next prediction based on the previous ones it makde'''
         encoder_input = tf.expand_dims(inp_sentence, 0)
 
         decoder_input = [inp_sentence[0]]
@@ -114,4 +124,3 @@ class Transformer(tfk.Model):
             output = tf.concat([output, predicted_id], axis=-1)
 
         return tf.squeeze(output, axis=0), attention_weights
-

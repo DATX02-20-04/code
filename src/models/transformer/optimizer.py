@@ -1,6 +1,9 @@
 import tensorflow as tf
 import tensorflow.keras as tfk
 
+''' Custom learning rate scheduler for the optimizer (formula follows transformer/CustomLearningRateScheduler.png).
+    Source: "Attention Is All You Need" '''
+
 class TransformerLRSchedule(tfk.optimizers.schedules.LearningRateSchedule):
     def __init__(self, d_model, warmup_steps=4000):
         super(TransformerLRSchedule, self).__init__()

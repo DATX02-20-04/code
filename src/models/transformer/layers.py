@@ -3,7 +3,13 @@ import tensorflow.keras as tfk
 from tensorflow.keras import layers as tfkl
 import numpy as np
 
+''' Define different components of the transformer nerual network architecture '''
+
+
 class PositionalEncoding(tfkl.Layer):
+    ''' Positional encoding is:
+        - a vector with infomation about positioning of elements in a sequence
+        - added to the embedding vector to give context.'''
     def __init__(self, position, d_model):
         super(PositionalEncoding, self).__init__()
 
@@ -26,6 +32,8 @@ class PositionalEncoding(tfkl.Layer):
         return pos * w
 
 class ScaledAttention(tfkl.Layer):
+    ''' Scaled Attenion:
+        A component of the MultiHeadAttention '''
     def __init__(self):
         super(ScaledAttention, self).__init__()
 
@@ -45,6 +53,8 @@ class ScaledAttention(tfkl.Layer):
         return outputs, weights
 
 class RelativeAttention(tfkl.Layer):
+    ''' Relative Attention:
+        Is used for relative global attention '''
     def __init__(self, max_seq, depth):
         super(RelativeAttention, self).__init__()
         self.max_seq = max_seq
@@ -104,6 +114,11 @@ class RelativeAttention(tfkl.Layer):
 
 
 class MultiHeadAttention(tfkl.Layer):
+    ''' Multi-Head Attention
+        - Linear layers and split into heads
+        - Scaled Dot-product attention
+        - Concatenation of heads
+        - Final layer'''
     def __init__(self, d_model, num_heads):
         super(MultiHeadAttention, self).__init__()
         self.d_model = d_model
@@ -146,6 +161,8 @@ class MultiHeadAttention(tfkl.Layer):
 
 
 class RelativeGlobalAttention(tfkl.Layer):
+    ''' RelativeRelativeGlobalAttention
+        a component of the encoder layer '''
     def __init__(self, d_model, num_heads, max_seq):
         super(RelativeGlobalAttention, self).__init__()
         self.d_model = d_model
@@ -188,6 +205,8 @@ class RelativeGlobalAttention(tfkl.Layer):
 
 
 class PointWiseFF(tfkl.Layer):
+    ''' PointWiseFF
+        Point wise feed forward network consists of two fully-connected layers with a ReLU activation in between.'''
     def __init__(self, d_model, dff):
         super(PointWiseFF, self).__init__()
         self.d1 = tfkl.Dense(dff, activation='relu')
@@ -200,6 +219,11 @@ class PointWiseFF(tfkl.Layer):
 
 
 class EncoderLayer(tfkl.Layer):
+    ''' EncoderLayer consists of sublayers:
+        - Relative global attention
+        - Point wise feed forward networks
+        Each of these sublayers has a residual connection around it followed by a layer normalization.
+        Residual connections help in avoiding the vanishing gradient problem in deep networks. '''
     def __init__(self, d_model, num_heads, dff, rate=0.1):
         super(EncoderLayer, self).__init__()
 
@@ -228,6 +252,13 @@ class EncoderLayer(tfkl.Layer):
 
 
 class DecoderLayer(tfkl.Layer):
+    ''' DecoderLayer consists of sublayers:
+        - Relative global attention
+        - Multi-head attention (with padding mask). V (value) and K (key) receive the encoder output as inputs.
+          Q (query) receives the output from the masked multi-head attention sublayer.
+        - Point wise feed forward networks
+        Each of these sublayers has a residual connection around it followed by a layer normalization.
+        The output of each sublayer is LayerNorm(x + Sublayer(x)). The normalization is done on the d_model (last) axis.'''
     def __init__(self, d_model, num_heads, dff, rate=0.1):
         super(DecoderLayer, self).__init__()
 
@@ -262,6 +293,13 @@ class DecoderLayer(tfkl.Layer):
         return out3, attn_weights_block1, attn_weights_block2
 
 class Encoder(tfkl.Layer):
+    ''' Encoder consists of:
+        - Input Embedding
+        - Positional Encoding
+        - N encoder layers
+        The input is put through an embedding which is summed with the positional encoding.
+        The output of this summation is the input to the encoder layers.
+        The output of the encoder is the input to the decoder.'''
     def __init__(self, num_layers, d_model, num_heads, dff, input_vocab_size, max_pos_enc, rate=0.1):
         super(Encoder, self).__init__()
 
@@ -288,6 +326,13 @@ class Encoder(tfkl.Layer):
         return x
 
 class Decoder(tfkl.Layer):
+    ''' Decoder consists of:
+        - Output Embedding
+        - Positional Encoding
+        - N decoder layers
+        The target is put through an embedding which is summed with the positional encoding.
+        The output of this summation is the input to the decoder layers.
+        The output of the decoder is the input to the final linear layer. '''
     def __init__(self, num_layers, d_model, num_heads, dff, target_vocab_size, max_pos_enc, rate=0.1):
         super(Decoder, self).__init__()
 
