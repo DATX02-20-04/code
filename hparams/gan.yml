@@ -1,9 +1,8 @@
 hparams:
-  name: 'gan'
+  name: 'test'
   instrument:
-    family: keyboard
-    source: acoustic
-  epochs: 100
+    family: 'guitar'
+  epochs: 2000
   steps: 0
   sample_rate: 16000
   batch_size: 32
@@ -11,7 +10,7 @@ hparams:
   latent_size: 100
   cond_vector_size: 61
   generator_scale: 128
-  aux_loss_weight: 10
+  aux_loss_weight: 1
   gen_lr: 0.0001
   disc_lr: 0.0004
   log_amin: 0.00000000001

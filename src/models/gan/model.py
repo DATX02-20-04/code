@@ -127,3 +127,4 @@ class GAN():
         aux = tfkl.Dense(self.hparams['cond_vector_size'], activation='softmax', name='auxillary')(o)
 
         return tf.keras.Model(inputs=image, outputs=[fake, aux])
+

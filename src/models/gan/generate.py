@@ -24,7 +24,7 @@ def start(hparams):
 
     trainer.init_checkpoint(ckpt)
 
-    count = 2
+    count = 10
     seed = tf.random.normal((count, hparams['latent_size']))
     mid = hparams['cond_vector_size']//2
     pitches = tf.one_hot(range(mid-count//2, mid+count//2), hparams['cond_vector_size'], axis=1)

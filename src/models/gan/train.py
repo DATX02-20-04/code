@@ -9,6 +9,7 @@ from models.gan.model import GAN
 import data.process as pro
 import tensorflow_datasets as tfds
 import matplotlib.pyplot as plt
+import io
 
 # Define some metrics to be used in the training
 gen_loss_avg = tf.keras.metrics.Mean()
@@ -42,7 +43,7 @@ def on_epoch_complete(epoch, step, duration, tsw, gan):
 
     samples = tf.reshape(gan.generator([seed, pitches], training=False), [-1, 128, 128])
     img = tf.unstack(samples)
-    img = tf.reverse(tf.concat(img, axis=1), axis=[0]))
+    img = tf.reverse(tf.concat(img, axis=1), axis=[0])
 
     with tsw.as_default():
         tf.summary.image(f'Spectrogram at epoch {epoch}', img, step=step)
@@ -86,6 +87,36 @@ def start(hparams):
     gan = GAN(spec_shape, hparams)
     gan.discriminator.summary()
     gan.generator.summary()
+
+
+    # This runs at the end of every epoch and is used to display metrics
+    def on_epoch_complete(epoch, step, duration, tsw):
+        #display.clear_output(wait=True)
+        count = 6
+        seed = tf.random.normal((count, gan.hparams['latent_size']))
+        mid = gan.hparams['cond_vector_size']//2
+        pitches = tf.one_hot(range(mid-count//2, mid+count//2), gan.hparams['cond_vector_size'], axis=1)
+
+        samples = tf.reshape(gan.generator([seed, pitches], training=False), [-1, 128, 128])
+        img = tf.unstack(samples)
+        img = tf.reverse(tf.concat(img, axis=1), axis=[0])
+        plt.axis('off')
+        plt.imshow(img)
+
+        buf = io.BytesIO()
+        plt.savefig(buf,  format='png')
+        buf.seek(0)
+
+        # Convert PNG buffer to TF image
+        image = tf.image.decode_png(buf.getvalue(), channels=4)
+
+        # Add the batch dimension
+        image = tf.expand_dims(image, 0)
+
+        with tsw.as_default():
+            tf.summary.image(f'Spectrogram at epoch {epoch}', image, step=step)
+        print(f"Epoch: {epoch}, Step: {step}, Gen Loss: {gen_loss_avg.result()}, Disc Loss: {disc_loss_avg.result()}, Duration: {duration} s")
+
 
     trainer = Trainer(dataset, hparams)
 
