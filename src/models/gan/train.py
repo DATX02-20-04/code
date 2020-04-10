@@ -33,8 +33,19 @@ def on_step(epoch, step, stats, tsw):
         print(f"Epoch: {epoch}, Step: {step}, Gen Loss: {gen_loss_avg.result()}, Disc Loss: {disc_loss_avg.result()}")
 
 # This runs at the end of every epoch and is used to display metrics
-def on_epoch_complete(epoch, step, duration, tsw):
+def on_epoch_complete(epoch, step, duration, tsw, gan):
     #display.clear_output(wait=True)
+    count = 5
+    seed = tf.random.normal((count, gan.hparams['latent_size']))
+    mid = gan.hparams['cond_vector_size']//2
+    pitches = tf.one_hot(range(mid-count//2, mid+count//2), gan.hparams['cond_vector_size'], axis=1)
+
+    samples = tf.reshape(gan.generator([seed, pitches], training=False), [-1, 128, 128])
+    img = tf.unstack(samples)
+    img = tf.reverse(tf.concat(img, axis=1), axis=[0]))
+
+    with tsw.as_default():
+        tf.summary.image(f'Spectrogram at epoch {epoch}', img, step=step)
     print(f"Epoch: {epoch}, Step: {step}, Gen Loss: {gen_loss_avg.result()}, Disc Loss: {disc_loss_avg.result()}, Duration: {duration} s")
 
 def start(hparams):
