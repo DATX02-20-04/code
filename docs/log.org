@@ -17,7 +17,7 @@
 #+LATEX: \setlength{\parskip}{\baselineskip}
 #+LATEX_CLASS: article
 
-#+MACRO: AUDIO @@html:<audio controls="controls" src="$1"></audio>@@
+#+MACRO: AUDIO @@html: <audio style='width: 100%;' controls="controls" src="$1"></audio>@@
 
 
 * Introduction
@@ -66,8 +66,7 @@ fake.
 
 With an actual loss to the discriminator and generator, the hope is they won't
 ignore the pitch vectors anymore. We have almost implemented all this, but are
-still experimenting with getting it entirely correct., but are still
-experimenting with getting it entirely correct.
+still experimenting with getting it entirely correct.
 
 *** Training
 Our required time to train has gone up drastically. For example, the pitch
@@ -88,19 +87,29 @@ over-fitting on the dataset, which is not idea either.
 
 *** Current Results of Note Generation with Conditioning and Classifier
 The following results were taken from the above training session at the last
-skip and at the end. (steps 600K and 1600K). The pitches used are increasing.
+skip and at the end. (steps 600K and 1600K). The pitches used are increasing,
+but due to a bug in our code, the spectrograms are flipped on the y axis (as the
+plot suggests). Here, we use an embedding of the pitch label instead of a one-hot
+encoding.
 
+#+begin_columns
+#+begin_column
 #+CAPTION: Result at 600K steps
 #+NAME: fig:600k_steps
 [[./img/600k_steps.png]]
 
 {{{AUDIO(audio/600k_steps.wav)}}}
+#+end_column
 
+#+begin_column
 #+CAPTION: Result at 1600K steps
 #+NAME: fig:1600k_steps
 [[./img/1600k_steps.png]]
 
 {{{AUDIO(audio/1600k_steps.wav)}}}
+#+end_column
+#+end_columns
+
 
 The main issue in this seems to be mode collapse, the generator no matter pitch
 or noise input generates the same or similar examples. In the case of figure
@@ -108,6 +117,31 @@ or noise input generates the same or similar examples. In the case of figure
 resembles a keyboard (which is what we are training on). Arguably, you could
 have noticed mode collapse in figure [[fig:600k_steps]], but we thought we would
 give it a try anyway.
+
+The next experiment we ran was a deeper network with much more trainable
+parameters. We trained it overnight on only acoustic keyboard sounds from the
+GANSynth subset of NSynth.
+
+#+begin_columns
+#+begin_column
+#+CAPTION:Generator loss from a deeper network
+#+NAME: fig:deep_gen_loss
+[[./img/deep_gen_loss.svg]]
+#+end_column
+
+#+begin_column
+#+CAPTION: Discriminator loss from a deeper network
+#+NAME: fig:deep_disc_loss
+[[./img/deep_disc_loss.svg]]
+#+end_column
+#+end_columns
+
+Figures [[fig:deep_gen_loss]] and [[fig:deep_disc_loss]] show a very unstable network
+Ideally, they converge to the Nash equilibrium and stay around there. Due to
+this issue and that the deeper model requires more time to train to see
+improvement, we reverted back to our previous, shallower networks.
+
+
 
 * Week 11
 No great audio results for this week unfortunately.
