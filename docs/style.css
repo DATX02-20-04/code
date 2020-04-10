@@ -95,3 +95,9 @@ body {
 table {
   margin: 0 auto;
 }
+
+audio {
+  width: 100%;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}

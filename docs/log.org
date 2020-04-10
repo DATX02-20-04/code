@@ -17,7 +17,7 @@
 #+LATEX: \setlength{\parskip}{\baselineskip}
 #+LATEX_CLASS: article
 
-#+MACRO: AUDIO @@html: <audio style='width: 100%;' controls="controls" src="$1"></audio>@@
+#+MACRO: AUDIO @@html: <audio controls="controls" src="$1"></audio>@@
 
 
 * Introduction
@@ -29,6 +29,12 @@
 
   The time log has exact tasks worked on each entry, for each
 * Week 12
+We had to cancel both the supervisor meeting and the Friday meeting with our
+group that we hold each week, so this week may not correctly reflect all
+progress that have happened in the project. I (Christoffer) try to sum
+everything up but it will always focus more on what I've been doing due to me
+writing the log. Please refer to the time log for more specific work by other members.
+
 ** Progress
 We are currently working hard on getting pitch conditioning to work since that
 is the bottleneck for connecting with structure. To accomplish this, we are
@@ -149,7 +155,7 @@ GANSynth subset of NSynth.
 #+end_column
 #+end_columns
 
-Figures [[fig:deep_gen_loss]] and [[fig:deep_disc_loss]] show a very unstable network
+Figures [[fig:deep_gen_loss]] and [[fig:deep_disc_loss]] show an unstable network
 Ideally, they converge to the Nash equilibrium and stay around there. Due to
 this issue and that the deeper model requires more time to train to see
 improvement, we reverted back to our previous, shallower networks.
@@ -186,9 +192,9 @@ stop training while seeing model progress.
 [[./img/shallow_spec_mid.png]]
 #+end_column
 #+begin_column
-#+CAPTION:Later images at step count ~xxK
+#+CAPTION:Later images at step count ~200K
 #+NAME: fig:shallow_spec_late
-[[./img/shallow_spec_mid.png]]
+[[./img/shallow_spec_late.png]]
 #+end_column
 #+end_columns
 
@@ -198,10 +204,78 @@ from ~10, while the generator stars from ~40. This is because of the weighted
 aux loss described earlier. Figure [[fig:shallow_spec_early]] shows to us almost
 random noise but at this point almost all loss from the aux is eliminated. At
 around step ~40K the generator starts generating images that resembles
-spectrograms, shown in figure [[fig:shallow_spec_mid]].
+spectrograms, shown in figure [[fig:shallow_spec_mid]]. Figure [[fig:shallow_spec_late]]
+shows accurate spectrograms representations.
 
+Although we have generated pitches in increasing fashion for these figures, the
+generator does not map them in that fashion. To show that pitch conditioning
+does indeed work, we provide the generator different noise inputs $z$ but the same
+pitch classes $c$.
 
+#+begin_column
+#+CAPTION: Spectrograms generated with different noise vectors and the same pitch class.
+#+NAME: fig:same_pitch_spec
+[[./img/same_pitch_spec.png]]
 
+{{{AUDIO(audio/same_pitch_spec.wav)}}}
+#+end_column
+
+Note that while figure [[fig:same_pitch_spec]] may look like mode collapse just like
+before, they look similar due to us choosing to generate only a specific pitch.
+The horizontal lines that make up the note are similar due to this, but timbre
+which is represented by everything else in the image differs.
+
+With this, we can select which pitch to generate, but not reliably. Our use case
+requires us to be able to select for instance the note A, but here we have no
+idea which one-hot vector represents that. Why it didn't learn them in order, we
+don't know. But solving this problem will be our next priority.
+
+Also, some processing was wrong with this generation that affects how
+normalising spectrograms work. Normalising is not a simple operation, and
+depends on the datasets standard deviation and variance. This requires us to
+process the entire dataset before training to calculate these. Because we
+switched to only guitars, the old one calculated is not correct, and we forgot
+to recalculate it.
+
+This variant will continue training until we are sure it won't improve more, but
+for now, these are the results we have.
+
+*** Report
+While we spent a great deal focusing this week on having a product to show,
+we've made a bit of progress on the report, specifically the introduction,
+theory and implementation portions.
+
+- *Introduction*: Drafted the background.
+- *Theory*: We improved our explanations of things, mostly the transformer.
+- *Implementation*: Start describing all the various parts, many that we worked on
+  last week like conditioning. Also worked on the theory portion.
+
+We also made figures that helps describe some of the complex things
+(particularly the transformer). We think they are preferable over text.
+
+** Last weeks' goals
+- A lot of progress on auxiliary classifier.
+- Holding off on incorporating WGAN.
+- Connecting everything was not possible quite yet, but maybe next week.
+- Implementation of report improved.
+** Summary of each member
+This week was Easter, so many group members were busy elsewhere.
+- *Christoffer*:
+  - Mostly worked on implementing and training the ACGAN.
+  - Also been writing the implementation chapter and the log in the dead time
+    between training.
+- *Eric*:
+- *Carl*:
+- *Lovisa*:
+- *Cao*: I did abit of pull request review and final report but mostly was sick
+- *Elias*:
+** Next week
+- Fine tune conditioning and figure out a way of reliably choosing which pitch
+  it generates. Also try improve audio quality so it sounds like more than just bells.
+- Start connecting structure and note gen. This should be possible now that we
+  can at least try choosing pitches, even if they are not quite correctly mapped yet.
+- As usual, write the report. We want to start making the text cohesive; it's
+  quite jumbled right now.
 
 * Week 11
 No great audio results for this week unfortunately.
