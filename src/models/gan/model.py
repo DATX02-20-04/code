@@ -73,7 +73,13 @@ class GAN():
         inp = tfkl.concatenate([latent, pitch_class])
         inp = tfkl.Reshape((1, 1, 161))(inp) # TODO: Fix this to correctly reshape depending on inputs
 
-        o = tfkl.Conv2D(128, (5, 5), strides=(1, 1), padding='same', use_bias=False)(inp)
+        o = tfkl.Dense((self.shape[0]//4)*(self.shape[1]//4)*self.hparams['generator_scale'])(inp)
+        # o = tfkl.BatchNormalization()(o)
+        o = tfkl.LeakyReLU()(o)
+
+        o = tfkl.Reshape((self.shape[0]//4, self.shape[1]//4, self.hparams['generator_scale']))(o)
+
+        o = tfkl.Conv2D(128, (5, 5), strides=(1, 1), padding='same', use_bias=False)(o)
         o = tfkl.BatchNormalization()(o)
         o = tfkl.LeakyReLU()(o)
 
@@ -83,32 +89,8 @@ class GAN():
         o = tfkl.LeakyReLU()(o)
 
         o = tfkl.UpSampling2D(size=(2, 2))(o)
-        o = tfkl.Conv2D(32, (5, 5), strides=(1, 1), padding='same', use_bias=False)(o)
-        o = tfkl.BatchNormalization()(o)
-        o = tfkl.LeakyReLU()(o)
-
-        o = tfkl.UpSampling2D(size=(2, 2))(o)
-        o = tfkl.Conv2D(16, (5, 5), strides=(1, 1), padding='same', use_bias=False)(o)
-        o = tfkl.BatchNormalization()(o)
-        o = tfkl.LeakyReLU()(o)
-
-        o = tfkl.UpSampling2D(size=(2, 2))(o)
-        o = tfkl.Conv2D(8, (5, 5), strides=(1, 1), padding='same', use_bias=False)(o)
-        o = tfkl.BatchNormalization()(o)
-        o = tfkl.LeakyReLU()(o)
-
-        o = tfkl.UpSampling2D(size=(2, 2))(o)
-        o = tfkl.Conv2D(4, (5, 5), strides=(1, 1), padding='same', use_bias=False)(o)
-        o = tfkl.BatchNormalization()(o)
-        o = tfkl.LeakyReLU()(o)
-
-        o = tfkl.UpSampling2D(size=(2, 2))(o)
-        o = tfkl.Conv2D(2, (5, 5), strides=(1, 1), padding='same', use_bias=False)(o)
-        o = tfkl.BatchNormalization()(o)
-        o = tfkl.LeakyReLU()(o)
-
-        o = tfkl.UpSampling2D(size=(2, 2))(o)
         o = tfkl.Conv2D(1, (5, 5), strides=(1, 1), padding='same', use_bias=False, activation='tanh')(o)
+
 
         return tf.keras.Model(inputs=[latent, pitch_class], outputs=o)
 
@@ -116,37 +98,28 @@ class GAN():
     def create_discriminator(self):
         image = tfkl.Input(shape=[*self.shape, 1])
 
-        o = tfkl.Conv2D(128, (3, 3), strides=(1, 1), padding='same')(image)
+        o = tfkl.Conv2D(32, (3, 3), strides=(1, 1), padding='same')(image)
         o = tfkl.BatchNormalization()(o)
         o = tfkl.LeakyReLU()(o)
-
-        o = tfkl.Conv2D(64, (3, 3), strides=(2, 2), padding='same')(o)
-        o = tfkl.BatchNormalization()(o)
-        o = tfkl.LeakyReLU()(o)
-
-        o = tfkl.Conv2D(32, (3, 3), strides=(2, 2), padding='same')(o)
-        o = tfkl.BatchNormalization()(o)
-        o = tfkl.LeakyReLU()(o)
-        o = tfkl.Dropout(0.3)(o)
+        # o = tfkl.Dropout(0.3)(o)
 
         o = tfkl.Conv2D(16, (4, 4), strides=(2, 2), padding='same')(o)
         o = tfkl.BatchNormalization()(o)
         o = tfkl.LeakyReLU()(o)
-        o = tfkl.Dropout(0.3)(o)
+        # o = tfkl.Dropout(0.3)(o)
 
-        o = tfkl.Conv2D(8, (4, 4), strides=(2, 2), padding='same')(o)
+        # o = tfkl.Conv2D(8, (4, 4), strides=(2, 2), padding='same')(o)
+        # o = tfkl.BatchNormalization()(o)
+        # o = tfkl.LeakyReLU()(o)
+        #
+        o = tfkl.Dropout(0.4)(o)
+        o = tfkl.Flatten()(o)
+
+        o = tfkl.Dense(32)(o)
         o = tfkl.BatchNormalization()(o)
         o = tfkl.LeakyReLU()(o)
 
-        o = tfkl.Conv2D(4, (4, 4), strides=(2, 2), padding='same')(o)
-        o = tfkl.BatchNormalization()(o)
-        o = tfkl.LeakyReLU()(o)
-
-        o = tfkl.Conv2D(2, (4, 4), strides=(2, 2), padding='same')(o)
-        o = tfkl.BatchNormalization()(o)
-        o = tfkl.LeakyReLU()(o)
-
-        o = tfkl.Conv2D(1, (4, 4), strides=(2, 2), padding='same')(o)
+        o = tfkl.Dense(16)(o)
         o = tfkl.BatchNormalization()(o)
         o = tfkl.LeakyReLU()(o)
 
