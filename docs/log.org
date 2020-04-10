@@ -141,6 +141,42 @@ Ideally, they converge to the Nash equilibrium and stay around there. Due to
 this issue and that the deeper model requires more time to train to see
 improvement, we reverted back to our previous, shallower networks.
 
+Next experiment was using one-hot encoding of pitch with a shallower network
+(quicker to train). We also multiplied the aux component of the losses by a
+weight of 10, hoping it would prioritise decreasing that penalty. For this
+experiment, we also added logging images in tensorboard so we didn't have to
+stop training while seeing model progress.
+
+#+begin_columns
+#+CAPTION:Generator loss from the shallower network, with one-hot encoding and a weighted aux loss.
+#+NAME: fig:shallow_gen_loss
+[[./img/shallow_gen_loss.svg]]
+
+#+CAPTION: Discriminator loss from the shallower network, with one-hot encoding and a weighted aux loss.
+#+NAME: fig:shallow_disc_loss
+[[./img/shallow_disc_loss.svg]]
+#+end_columns
+
+#+begin_columns
+#+CAPTION:Early images at step count ~30K
+#+NAME: fig:shallow_spec_early
+[[./img/shallow_spec_early.png]]
+#+CAPTION:Early images at step count ~50K
+#+NAME: fig:shallow_spec_mid
+[[./img/shallow_spec_mid.png]]
+#+CAPTION:Later images at step count ~xxK
+#+NAME: fig:shallow_spec_late
+[[./img/shallow_spec_mid.png]]
+#+end_columns
+
+The loss graphs in figures [[fig:shallow_gen_loss]] and [[fig:shallow_disc_loss]] look
+much better than before. Not visualised in them is that the the discriminator
+starts from ~10, while the generator stars from ~40. This is because of the
+weighted aux loss described earlier. Figure [[fig:shallow_spec_early]] shows to us
+almost random noise but at this point almost all loss from the aux is
+eliminated. At around step ~40K the generator starts generating images that
+resembles spectrograms, shown in figure [[fig:shallow_spec_mid]].
+
 
 
 * Week 11
