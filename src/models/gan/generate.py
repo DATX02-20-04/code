@@ -52,4 +52,4 @@ def start(hparams):
 
     output = np.concatenate(list(audio))
 
-    librosa.output.write_wav('gan_sample.wav', output, hparams['sample_rate'], norm=True)
+    librosa.output.write_wav('gan_sample.wav', output, hparams['sample_rate'])
