@@ -38,8 +38,8 @@ def start(hparams):
     # Load nsynth dataset from tfds
     dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=True)
 
-    #gan_stats = calculate_dataset_stats(hparams, dataset)
-    gan_stats = np.load('gan_stats.npz')
+    gan_stats = calculate_dataset_stats(hparams, dataset)
+    #gan_stats = np.load('gan_stats.npz')
 
     dataset = nsynth_to_melspec(dataset, hparams, gan_stats)
 
@@ -99,7 +99,7 @@ def start(hparams):
         image = tf.expand_dims(image, 0)
 
         with tsw.as_default():
-            tf.summary.image(f'Spectrogram at epoch {epoch}', image, step=step)
+            tf.summary.image(f'Spectrogram', image, step=step)
         print(f"Epoch: {epoch}, Step: {step}, Gen Loss: {gen_loss_avg.result()}, Disc Loss: {disc_loss_avg.result()}, Duration: {duration} s")
 
 

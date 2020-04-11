@@ -24,15 +24,26 @@ def start(hparams):
 
     trainer.init_checkpoint(ckpt)
 
-    count = 10
+    count = 8
+
     seed = tf.random.normal((count, hparams['latent_size']))
+    #seed = tf.repeat(seed, count, axis=0)
     mid = hparams['cond_vector_size']//2
     pitches = tf.one_hot(range(mid-count//2, mid+count//2), hparams['cond_vector_size'], axis=1)
 
     samples = tf.reshape(gan.generator([seed, pitches], training=False), [-1, 128, 128])
     x = tf.unstack(samples)
-    plt.imshow(tf.reverse(tf.concat(x, axis=1), axis=[0]))
-    plt.axis('off')
+
+    width = 4
+    height = 2
+    plt.figure(figsize=(width*2, height*2))
+
+    for i, img in enumerate(x):
+        plt.subplot(width, height, i+1)
+        plt.title(i)
+        plt.imshow(tf.reverse(x[i], axis=[0]))
+        plt.axis('off')
+
     plt.savefig('output.png')
     audio = pro.pipeline([
         pro.denormalize(normalization='specgan', stats=gan_stats),
