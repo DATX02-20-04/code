@@ -1,0 +1,103 @@
+body {
+  font-family: "Roboto Slab","ff-tisa-web-pro","Georgia",Arial,sans-serif;
+}
+
+@media screen and (max-width: 768px) {
+  #toggle-sidebar h2 {
+    opacity: 1;
+  }
+}
+
+#content {
+  max-width: none;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+#content .outline-1,
+#content .outline-2,
+#content .outline-3,
+#content .outline-4,
+#content .outline-5,
+#content .outline-6 {
+  text-align: justify;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+#content img {
+  width: 100%;
+  display: inline-block;
+}
+
+.w-1\/2 {
+  margin: 0 auto;
+  max-width: 50%;
+}
+
+.columns {
+  display: flex;
+  margin: 0 -1rem;
+}
+
+.columns .column {
+  flex: 1 1 0%;
+  padding: 0 0.5rem;
+}
+
+.notice-warning {
+  position: relative;
+  padding: .75rem 1.25rem;
+  margin-bottom: 1rem;
+  border: 1px solid transparent;
+  border-radius: .25rem;
+
+  color: #856404;
+  background-color: #fff3cd;
+  border-color: #ffeeba;
+}
+
+
+#content ul ol,
+#content ol ul {
+  margin-bottom: 0.75rem;
+}
+
+#content li {
+  margin-bottom: 0.25rem;
+}
+
+
+.decisions p,
+.decisions ul,
+.decisions ol,
+.notice-warning p,
+.notice-warning ol,
+.notice-warning ul {
+  margin: 0;
+}
+
+.decisions {
+  position: relative;
+  padding: .75rem 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid transparent;
+  border-radius: .25rem;
+
+  color: #383d41;
+  background-color: #efefef;
+  border-color: #e2e3e5;
+}
+
+table {
+  margin: 0 auto;
+}
+
+audio {
+  width: 100%;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
