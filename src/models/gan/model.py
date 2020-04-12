@@ -73,6 +73,53 @@ class GAN():
         inp = tfkl.concatenate([latent, pitch_class])
         inp = tfkl.Reshape((1, 1, 161))(inp) # TODO: Fix this to correctly reshape depending on inputs
 
+        o = tfkl.Conv2D(256, (2, 16), strides=(1, 1), padding='same', use_bias=False)(inp)
+        o = tfkl.LeakyReLU()(o)
+        o = tfkl.Conv2D(256, (3, 3), strides=(1, 1), padding='same', use_bias=False)(o)
+        o = tfkl.LeakyReLU()(o)
+        o = tfkl.UpSampling2D(size=(2, 2))(o)
+
+        o = tfkl.Conv2D(256, (3, 3), strides=(1, 1), padding='same', use_bias=False)(o)
+        o = tfkl.LeakyReLU()(o)
+        o = tfkl.Conv2D(256, (3, 3), strides=(1, 1), padding='same', use_bias=False)(o)
+        o = tfkl.LeakyReLU()(o)
+        o = tfkl.UpSampling2D(size=(2, 2))(o)
+
+        o = tfkl.Conv2D(256, (3, 3), strides=(1, 1), padding='same', use_bias=False)(o)
+        o = tfkl.LeakyReLU()(o)
+        o = tfkl.Conv2D(256, (3, 3), strides=(1, 1), padding='same', use_bias=False)(o)
+        o = tfkl.LeakyReLU()(o)
+        o = tfkl.UpSampling2D(size=(2, 2))(o)
+
+        o = tfkl.Conv2D(256, (3, 3), strides=(1, 1), padding='same', use_bias=False)(o)
+        o = tfkl.LeakyReLU()(o)
+        o = tfkl.Conv2D(256, (3, 3), strides=(1, 1), padding='same', use_bias=False)(o)
+        o = tfkl.LeakyReLU()(o)
+        o = tfkl.UpSampling2D(size=(2, 2))(o)
+
+        o = tfkl.Conv2D(128, (3, 3), strides=(1, 1), padding='same', use_bias=False)(o)
+        o = tfkl.LeakyReLU()(o)
+        o = tfkl.Conv2D(128, (3, 3), strides=(1, 1), padding='same', use_bias=False)(o)
+        o = tfkl.LeakyReLU()(o)
+        o = tfkl.UpSampling2D(size=(2, 2))(o)
+
+        o = tfkl.Conv2D(64, (3, 3), strides=(1, 1), padding='same', use_bias=False)(o)
+        o = tfkl.LeakyReLU()(o)
+        o = tfkl.Conv2D(64, (3, 3), strides=(1, 1), padding='same', use_bias=False)(o)
+        o = tfkl.LeakyReLU()(o)
+        o = tfkl.UpSampling2D(size=(2, 2))(o)
+
+        o = tfkl.Conv2D(32, (3, 3), strides=(1, 1), padding='same', use_bias=False)(o)
+        o = tfkl.LeakyReLU()(o)
+        o = tfkl.Conv2D(32, (3, 3), strides=(1, 1), padding='same', use_bias=False)(o)
+        o = tfkl.LeakyReLU()(o)
+
+        return tf.keras.Model(inputs=[latent, pitch_class], outputs=o)
+
+        # -------------------------------------------
+
+
+
         o = tfkl.Dense((self.shape[0]//4)*(self.shape[1]//4)*self.hparams['generator_scale'])(inp)
         # o = tfkl.BatchNormalization()(o)
         o = tfkl.LeakyReLU()(o)
