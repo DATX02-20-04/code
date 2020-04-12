@@ -39,7 +39,8 @@ class SineNet():
 
     def get_wave(self, params):
         As, Bs = tf.split(params, num_or_size_splits=2, axis=1)
-        print(As.shape, Bs.shape)
+        As = tf.reshape(As, [self.hparams['batch_size'], 1, self.hparams['channels']])
+        Bs = tf.reshape(Bs, [self.hparams['batch_size'], 1, self.hparams['channels']])
 
         t = tf.reshape(
             tf.tile(
@@ -53,7 +54,6 @@ class SineNet():
         sin = tf.math.sin(t*np.pi*2*Bs)
 
         wave = tf.math.tanh(exp*sin)
+        wave = tf.math.reduce_sum(wave, axis=2)
 
-        print(wave)
-
-        return tf.math.reduce_sum(wave, axis=1)
+        return wave
