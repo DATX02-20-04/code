@@ -43,9 +43,11 @@ class SineNet():
 
         t = tf.reshape(
             tf.tile(
-                tf.reshape(tf.linspace(0.0, 1.0, self.hparams['samples']), [self.hparams['samples'], 1]),
-                [self.hparams['batch_size'], self.hparams['channels']]),
-            [self.hparams['samples'], self.hparams['channels']])
+                tf.reshape(
+                    tf.linspace(0.0, 1.0, self.hparams['samples']),
+                    [1, self.hparams['samples'], 1]),
+                [self.hparams['batch_size'], 1, self.hparams['channels']]),
+            [self.hparams['batch_size'], self.hparams['samples'], self.hparams['channels']])
 
         exp = tf.math.exp(-t*As)
         sin = tf.math.sin(t*np.pi*2*Bs)

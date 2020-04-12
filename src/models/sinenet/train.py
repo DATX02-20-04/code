@@ -35,7 +35,7 @@ def start(hparams):
         pro.normalize(),
         pro.stft(frame_length=2048, frame_step=512, fft_length=126),
         pro.abs(),
-        # pro.map_transform(lambda x: tf.reduce_max(x, axis=0)),
+        pro.map_transform(lambda x: tf.reduce_max(x, axis=0)),
     ])(dataset)
 
     shape = None
