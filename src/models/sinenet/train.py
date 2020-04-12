@@ -30,40 +30,31 @@ def start(hparams):
 
     dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=True)
 
-    stft_dataset = pro.pipeline([
+    y_dataset = pro.pipeline([
         pro.extract('audio'),
         pro.normalize(),
+    ])(dataset)
+
+    x_dataset = pro.pipeline([
         pro.stft(frame_length=2048, frame_step=512, fft_length=126),
         pro.abs(),
         pro.map_transform(lambda x: tf.reduce_max(x, axis=0)),
-    ])(dataset)
+    ])(y_dataset)
 
     shape = None
-    for e in stft_dataset.take(1):
+    for e in x_dataset.take(1):
         shape = e.shape
 
     print("FT shape:", shape)
     sinenet = SineNet(hparams, shape)
 
-    x_dataset = pro.pipeline([
-        pro.shuffle(hparams['buffer_size']),
-        pro.batch(hparams['batch_size']),
-        pro.prefetch()
-    ])(stft_dataset)
-
-    y_dataset = pro.pipeline([
-        pro.extract('audio'),
-        pro.normalize(),
-        pro.shuffle(hparams['buffer_size']),
-        pro.batch(hparams['batch_size']),
-        pro.prefetch()
-    ])(dataset)
+    sinenet.param_net.summary()
 
     dataset = tf.data.Dataset.zip((x_dataset, y_dataset))
 
     dataset = pro.pipeline([
         pro.shuffle(hparams['buffer_size']),
-        pro.batch(hparams['batch_size']),
+        pro.batch(hparams['batch_size'], drop_remainder=True),
         pro.prefetch()
     ])(dataset)
 
