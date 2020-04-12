@@ -25,6 +25,6 @@ def start(hparams):
     # params = tf.tile(tf.concat([ones*10, ones*440], axis=1), [hparams['batch_size'], 1])
     params = sinenet.param_net(tf.random.normal([hparams['batch_size'], 64]), training=False)
 
-    wave = sinenet.get_wave(params)
+    wave = tf.reshape(sinenet.get_wave(params), [-1])
 
-    librosa.output.write_wav('output.wav', wave[0].numpy(), sr=hparams['sample_rate'])
+    librosa.output.write_wav('output.wav', wave.numpy(), sr=hparams['sample_rate'])
