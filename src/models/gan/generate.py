@@ -24,7 +24,7 @@ def start(hparams):
 
     trainer.init_checkpoint(ckpt)
 
-    count = 8
+    count = 16
 
     seed = tf.random.normal((count, hparams['latent_size']))
     #seed = tf.repeat(seed, count, axis=0)
@@ -35,7 +35,7 @@ def start(hparams):
     x = tf.unstack(samples)
 
     width = 4
-    height = 2
+    height = 4
     plt.figure(figsize=(width*2, height*2))
 
     for i, img in enumerate(x):
