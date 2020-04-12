@@ -33,7 +33,7 @@ def start(hparams):
     stft_dataset = pro.pipeline([
         pro.extract('audio'),
         pro.normalize(),
-        pro.stft(frame_length=512, frame_step=256, fft_length=512),
+        pro.stft(frame_length=2048, frame_step=980, fft_length=126),
     ])(dataset)
 
     shape = None

@@ -14,7 +14,7 @@ class SineNet():
         x, y_target = x
 
         with tf.GradientTape() as tape:
-            params = self.freq(x, training=True)
+            params = self.param_net(x, training=True)
 
             wave = self.get_wave(params)
 
