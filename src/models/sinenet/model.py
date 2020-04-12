@@ -27,7 +27,7 @@ class SineNet():
         return loss
 
     def create_param_net(self):
-        i = tfkl.Input(shape=(self.ft_shape[0]*self.ft_shape[1],))
+        i = tfkl.Input(shape=self.ft_shape)
 
         o = tfkl.Dense(128)(i)
         o = tfkl.Dense(128)(o)
