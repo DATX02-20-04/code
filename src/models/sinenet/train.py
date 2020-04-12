@@ -5,6 +5,7 @@ import tensorflow_datasets as tfds
 from models.sinenet.model import SineNet
 import tensorflow_datasets as tfds
 import librosa
+from data.nsynth import instrument_families_filter
 
 loss_avg = tf.keras.metrics.Mean()
 
@@ -29,6 +30,12 @@ def start(hparams):
     # librosa.output.write_wav('output.wav', wave.numpy(), sr=hparams['sample_rate'])
 
     dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=True)
+
+    if 'instrument' in hparams and hparams['instrument'] is not None:
+        instrument = hparams['instrument']
+        if 'family' in instrument and instrument['family'] is not None:
+            print("FILTER ", instrument['family'])
+            dataset = pro.filter(instrument_families_filter(instrument['family']))(dataset)
 
     y_dataset = pro.pipeline([
         pro.extract('audio'),

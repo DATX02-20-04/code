@@ -1,5 +1,7 @@
 hparams:
   name: 'sinenet'
+  instrument:
+    family: 'keyboard'
   epochs: 100
   steps: 1000
   sample_rate: 16000
