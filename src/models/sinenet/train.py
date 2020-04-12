@@ -34,6 +34,8 @@ def start(hparams):
         pro.extract('audio'),
         pro.normalize(),
         pro.stft(frame_length=2048, frame_step=980, fft_length=126),
+        pro.abs(),
+        pro.reshape([-1]),
     ])(dataset)
 
     shape = None

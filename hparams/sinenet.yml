@@ -3,7 +3,7 @@ hparams:
   epochs: 100
   steps: 1000
   sample_rate: 16000
-  samples: 32000
+  samples: 64000
   channels: 16
   batch_size: 32
   buffer_size: 1000
