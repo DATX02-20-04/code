@@ -33,9 +33,9 @@ def start(hparams):
     stft_dataset = pro.pipeline([
         pro.extract('audio'),
         pro.normalize(),
-        pro.stft(frame_length=2048, frame_step=980, fft_length=126),
+        pro.stft(frame_length=2048, frame_step=512, fft_length=126),
         pro.abs(),
-        pro.reshape([-1]),
+        # pro.map_transform(lambda x: tf.reduce_max(x, axis=0)),
     ])(dataset)
 
     shape = None
@@ -46,7 +46,6 @@ def start(hparams):
     sinenet = SineNet(hparams, shape)
 
     x_dataset = pro.pipeline([
-        pro.set_channels(1),
         pro.shuffle(hparams['buffer_size']),
         pro.batch(hparams['batch_size']),
         pro.prefetch()
@@ -55,7 +54,6 @@ def start(hparams):
     y_dataset = pro.pipeline([
         pro.extract('audio'),
         pro.normalize(),
-        pro.set_channels(1),
         pro.shuffle(hparams['buffer_size']),
         pro.batch(hparams['batch_size']),
         pro.prefetch()
