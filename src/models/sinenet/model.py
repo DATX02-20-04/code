@@ -56,7 +56,7 @@ class SineNet():
         #o = tfkl.Flatten()(o)
         o = tfkl.Dense(512, activation='relu')(i)
         o = tfkl.Dense(512, activation='relu')(o)
-        o = tfkl.Dense(self.hparams['channels']*self.hparams['params'], activation='sigmoid')(o)
+        o = tfkl.Dense(self.hparams['channels']*self.hparams['channels'], activation='sigmoid')(o)
 
         return tfk.Model(inputs=i, outputs=o)
 
@@ -64,23 +64,20 @@ class SineNet():
     @tf.function
     def get_wave(self, params):
         batch_size = tf.shape(params)[0]
-        params = tf.split(params, num_or_size_splits=self.hparams['params'], axis=1)
-        As, Bs, Cs = [tf.reshape(p, [-1, 1, self.hparams['channels']]) for p in params]
+        notes = tf.math.argmax(params)
 
-        t = tf.reshape(
-            tf.tile(
-                tf.reshape(
-                    tf.linspace(0.0, 1.0, self.hparams['samples']),
-                    [1, self.hparams['samples'], 1]),
-                [batch_size, 1, self.hparams['channels']]),
-            [-1, self.hparams['samples'], self.hparams['channels']])
+        t = tf.linspace(0.0, 1.0, self.hparams['samples'])
 
-        i = tf.reshape(tf.range(-45, -45 + self.hparams['channels']), [1, 1, self.hparams['channels']])
-        i = tf.cast(i, dtype=tf.float32)
-        cos = As*tf.math.cos(t*2*np.pi*440*2**(i/12) - Bs*np.pi*2)
-        exp = tf.math.exp(-t*Cs*20)
+        channels = []
+        for i in tf.unstack(notes, axis=1):
+            wave = tf.sin(t*2*np.pi*440*2**((i-24)/12))
+            channels.append(wave)
 
-        wave = tf.math.reduce_sum(cos*exp, axis=2)
+        #exp = tf.math.exp(-t*Cs*20)
+
+        wave = tf.concat(channels, axis=1)
+        print(wave.shape)
+        wave = tf.math.reduce_sum(cos*exp, axis=1)
         wave = tf.math.tanh(wave)
 
         return wave
