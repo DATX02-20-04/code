@@ -79,7 +79,7 @@ class GAN():
         o = tfkl.Conv2D(256, (3, 3), strides=(1, 1), padding='same', use_bias=False)(o)
         o = tfkl.BatchNormalization()(o)
         o = tfkl.LeakyReLU()(o)
-        o = tfkl.UpSampling2D(size=(4, 2))(o)
+        o = tfkl.UpSampling2D(size=(2, 4))(o)
 
         o = tfkl.Conv2D(256, (3, 3), strides=(1, 1), padding='same', use_bias=False)(o)
         o = tfkl.BatchNormalization()(o)
@@ -183,7 +183,7 @@ class GAN():
         o = tfkl.BatchNormalization()(o)
         o = tfkl.LeakyReLU()(o)
 
-        o = tfkl.Conv2D(256, (3, 3), strides=(2, 1), padding='same')(o)
+        o = tfkl.Conv2D(256, (3, 3), strides=(1, 2), padding='same')(o)
         o = tfkl.BatchNormalization()(o)
         o = tfkl.LeakyReLU()(o)
         o = tfkl.Conv2D(256, (3, 3), strides=(2, 2), padding='same')(o)

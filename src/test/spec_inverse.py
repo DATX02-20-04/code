@@ -7,7 +7,7 @@ import numpy as np
 
 
 dataset = tf.data.Dataset.list_files('src/audio/*.wav')
-stats = np.load('gan_stats')
+stats = np.load('gan_stats.npz')
 
 
 hparams = {
@@ -17,18 +17,19 @@ hparams = {
 
 dataset = pro.pipeline([
     pro.wav(),
-    pro.melspec(hparams['sample_rate']),
+    pro.melspec(hparams['sample_rate'], n_mels=256, win_length=1024),
     pro.pad([[0, 0], [0, 2]], 'CONSTANT', constant_values=hparams['log_amin']),
     pro.normalize(normalization='specgan', stats=stats),
     pro.numpy(),
 ])(dataset)
 x = next(dataset)
-plt.imshow(x)
+plt.imshow(tf.reverse(x, axis=[0]))
+plt.axis('off')
 plt.savefig('result.png')
 
 dataset = pro.pipeline([
     pro.denormalize(normalization='specgan', stats=stats),
-    pro.invert_log_melspec(hparams['sample_rate'])
+    pro.invert_log_melspec(hparams['sample_rate'], hop_length=256, win_length=1024)
 ])(dataset)
 
 x = next(dataset)

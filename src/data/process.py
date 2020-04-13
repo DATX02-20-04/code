@@ -204,9 +204,9 @@ def spec(fft_length=1024, frame_step=512, frame_length=None, **kwargs):
         transpose2d()
     ])
 
-def melspec(sr, n_fft=1024, hop_length=512, win_length=None, **kwargs):
+def melspec(sr, n_mels=256, n_fft=1024, hop_length=512, win_length=None, **kwargs):
     return pipeline([
-        map_transform(lambda x: tf.py_function(lambda x: librosa.feature.melspectrogram(x.numpy(), sr=sr, n_fft=n_fft, hop_length=hop_length, win_length=win_length), [x], x.dtype)),
+        map_transform(lambda x: tf.py_function(lambda x: librosa.feature.melspectrogram(x.numpy(), sr=sr, n_fft=n_fft, n_mels=n_mels, hop_length=hop_length, win_length=win_length), [x], x.dtype)),
         map_transform(lambda x: tf.py_function(lambda x: librosa.core.power_to_db(x.numpy(), ref=1.0), [x], x.dtype)),
         # stft(frame_length, frame_step, fft_length),
         # abs(),
