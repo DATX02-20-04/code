@@ -10,7 +10,7 @@ import numpy as np
 def start(hparams):
     gan_stats = np.load('gan_stats.npz')
 
-    gan = GAN((256, 128), hparams)
+    gan = GAN((128, 256), hparams)
 
     trainer = Trainer(None, hparams)
 
@@ -44,7 +44,7 @@ def start(hparams):
     one_hot_pitches = tf.one_hot(pitches, hparams['cond_vector_size'], axis=1)
     
     output = gan.generator([seed, one_hot_pitches], training=False)
-    samples = tf.reshape(output, [-1, 256, 128])
+    samples = tf.reshape(output, [-1, 128, 256])
     x = tf.unstack(samples)
 
     width = 4

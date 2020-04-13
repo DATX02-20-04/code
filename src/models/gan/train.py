@@ -97,7 +97,7 @@ def start(hparams):
         one_hot_pitches = tf.one_hot(pitches, hparams['cond_vector_size'], axis=1)
 
         output = gan.generator([seed, one_hot_pitches], training=False)
-        samples = tf.reshape(output, [-1, 256, 128])
+        samples = tf.reshape(output, [-1, 128, 256])
         img = tf.unstack(samples)
         img = tf.reverse(tf.concat(img, axis=1), axis=[0])
         plt.axis('off')
