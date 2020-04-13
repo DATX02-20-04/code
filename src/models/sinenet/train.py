@@ -43,13 +43,14 @@ def start(hparams):
     ])(dataset)
 
     x_dataset = pro.pipeline([
-        pro.stft(frame_length=2048, frame_step=512, fft_length=126),
+        pro.stft(frame_length=2048, frame_step=512, fft_length=512),
         pro.abs(),
-        pro.map_transform(lambda x: tf.reduce_max(x, axis=0)),
+        #pro.map_transform(lambda x: tf.reduce_max(x, axis=0)),
     ])(y_dataset)
 
     shape = None
     for e in x_dataset.take(1):
+        print(e)
         shape = e.shape
 
     print("FT shape:", shape)
@@ -60,6 +61,7 @@ def start(hparams):
     dataset = tf.data.Dataset.zip((x_dataset, y_dataset))
 
     dataset = pro.pipeline([
+        pro.cache(),
         pro.shuffle(hparams['buffer_size']),
         pro.batch(hparams['batch_size'], drop_remainder=True),
         pro.prefetch()
