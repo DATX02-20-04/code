@@ -1,12 +1,12 @@
 hparams:
   name: 'sinenet'
   instrument:
-    family: 'keyboard'
+    family: 'string'
   epochs: 10000
-  steps: 1000
+  steps: 0
   sample_rate: 16000
   samples: 64000
-  channels: 64
+  channels: 61
   params: 3
   batch_size: 32
   buffer_size: 100
