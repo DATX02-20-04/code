@@ -41,7 +41,7 @@ class SineNet(tfk.Model):
         # pitch = tfkl.Dense(16, activation='relu')(pitch_i)
 
         hist = tfkl.Reshape([self.hparams['history'], 1])(hist_i)
-        hist = tfkl.LSTM(10, activation='tanh')(hist)
+        hist = tfkl.LSTM(10)(hist)
         # hist = tfkl.Conv1D(64, 4, 2, activation='relu')(hist)
         # hist = tfkl.Flatten()(hist)
         # hist = tfkl.Dense(16, activation='relu')(hist_i)
@@ -50,6 +50,6 @@ class SineNet(tfk.Model):
         o = hist
 
         # o = tfkl.Dense(8, activation='tanh')(o)
-        o = tfkl.Dense(1, activation='tanh')(o)
+        o = tfkl.Dense(1)(o)
 
         return tfk.Model(inputs=hist_i, outputs=o)
