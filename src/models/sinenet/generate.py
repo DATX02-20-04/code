@@ -22,12 +22,12 @@ def start(hparams):
     trainer.init_checkpoint(ckpt)
 
 
-    wave = tf.zeros([1, 0])
+    waves = []
     for p in range(0, 2):
-
         t = tf.linspace(0.0, 1.0, hparams['history'])
         hist = tf.math.sin(t*2*np.pi*440*2**(tf.cast(p, dtype=tf.float32)/12))
         hist = tf.reshape(hist, [1, hparams['history']])
+        wave = hist
 
         for i in range(hparams['samples']):
             sample = sinenet.models[p](hist, training=False)
@@ -36,6 +36,6 @@ def start(hparams):
             wave = tf.concat([wave, sample], axis=1)
             print(f"{i}/{hparams['samples']} pitch: {p}", end='\r')
 
-    wave = tf.reshape(wave, [-1])
+    wave = tf.reshape(tf.stack(waves), [-1])
 
     librosa.output.write_wav('output.wav', wave.numpy(), sr=hparams['sample_rate'])
