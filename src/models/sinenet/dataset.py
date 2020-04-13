@@ -14,7 +14,7 @@ def create_dataset(hparams, hist_len=None):
     wave_dataset = tf.data.Dataset.from_generator(sinewave, output_types=tf.float32)
 
     next_dataset = wave_dataset.map(lambda xs: xs[:, -1])
-    hist_dataset = wave_dataset.map(lambda xs: xs[:, :-1])
+    hist_dataset = wave_dataset.map(lambda xs: xs[:, :-1]+tf.random.normal(tf.shape(xs[:, :-1]))*0.01)
 
     dataset = tf.data.Dataset.zip((hist_dataset, next_dataset))
 
