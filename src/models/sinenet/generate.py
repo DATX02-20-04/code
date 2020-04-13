@@ -23,7 +23,11 @@ def start(hparams):
 
     wave = tf.zeros([1, 0])
     for p in range(0, 2):
-        hist = tf.random.normal([1, hparams['history']])
+
+        t = tf.linspace(0.0, 1.0, hparams['history'])
+        hist = tf.math.sin(t*2*np.pi*440*2**(tf.cast(p, dtype=tf.float32)/12))
+        hist = tf.reshape(hist, [1, hparams['history']])
+
         for i in range(hparams['samples']):
             sample = sinenet.models[p](hist, training=False)
             _, hist = tf.split(hist, num_or_size_splits=[1, hist.shape[1]-1], axis=1)
