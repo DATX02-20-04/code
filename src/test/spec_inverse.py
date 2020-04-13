@@ -17,7 +17,7 @@ hparams = {
 
 dataset = pro.pipeline([
     pro.wav(),
-    pro.melspec(hparams['sample_rate'], n_mels=256, hop_length=256, win_length=1024),
+    pro.melspec(hparams['sample_rate'], n_mels=256),
     pro.pad([[0, 0], [0, 2]], 'CONSTANT', constant_values=hparams['log_amin']),
     pro.normalize(normalization='specgan', stats=stats),
     pro.numpy(),
@@ -29,7 +29,7 @@ plt.savefig('result.png')
 
 dataset = pro.pipeline([
     pro.denormalize(normalization='specgan', stats=stats),
-    pro.invert_log_melspec(hparams['sample_rate'], n_mels=256, hop_length=256, win_length=1024)
+    pro.invert_log_melspec(hparams['sample_rate'])
 ])(dataset)
 
 x = next(dataset)

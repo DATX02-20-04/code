@@ -113,8 +113,19 @@ def start(hparams):
         # Add the batch dimension
         image = tf.expand_dims(image, 0)
 
+        # Convert to audio
+        audio = pro.pipeline([
+            pro.denormalize(normalization='specgan', stats=gan_stats),
+            pro.invert_log_melspec(hparams['sample_rate'], n_mels=256)
+        ])(img)
+
+        # Convert to tf audio
+        output = np.concatenate(list(audio))
+        audio = tf.reshape([1,-1, 1], output)
+
         with tsw.as_default():
             tf.summary.image(f'Spectrogram', image, step=step)
+            tf.summary.audio(f'Audio', audio, hparams['sample_rate'], step=step, encoding='wav')
         print(f"Epoch: {epoch}, Step: {step}, Gen Loss: {gen_loss_avg.result()}, Disc Loss: {disc_loss_avg.result()}, Duration: {duration} s")
 
 
