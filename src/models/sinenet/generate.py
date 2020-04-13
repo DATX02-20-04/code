@@ -4,13 +4,16 @@ from models.common.training import Trainer
 import tensorflow_datasets as tfds
 from models.sinenet.model import SineNet
 import tensorflow_datasets as tfds
+from data.nsynth import instrument_families_filter
 import librosa
 
 def note(i):
     return 440*2**(i/12)
 
 def start(hparams):
-    sinenet = SineNet(hparams, [122, 257])
+    dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=True)
+
+    sinenet = SineNet(hparams, [61])
 
     trainer = Trainer(None, hparams)
 
@@ -23,7 +26,10 @@ def start(hparams):
 
     # ones = tf.ones([1, hparams['channels']])
     # params = tf.tile(tf.concat([ones*10, ones*440], axis=1), [hparams['batch_size'], 1])
-    inp = tf.math.abs(tf.random.normal([64, 122, 257]))
+    start = 0
+    end = 60
+    inp = tf.one_hot(tf.range(start, end), 61)
+    print(inp.shape)
     #max_ = tf.math.reduce_max(inp)
     #min_ = tf.math.reduce_min(inp)
     #inp = (inp - min_) / (max_ - min_)

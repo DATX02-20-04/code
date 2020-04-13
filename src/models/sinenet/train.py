@@ -43,10 +43,14 @@ def start(hparams):
     ])(dataset)
 
     x_dataset = pro.pipeline([
-        pro.stft(frame_length=2048, frame_step=512, fft_length=512),
-        pro.abs(),
+        pro.extract('pitch'),
+        pro.map_transform(lambda x: x-24),
+        pro.one_hot(61),
+        #pro.normalize(),
+        #pro.stft(frame_length=2048, frame_step=512, fft_length=512),
+        #pro.abs(),
         #pro.map_transform(lambda x: tf.reduce_max(x, axis=0)),
-    ])(y_dataset)
+    ])(dataset)
 
     shape = None
     for e in x_dataset.take(1):
