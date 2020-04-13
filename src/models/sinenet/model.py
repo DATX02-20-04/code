@@ -64,6 +64,7 @@ class SineNet():
     @tf.function
     def get_wave(self, params):
         batch_size = tf.shape(params)[0]
+        params = tf.reshape(params, [-1, self.hparams['channels'], self.hparams['channels']])
         notes = tf.math.argmax(params)
 
         t = tf.linspace(0.0, 1.0, self.hparams['samples'])
