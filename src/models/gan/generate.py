@@ -47,7 +47,7 @@ def start(hparams):
     plt.savefig('output.png')
     audio = pro.pipeline([
         pro.denormalize(normalization='specgan', stats=gan_stats),
-        pro.invert_log_melspec(hparams['sample_rate'])
+        pro.invert_log_melspec(hparams['sample_rate'], hop_length=256, win_length=1028)
     ])(x)
 
     output = np.concatenate(list(audio))
