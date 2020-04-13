@@ -78,11 +78,6 @@ def start(hparams):
     def on_epoch_complete(epoch, step, duration, tsw):
         #display.clear_output(wait=True)
         count = 6
-        seed = tf.random.normal((count, gan.hparams['latent_size']))
-        mid = gan.hparams['cond_vector_size']//2
-        pitches = tf.one_hot(range(mid-count//2, mid+count//2), gan.hparams['cond_vector_size'], axis=1)
-
-        samples = tf.reshape(gan.generator([seed, pitches], training=False), [-1, 128, 128])
         img = tf.unstack(samples)
         img = tf.reverse(tf.concat(img, axis=1), axis=[0])
         plt.axis('off')
