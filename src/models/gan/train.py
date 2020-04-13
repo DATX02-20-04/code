@@ -117,12 +117,10 @@ def start(hparams):
         audio = pro.pipeline([
             pro.denormalize(normalization='specgan', stats=gan_stats),
             pro.invert_log_melspec(hparams['sample_rate'], n_mels=256)
-        ])(img)
+            ])(samples)
 
+        audio = next(audio).reshape([1, -1, 1])
         # Convert to tf audio
-        output = np.concatenate(list(audio))
-        audio = tf.reshape([1,-1, 1], output)
-
         with tsw.as_default():
             tf.summary.image(f'Spectrogram', image, step=step)
             tf.summary.audio(f'Audio', audio, hparams['sample_rate'], step=step, encoding='wav')
