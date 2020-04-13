@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 import data.process as pro
 from models.common.training import Trainer
 import tensorflow_datasets as tfds
@@ -29,23 +30,24 @@ def start(hparams):
 
     # librosa.output.write_wav('output.wav', wave.numpy(), sr=hparams['sample_rate'])
 
-    dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=True)
+    def sinewaves():
+        while True:
+            pitch = tf.random.uniform([], 0, 128)
 
-    if 'instrument' in hparams and hparams['instrument'] is not None:
-        instrument = hparams['instrument']
-        if 'family' in instrument and instrument['family'] is not None:
-            print("FILTER ", instrument['family'])
-            dataset = pro.filter(instrument_families_filter(instrument['family']))(dataset)
+            t = tf.linspace(0.0, 1.0, hparams['samples'])
+            yield {
+                    'audio': tf.math.sin(t*2*np.pi*2**((-69+pitch)/12)),
+                    'pitch': pitch
+            }
+
+    dataset = tf.data.Dataset.from_generator(sinewaves)
 
     y_dataset = pro.pipeline([
         pro.extract('audio'),
-        pro.normalize(),
     ])(dataset)
 
     x_dataset = pro.pipeline([
         pro.extract('pitch'),
-        pro.map_transform(lambda x: x-24),
-        pro.one_hot(61),
         #pro.normalize(),
         #pro.stft(frame_length=2048, frame_step=512, fft_length=512),
         #pro.abs(),

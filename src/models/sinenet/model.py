@@ -17,15 +17,6 @@ class SineNet():
         wave = self.get_wave(params)
         #loss = tfk.losses.mean_squared_error(y_target, wave)
 
-        wave = tf.signal.stft(wave, 512, 256, 512)
-        wave = tf.math.abs(wave)+0.0000001
-        wave = tf.math.log(wave)
-        #wave = tf.math.reduce_mean(wave, axis=1)
-        y_target = tf.signal.stft(y_target, 512, 256, 512)
-        y_target = tf.math.abs(y_target)+0.0000001
-        y_target = tf.math.log(y_target)
-        #y_target = tf.math.reduce_mean(y_target, axis=1)
-
         specloss = tfk.losses.mean_squared_error(y_target, wave)
 
         return specloss
@@ -54,33 +45,8 @@ class SineNet():
         #o = tfkl.Conv2D(8, 3, strides=2, activation='relu')(o)
         #o = tfkl.Conv2D(8, 3, strides=2, activation='relu')(o)
         #o = tfkl.Flatten()(o)
-        o = tfkl.Dense(512, activation='relu')(i)
-        o = tfkl.Dense(512, activation='relu')(o)
+        o = tfkl.Dense(256, activation='relu')(i)
         o = tfkl.Dense(self.hparams['channels']*self.hparams['params'], activation='sigmoid')(o)
 
         return tfk.Model(inputs=i, outputs=o)
 
-
-    @tf.function
-    def get_wave(self, params):
-        batch_size = tf.shape(params)[0]
-        params = tf.split(params, num_or_size_splits=self.hparams['params'], axis=1)
-        As, Bs, Cs = [tf.reshape(p, [-1, 1, self.hparams['channels']]) for p in params]
-
-        t = tf.reshape(
-            tf.tile(
-                tf.reshape(
-                    tf.linspace(0.0, 1.0, self.hparams['samples']),
-                    [1, self.hparams['samples'], 1]),
-                [batch_size, 1, self.hparams['channels']]),
-            [-1, self.hparams['samples'], self.hparams['channels']])
-
-        i = tf.reshape(tf.range(-45, -45 + self.hparams['channels']), [1, 1, self.hparams['channels']])
-        i = tf.cast(i, dtype=tf.float32)
-        cos = As*tf.math.cos(t*2*np.pi*440*2**(i/12) - Bs*np.pi*2)
-        exp = tf.math.exp(-t*Cs*20)
-
-        wave = tf.math.reduce_sum(cos*exp, axis=2)
-        wave = tf.math.tanh(wave)
-
-        return wave
