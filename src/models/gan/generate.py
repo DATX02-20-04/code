@@ -59,11 +59,11 @@ def start(hparams):
         plt.axis('off')
 
     plt.savefig('output.png')
-    #audio = pro.pipeline([
-        #pro.denormalize(normalization='specgan', stats=gan_stats),
-        #pro.invert_log_melspec(hparams['sample_rate'], n_mels=256)
-    #])(x)
+    audio = pro.pipeline([
+        pro.denormalize(normalization='specgan', stats=gan_stats),
+        pro.invert_log_melspec(hparams['sample_rate'], n_mels=256)
+    ])(x)
 
-    #output = np.concatenate(list(audio))
+    output = np.concatenate(list(audio))
 
-    #librosa.output.write_wav('gan_sample.wav', output, hparams['sample_rate'], norm=False)
+    librosa.output.write_wav('gan_sample.wav', output, hparams['sample_rate'], norm=False)
