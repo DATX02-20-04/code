@@ -44,7 +44,7 @@ def start(hparams):
     one_hot_pitches = tf.one_hot(pitches, hparams['cond_vector_size'], axis=1)
     
     output = gan.generator([seed, one_hot_pitches], training=False)
-    samples = tf.reshape(output, [-1, 128, 256])
+    samples = tf.reshape(output, [-1, 256, 128])
     x = tf.unstack(samples)
 
     width = 4
@@ -61,7 +61,7 @@ def start(hparams):
     plt.savefig('output.png')
     #audio = pro.pipeline([
         #pro.denormalize(normalization='specgan', stats=gan_stats),
-        #pro.invert_log_melspec(hparams['sample_rate'], hop_length=256, win_length=1028)
+        #pro.invert_log_melspec(hparams['sample_rate'], n_mels=256)
     #])(x)
 
     #output = np.concatenate(list(audio))

@@ -41,8 +41,8 @@ def nsynth_to_melspec(dataset, hparams, stats=None):
     ]))(dataset)
 
     dataset = pro.index_map('audio', pro.pipeline([
-        pro.melspec(sr=hparams['sample_rate'], hop_length=256, win_length=1024),
-        pro.pad([[0, 0], [0, 5]], 'CONSTANT', constant_values=hparams['log_amin']),
+        pro.melspec(sr=hparams['sample_rate'], n_mels=256),
+        pro.pad([[0, 0], [0, 2]], 'CONSTANT', constant_values=hparams['log_amin']),
     ]))(dataset)
 
     if stats is not None:
