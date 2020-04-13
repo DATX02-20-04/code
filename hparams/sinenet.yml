@@ -4,16 +4,16 @@ hparams:
     family: 'string'
   epochs: 10000
   steps: 0
-  sample_rate: 16000
-  samples: 16000
-  pitches: 128
-  history: 512
+  sample_rate: 8000
+  samples: 8000
+  pitches: 64
+  history: 20
   params: 3
-  batch_size: 32
+  batch_size: 8
   buffer_size: 100
   latent_size: 100
   scale: 128
-  lr: 0.001
+  lr: 0.01
   num_examples: 16
   save_dir: './'
-  ckpt_every_step: 1000
+  ckpt_every_step: 100

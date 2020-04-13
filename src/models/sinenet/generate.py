@@ -9,37 +9,27 @@ from models.sinenet.dataset import create_dataset
 import librosa
 
 def start(hparams):
-    dataset = create_dataset(hparams, 16000)
-    dataset = pro.pipeline([
-        pro.batch(16),
-    ])(dataset).as_numpy_iterator()
-
-    samples = next(dataset)[1].flatten()
-
-    librosa.output.write_wav('dataset_samples.wav', samples, sr=hparams['sample_rate'])
-    print("Saved dataset samples.")
-
     sinenet = SineNet(hparams)
 
     trainer = Trainer(None, hparams)
 
     ckpt = tf.train.Checkpoint(
         step=trainer.step,
-        model=sinenet.model,
+        model=sinenet,
     )
 
     trainer.init_checkpoint(ckpt)
 
-    pitch = tf.one_hot(tf.range(40, 80), hparams['pitches'])
-    hist = tf.random.normal([pitch.shape[0], hparams['history']])
-    wave = tf.zeros([pitch.shape[0], 0])
 
-    for i in range(hparams['samples']):
-        sample = sinenet.model([pitch, hist], training=False)
-        _, hist = tf.split(hist, num_or_size_splits=[1, hist.shape[1]-1], axis=1)
-        hist = tf.concat([hist, sample], axis=1)
-        wave = tf.concat([wave, sample], axis=1)
-        print(f"{i}/{hparams['samples']}", end='\r')
+    wave = tf.zeros([1, 0])
+    for p in range(0, 2):
+        hist = tf.random.normal([1, hparams['history']])
+        for i in range(hparams['samples']):
+            sample = sinenet.models[p](hist, training=False)
+            _, hist = tf.split(hist, num_or_size_splits=[1, hist.shape[1]-1], axis=1)
+            hist = tf.concat([hist, sample], axis=1)
+            wave = tf.concat([wave, sample], axis=1)
+            print(f"{i}/{hparams['samples']} pitch: {p}", end='\r')
 
     wave = tf.reshape(wave, [-1])
 

@@ -16,7 +16,7 @@ def on_epoch_start(epoch, step, tsw):
 
 def on_step(epoch, step, loss, tsw):
     loss_avg(loss)
-    if step % 100 == 0:
+    if step % 5 == 0:
         print(f"Epoch: {epoch}, Step: {step}, Loss: {loss_avg.result()}")
     with tsw.as_default():
         tf.summary.scalar('loss', loss_avg.result(), step=step)
@@ -26,7 +26,7 @@ def start(hparams):
 
     sinenet = SineNet(hparams)
 
-    sinenet.model.summary()
+    # sinenet.summary()
 
     dataset = pro.pipeline([
         pro.cache(),
@@ -39,7 +39,7 @@ def start(hparams):
 
     ckpt = tf.train.Checkpoint(
         step=trainer.step,
-        model=sinenet.model,
+        model=sinenet,
     )
 
     trainer.on_epoch_start = on_epoch_start
