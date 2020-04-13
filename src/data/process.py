@@ -226,12 +226,12 @@ def denormalize(normalization='neg_one_to_one', **kwargs):
     else:
         raise Exception(f"No normalization type named '{normalization}'.")
 
-def invert_log_melspec(sr, n_fft=1024, hop_length=512, win_length=None, amin=1e-5, denorm_amin=-38, denorm_amax=0):
+def invert_log_melspec(sr, n_mels=256, n_fft=1024, hop_length=512, win_length=None, amin=1e-5, denorm_amin=-38, denorm_amax=0):
     return pipeline([
         # denormalize(denorm_amin, denorm_amax),
         # log_to_amp(amin),
         map_transform(lambda x: librosa.core.db_to_power(x, ref=1.0)),
-        map_transform(lambda x: librosa.feature.inverse.mel_to_audio(x, sr=sr, n_fft=n_fft, hop_length=hop_length, win_length=win_length))
+        map_transform(lambda x: librosa.feature.inverse.mel_to_audio(x, sr=sr, n_mels=n_mels, n_fft=n_fft, hop_length=hop_length, win_length=win_length))
     ])
 
 def load_midi():
