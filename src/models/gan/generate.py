@@ -54,8 +54,8 @@ def start(hparams):
     for i, img in enumerate(x):
         plt.subplot(height, width, i+1)
         plt.title(i)
-        plt.imshow(x[i])
-        #plt.imshow(tf.reverse(x[i], axis=[1]))
+        # plt.imshow(x[i])
+        plt.imshow(tf.reverse(x[i], axis=[1]))
         plt.axis('off')
 
     plt.savefig('output.png')
