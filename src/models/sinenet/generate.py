@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 import data.process as pro
 from models.common.training import Trainer
 import tensorflow_datasets as tfds
