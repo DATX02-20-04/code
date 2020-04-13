@@ -77,7 +77,27 @@ def start(hparams):
     # This runs at the end of every epoch and is used to display metrics
     def on_epoch_complete(epoch, step, duration, tsw):
         #display.clear_output(wait=True)
-        count = 6
+        count = 8
+
+        # Random seed for each
+        seed = tf.random.normal((count, hparams['latent_size']))
+
+        # Same seed for all
+        # seed = tf.random.normal((1, hparams['latent_size']))
+        # seed = tf.repeat(seed, count, axis=0)
+
+        # Sample pitch from middle
+        mid = hparams['cond_vector_size']//2
+        pitches = range(mid-count//2, mid+count//2)
+
+        # Same pitch for each
+        # pitch = 24
+        # pitches = tf.repeat(pitch, count)
+
+        one_hot_pitches = tf.one_hot(pitches, hparams['cond_vector_size'], axis=1)
+
+        output = gan.generator([seed, one_hot_pitches], training=False)
+        samples = tf.reshape(output, [-1, 256, 128])
         img = tf.unstack(samples)
         img = tf.reverse(tf.concat(img, axis=1), axis=[0])
         plt.axis('off')
