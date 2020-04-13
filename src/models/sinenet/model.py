@@ -5,48 +5,44 @@ import tensorflow.keras as tfk
 import tensorflow.keras.layers as tfkl
 
 class SineNet():
-    def __init__(self, hparams, ft_shape):
+    def __init__(self, hparams):
         self.hparams = hparams
-        self.ft_shape = ft_shape
 
-        self.param_net = self.create_param_net()
+        self.model = self.create_model()
         self.optimizer = tfk.optimizers.Adam(hparams['lr'])
 
     @tf.function
-    def get_loss(self, y_target, params):
-        wave = self.get_wave(params)
-        #loss = tfk.losses.mean_squared_error(y_target, wave)
-
-        specloss = tfk.losses.mean_squared_error(y_target, wave)
-
-        return specloss
-
-    @tf.function
     def train_step(self, x):
-        x, y_target = x
+        pitch, hist, next_sample = x
 
         with tf.GradientTape() as tape:
-            params = self.param_net(x, training=True)
+            gen_sample = self.model([pitch, hist], training=True)
             
-            loss = self.get_loss(y_target, params)
+            loss = tfk.losses.mean_squared_error(next_sample, gen_sample)
 
 
-        gradients = tape.gradient(loss, self.param_net.trainable_variables)
+        gradients = tape.gradient(loss, self.model.trainable_variables)
 
-        self.optimizer.apply_gradients(zip(gradients, self.param_net.trainable_variables))
+        self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
 
         return loss
 
-    def create_param_net(self):
-        i = tfkl.Input(shape=self.ft_shape)
+    def create_model(self):
+        pitch_i = tfkl.Input(shape=(self.hparams['pitches'],))
+        hist_i = tfkl.Input(shape=(self.hparams['history'],))
 
-        #o = tfkl.Reshape([*self.ft_shape, 1])(i)
-        #o = tfkl.Conv2D(8, 3, activation='relu')(o)
-        #o = tfkl.Conv2D(8, 3, strides=2, activation='relu')(o)
-        #o = tfkl.Conv2D(8, 3, strides=2, activation='relu')(o)
-        #o = tfkl.Flatten()(o)
-        o = tfkl.Dense(256, activation='relu')(i)
-        o = tfkl.Dense(self.hparams['channels']*self.hparams['params'], activation='sigmoid')(o)
+        pitch = tfkl.Dense(128, activation='relu', use_bias=False)(pitch_i)
 
-        return tfk.Model(inputs=i, outputs=o)
+        hist = tfkl.Reshape([self.hparams['history'], 1])(hist_i)
+        hist = tfkl.Conv1D(16, 4, 2, activation='relu')(hist)
+        hist = tfkl.Conv1D(64, 4, 2, activation='relu')(hist)
+        hist = tfkl.Flatten()(hist)
+        hist = tfkl.Dense(128, activation='relu', use_bias=False)(hist_i)
 
+        o = tfkl.Concatenate(1)([pitch, hist])
+
+        o = tfkl.Dense(128, activation='relu', use_bias=False)(o)
+        o = tfkl.Dense(64, activation='relu', use_bias=False)(o)
+        o = tfkl.Dense(1, activation='tanh')(o)
+
+        return tfk.Model(inputs=[pitch_i, hist_i], outputs=o)

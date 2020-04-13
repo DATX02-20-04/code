@@ -5,36 +5,42 @@ import tensorflow_datasets as tfds
 from models.sinenet.model import SineNet
 import tensorflow_datasets as tfds
 from data.nsynth import instrument_families_filter
+from models.sinenet.dataset import create_dataset
 import librosa
 
-def note(i):
-    return 440*2**(i/12)
-
 def start(hparams):
-    dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=True)
+    dataset = create_dataset(hparams, 16000)
+    dataset = pro.pipeline([
+        pro.batch(16),
+    ])(dataset).as_numpy_iterator()
 
-    sinenet = SineNet(hparams, [61])
+    samples = next(dataset)[1].flatten()
+
+    librosa.output.write_wav('dataset_samples.wav', samples, sr=hparams['sample_rate'])
+    print("Saved dataset samples.")
+
+    sinenet = SineNet(hparams)
 
     trainer = Trainer(None, hparams)
 
     ckpt = tf.train.Checkpoint(
         step=trainer.step,
-        param_net=sinenet.param_net,
+        model=sinenet.model,
     )
 
     trainer.init_checkpoint(ckpt)
 
-    # ones = tf.ones([1, hparams['channels']])
-    # params = tf.tile(tf.concat([ones*10, ones*440], axis=1), [hparams['batch_size'], 1])
-    start = 0
-    end = 60
-    inp = tf.one_hot(tf.range(start, end), 61)
-    print(inp.shape)
-    #max_ = tf.math.reduce_max(inp)
-    #min_ = tf.math.reduce_min(inp)
-    #inp = (inp - min_) / (max_ - min_)
-    params = sinenet.param_net(inp, training=False)
+    pitch = tf.one_hot(tf.range(40, 80), hparams['pitches'])
+    hist = tf.random.normal([pitch.shape[0], hparams['history']])
+    wave = tf.zeros([pitch.shape[0], 0])
 
-    wave = tf.reshape(sinenet.get_wave(params), [-1])
+    for i in range(hparams['samples']):
+        sample = sinenet.model([pitch, hist], training=False)
+        _, hist = tf.split(hist, num_or_size_splits=[1, hist.shape[1]-1], axis=1)
+        hist = tf.concat([hist, sample], axis=1)
+        wave = tf.concat([wave, sample], axis=1)
+        print(f"{i}/{hparams['samples']}", end='\r')
 
-    librosa.output.write_wav('output.wav', wave.numpy(), sr=hparams['sample_rate'], norm=True)
+    wave = tf.reshape(wave, [-1])
+
+    librosa.output.write_wav('output.wav', wave.numpy(), sr=hparams['sample_rate'])

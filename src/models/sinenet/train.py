@@ -6,6 +6,7 @@ import tensorflow_datasets as tfds
 from models.sinenet.model import SineNet
 import tensorflow_datasets as tfds
 import librosa
+from models.sinenet.dataset import create_dataset
 from data.nsynth import instrument_families_filter
 
 loss_avg = tf.keras.metrics.Mean()
@@ -20,51 +21,12 @@ def on_step(epoch, step, loss, tsw):
     with tsw.as_default():
         tf.summary.scalar('loss', loss_avg.result(), step=step)
 
-def note(i):
-    return 440*2**(i/12)
-
 def start(hparams):
+    dataset = create_dataset(hparams)
 
-    # ones = tf.ones([hparams['channels']])
-    # wave = sinenet.get_wave(tf.concat([ones*10, ones*440], axis=0))
+    sinenet = SineNet(hparams)
 
-    # librosa.output.write_wav('output.wav', wave.numpy(), sr=hparams['sample_rate'])
-
-    def sinewaves():
-        while True:
-            pitch = tf.random.uniform([], 0, 128)
-
-            t = tf.linspace(0.0, 1.0, hparams['samples'])
-            yield {
-                    'audio': tf.math.sin(t*2*np.pi*2**((-69+pitch)/12)),
-                    'pitch': pitch
-            }
-
-    dataset = tf.data.Dataset.from_generator(sinewaves)
-
-    y_dataset = pro.pipeline([
-        pro.extract('audio'),
-    ])(dataset)
-
-    x_dataset = pro.pipeline([
-        pro.extract('pitch'),
-        #pro.normalize(),
-        #pro.stft(frame_length=2048, frame_step=512, fft_length=512),
-        #pro.abs(),
-        #pro.map_transform(lambda x: tf.reduce_max(x, axis=0)),
-    ])(dataset)
-
-    shape = None
-    for e in x_dataset.take(1):
-        print(e)
-        shape = e.shape
-
-    print("FT shape:", shape)
-    sinenet = SineNet(hparams, shape)
-
-    sinenet.param_net.summary()
-
-    dataset = tf.data.Dataset.zip((x_dataset, y_dataset))
+    sinenet.model.summary()
 
     dataset = pro.pipeline([
         pro.cache(),
@@ -77,7 +39,7 @@ def start(hparams):
 
     ckpt = tf.train.Checkpoint(
         step=trainer.step,
-        param_net=sinenet.param_net,
+        model=sinenet.model,
     )
 
     trainer.on_epoch_start = on_epoch_start

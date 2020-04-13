@@ -5,8 +5,9 @@ hparams:
   epochs: 10000
   steps: 0
   sample_rate: 16000
-  samples: 64000
-  channels: 61
+  samples: 16000
+  pitches: 128
+  history: 512
   params: 3
   batch_size: 32
   buffer_size: 100
@@ -15,3 +16,4 @@ hparams:
   lr: 0.001
   num_examples: 16
   save_dir: './'
+  ckpt_every_step: 1000
