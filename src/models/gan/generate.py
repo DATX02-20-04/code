@@ -10,7 +10,7 @@ import numpy as np
 def start(hparams):
     gan_stats = np.load('gan_stats.npz')
 
-    gan = GAN((256, 128), hparams)
+    gan = GAN((hparams['generator_scale'], 128), hparams)
 
     trainer = Trainer(None, hparams)
 
@@ -47,12 +47,12 @@ def start(hparams):
     one_hot_pitches = tf.one_hot(pitches, hparams['cond_vector_size'], axis=1)
     
     output = gan.generator([seed, one_hot_pitches], training=False)
-    samples = tf.reshape(output, [-1, 256, 128])
+    samples = tf.reshape(output, [-1, hparams['generator_scale'], 128])
     x = tf.unstack(samples)
 
     width = 4
     height = 1
-    plt.figure(figsize=(width * 2, height * 4))
+    plt.figure(figsize=(width * 2, height * 8))
 
     for i, img in enumerate(x):
         plt.subplot(height, width, i+1)
@@ -65,7 +65,7 @@ def start(hparams):
     plt.savefig('output.png')
     audio = pro.pipeline([
         pro.denormalize(normalization='specgan', stats=gan_stats),
-        pro.invert_log_melspec(hparams['sample_rate'], n_mels=256)
+        pro.invert_log_melspec(hparams['sample_rate'], n_mels=512)
     ])(x)
 
     output = np.concatenate(list(audio))

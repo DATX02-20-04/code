@@ -41,7 +41,7 @@ def nsynth_to_melspec(dataset, hparams, stats=None):
     ]))(dataset)
 
     dataset = pro.index_map('audio', pro.pipeline([
-        pro.melspec(sr=hparams['sample_rate'], n_mels=256),
+        pro.melspec(sr=hparams['sample_rate'], n_mels=512),
         pro.pad([[0, 0], [0, 2]], 'CONSTANT', constant_values=hparams['log_amin']),
     ]))(dataset)
 

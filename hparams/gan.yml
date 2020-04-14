@@ -1,5 +1,5 @@
 hparams:
-  name: 'deep_128x256_first_test'
+  name: 'deep_128x512_first_test'
   instrument:
     family: 'keyboard'
   epochs: 8000
@@ -9,7 +9,7 @@ hparams:
   buffer_size: 1000
   latent_size: 100
   cond_vector_size: 61
-  generator_scale: 256
+  generator_scale: 512
   aux_loss_weight: 10
   gen_lr: 0.0001
   disc_lr: 0.0004
