@@ -1,16 +1,24 @@
 #+TITLE: Project Log
+#+AUTHOR: Christoffer Arvidsson
+#+DESCRIPTION: This document logs project progress for a bachelor thesis at Chalmers University in Computer Science.
 
 #+OPTIONS: num:nil
 #+OPTIONS: html-postamble:nil
 
 #+EXPORT_FILE_NAME: index
 
-#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://gongzhitaao.org/orgcss/org.css"/>
+# #+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://gongzhitaao.org/orgcss/org.css"/>
+# Prettier stylesheet
+#+SETUPFILE: https://fniessen.github.io/org-html-themes/setup/theme-readtheorg.setup
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="./style.css" />
 
 #+LATEX_HEADER: \usepackage[margin=3cm]{geometry}
 #+LATEX: \setlength{\parindent}{0pt}
 #+LATEX: \setlength{\parskip}{\baselineskip}
 #+LATEX_CLASS: article
+
+#+MACRO: AUDIO @@html: <audio controls="controls" src="$1"></audio>@@
+
 
 * Introduction
   This page is a shared log detailing the work the group has done and what
@@ -19,7 +27,561 @@
 
   A time log can be found at Google Sheets: https://bit.ly/2PRKRl8
 
-  The time log has exact tasks worked on each entry, for each member.
+  The time log has exact tasks worked on each entry, for each
+* Week 12
+We had to cancel both the supervisor meeting and the Friday meeting with our
+group that we hold each week, so this week may not correctly reflect all
+progress that have happened in the project. I (Christoffer) try to sum
+everything up but it will always focus more on what I've been doing due to me
+writing the log. Please refer to the time log for more specific work by other members.
+
+** Progress
+We are currently working hard on getting pitch conditioning to work since that
+is the bottleneck for connecting with structure. To accomplish this, we are
+constantly reading about ways of conditioning GANs, one of which is using an
+/auxiliary classifier/.
+
+*** Pitch conditioning and Auxiliary Classifier
+As explained last week, we require this step to be able to choose which notes
+are being played. However, from our research and from limited testing, we found
+that the generator rarely if ever made use of the additional pitch information.
+To encourage the generator to actually use it, we implement an auxiliary
+classifier loss to the network.
+
+#+CAPTION: Overview of how a Auxiliary Classifier GAN works (ACGAN)
+#+NAME: fig:aux_overview
+[[./img/aux_class_overview.png]]
+
+The /ACGAN/ in figure [[fig:aux_overview]] shows pitch class as $c$, noise input as $z$,
+and the real image as x (which also needs a pitch class)
+
+Without explaining exactly how a GAN work, there are two networks, a generator
+and a discriminator. The aux classifier comes in at the discriminator, who
+normally only has the job of determining fake vs real images from its input
+(either an image from the dataset or form the generator). With an aux
+classifier, there is a second loss, depending on if the discriminator can
+correctly label the pitch of the generated image.
+
+The discriminators $D$ job is then to maximise $$L_{D} = L_{C} + L_{S}$$ where
+$L_{C}$ is the log-likelihood of correct class (or pitch in this case), and
+$L_{S}$ is the log-likelihood of correct source (real vs fake image).
+
+The generators $G$ job is then to maximise $$L_{G} = L_{C} - L_{S}$$ or in
+words, get D to determine the class label right, but fail at determining real vs
+fake.
+
+With an actual loss to the discriminator and generator, the hope is they won't
+ignore the pitch vectors anymore. We have almost implemented all this, but are
+still experimenting with getting it entirely correct.
+
+*** Training
+Our required time to train has gone up drastically. For example, the pitch
+conditioning with an auxiliary classifier (but probably without one as well)
+required 2.5 days to train. That is around 1.5M steps. We may have been able
+to decrease this but that is still a lot of time spent on waiting for results
+that may or may not be great. This is after we decreased each epoch (~200 steps)
+from 40 seconds to 11 seconds by caching all images from the dataset into memory.
+
+#+begin_columns
+#+begin_column
+#+CAPTION: Generator loss when training with an embedding
+#+NAME: fig:emb_gen_loss
+[[./img/embedding_gen_loss.svg]]
+#+end_column
+
+#+begin_column
+#+CAPTION: Discriminator loss when training with an embedding.
+#+NAME: fig:emb_disc_loss
+[[./img/embedding_disc_loss.svg]]
+#+end_column
+#+end_columns
+
+
+Figures [[fig:emb_gen_loss]] and [[fig:emb_disc_loss]] shows that it does reach an
+equilibrium, which is where the training is optimal. It does reach this stage,
+but determining when to stop is a difficult thing. Another issue that arises
+with longer training periods is over-fitting on the dataset, which is not idea
+either. The skips in the figure are due to us requiring to stop the training to
+use the GPUs to generate results.
+
+*** Current Results of Note Generation with Conditioning and Classifier
+The following results were taken from the above training session at the last
+skip and at the end. (steps 600K and 1600K). The pitches used are increasing,
+but due to a bug in our code, the spectrograms are flipped on the y axis (as the
+plot suggests). Here, we use an embedding of the pitch label instead of a one-hot
+encoding.
+
+#+begin_columns
+#+begin_column
+#+CAPTION: Result at 600K steps
+#+NAME: fig:600k_steps
+[[./img/600k_steps.png]]
+
+{{{AUDIO(audio/600k_steps.wav)}}}
+#+end_column
+
+#+begin_column
+#+CAPTION: Result at 1600K steps
+#+NAME: fig:1600k_steps
+[[./img/1600k_steps.png]]
+
+{{{AUDIO(audio/1600k_steps.wav)}}}
+#+end_column
+#+end_columns
+
+
+The main issue in this seems to be mode collapse, the generator no matter pitch
+or noise input generates the same or similar examples. In the case of figure
+[[fig:1600k_steps]], there are three kinds of images, of which only one of them
+resembles a keyboard (which is what we are training on). Arguably, you could
+have noticed mode collapse in figure [[fig:600k_steps]], but we thought we would
+give it a try anyway.
+
+The next experiment we ran was a deeper network with much more trainable
+parameters. We trained it overnight on only acoustic keyboard sounds from the
+GANSynth subset of NSynth.
+
+#+begin_columns
+#+begin_column
+#+CAPTION:Generator loss from a deeper network
+#+NAME: fig:deep_gen_loss
+[[./img/deep_gen_loss.svg]]
+#+end_column
+
+#+begin_column
+#+CAPTION: Discriminator loss from a deeper network
+#+NAME: fig:deep_disc_loss
+[[./img/deep_disc_loss.svg]]
+#+end_column
+#+end_columns
+
+Figures [[fig:deep_gen_loss]] and [[fig:deep_disc_loss]] show an unstable network
+Ideally, they converge to the Nash equilibrium and stay around there. Due to
+this issue and that the deeper model requires more time to train to see
+improvement, we reverted back to our previous, shallower networks.
+
+Next experiment was using one-hot encoding of pitch with a shallower network
+(quicker to train). We also multiplied the aux component of the losses by a
+weight of 10, hoping it would prioritise decreasing that penalty. For this
+experiment, we also added logging images in tensorboard so we didn't have to
+stop training while seeing model progress.
+
+#+begin_columns
+#+begin_column
+#+CAPTION:Generator loss from the shallower network, with one-hot encoding and a weighted aux loss.
+#+NAME: fig:shallow_gen_loss
+[[./img/shallow_gen_loss.svg]]
+#+end_column
+
+#+begin_column
+#+CAPTION: Discriminator loss from the shallower network, with one-hot encoding and a weighted aux loss.
+#+NAME: fig:shallow_disc_loss
+[[./img/shallow_disc_loss.svg]]
+#+end_column
+#+end_columns
+
+#+begin_columns
+#+begin_column
+#+CAPTION:Early images at step count ~30K
+#+NAME: fig:shallow_spec_early
+[[./img/shallow_spec_early.png]]
+#+end_column
+#+begin_column
+#+CAPTION:Early images at step count ~50K
+#+NAME: fig:shallow_spec_mid
+[[./img/shallow_spec_mid.png]]
+#+end_column
+#+begin_column
+#+CAPTION:Later images at step count ~200K
+#+NAME: fig:shallow_spec_late
+[[./img/shallow_spec_late.png]]
+#+end_column
+#+end_columns
+
+The loss graphs in figures [[fig:shallow_gen_loss]] and [[fig:shallow_disc_loss]] look
+much better than before. Not visualised in them is that the discriminator starts
+from ~10, while the generator stars from ~40. This is because of the weighted
+aux loss described earlier. Figure [[fig:shallow_spec_early]] shows to us almost
+random noise but at this point almost all loss from the aux is eliminated. At
+around step ~40K the generator starts generating images that resembles
+spectrograms, shown in figure [[fig:shallow_spec_mid]]. Figure [[fig:shallow_spec_late]]
+shows accurate spectrograms representations.
+
+Although we have generated pitches in increasing fashion for these figures, the
+generator does not map them in that fashion. To show that pitch conditioning
+does indeed work, we provide the generator different noise inputs $z$ but the same
+pitch classes $c$.
+
+#+begin_column
+#+CAPTION: Spectrograms generated with different noise vectors and the same pitch class.
+#+NAME: fig:same_pitch_spec
+[[./img/same_pitch_spec.png]]
+
+{{{AUDIO(audio/same_pitch_spec.wav)}}}
+#+end_column
+
+Note that while figure [[fig:same_pitch_spec]] may look like mode collapse just like
+before, they look similar due to us choosing to generate only a specific pitch.
+The horizontal lines that make up the note are similar due to this, but timbre
+which is represented by everything else in the image differs.
+
+With this, we can select which pitch to generate, but not reliably. Our use case
+requires us to be able to select for instance the note A, but here we have no
+idea which one-hot vector represents that. Why it didn't learn them in order, we
+don't know. But solving this problem will be our next priority.
+
+Also, some processing was wrong with this generation that affects how
+normalising spectrograms work. Normalising is not a simple operation, and
+depends on the datasets standard deviation and variance. This requires us to
+process the entire dataset before training to calculate these. Because we
+switched to only guitars, the old one calculated is not correct, and we forgot
+to recalculate it.
+
+This variant will continue training until we are sure it won't improve more, but
+for now, these are the results we have.
+
+*** Pitch experiments
+This section is just an addition of some pitch experiments we performed to try
+to figure out if the classifier works correctly. Not a lot of progress here but
+it is interesting noting things down.
+
+As of writing this, the model has trained for 800k steps. At one point, it
+introduced a lot of extra noise but quickly eliminated it.
+
+#+begin_columns
+#+begin_column
+#+CAPTION:Generator loss from training at 800k steps
+#+NAME: fig:800k_gen_loss
+[[./img/800k_gen_loss.svg]]
+#+end_column
+
+#+begin_column
+#+CAPTION: Discriminator loss from training at 800k steps
+#+NAME: fig:800k_disc_loss
+[[./img/800k_disc_loss.svg]]
+#+end_column
+#+end_columns
+
+#+begin_column
+#+CAPTION: 64 different pitches generated with the same seed. The last 3 (61,62,63) do not exist so they look like junk. There is no discernible order or pattern in this set but the pitches generated do seem unique and changes depending on pitch class.
+#+NAME: fig:pitch_exp_64
+[[./img/pitch_exp_64.png]]
+
+{{{AUDIO(audio/pitch_exp_64.wav)}}}
+#+end_column
+
+Figure [[fig:pitch_exp_64]] shows that pitch class matters and changes the item
+generated by a noticable amount, but that they don't appear to be sorted like
+the pitches in the dataset are though it is a bit difficult to tell though it is
+a bit difficult to tell.
+
+*** Report
+While we spent a great deal focusing this week on having a product to show,
+we've made a bit of progress on the report, specifically the introduction,
+theory and implementation portions.
+
+- *Introduction*: Drafted the background.
+- *Theory*: We improved our explanations of things, mostly the transformer.
+- *Implementation*: Start describing all the various parts, many that we worked on
+  last week like conditioning. Also worked on the transformer portion.
+
+We also made figures that helps describe some of the complex things
+(particularly the transformer). We think they are preferable over text.
+
+** Last weeks' goals
+- A lot of progress on auxiliary classifier.
+- Holding off on incorporating WGAN.
+- Connecting everything was not possible quite yet, but maybe next week.
+- Implementation of report improved.
+** Summary of each member
+This week was Easter, so many group members were busy elsewhere.
+- *Christoffer*:
+  - Mostly worked on implementing and training the ACGAN.
+  - Also been writing the implementation chapter and the log in the dead time
+    between training.
+- *Eric*:
+- *Carl*: Created tikz figures of RNN and seq2seq used in theory
+- *Lovisa*:
+- *Cao*: I did a bit of pull request review and final report but mostly was sick
+- *Elias*: Worked with Christoffer on ACGAN. Minor work on the report.
+** Next week
+- Fine tune conditioning and figure out a way of reliably choosing which pitch
+  it generates. Also try improve audio quality so it sounds like more than just bells.
+- Start connecting structure and note gen. This should be possible now that we
+  can at least try choosing pitches, even if they are not quite correctly mapped yet.
+- As usual, write the report. We want to start making the text cohesive; it's
+  quite jumbled right now.
+
+* Week 11
+No great audio results for this week unfortunately.
+** Progress
+*** Report
+We have made good progress on the report, though we feel that since our
+implementation is so advanced compared to the typical bachelor thesis, the
+theory section has to be really large. As such, we have primarily been writing
+theory and a bit on implementation.
+
+We came up with a good structure with our supervisor and are right now focusing
+on making each chapter have roughly the same amount of pages. We could easily
+write too much for this report, so we have to find a balance of what is actually
+required to explain to understand the implementation. An example is: how do you
+explain how a transformer with attention work? This topic could easily take ~20
+pages but leaving it too short would make understanding difficult for the reader
+who we target as our course mates.
+
+*** Note generation
+In order to connect this component to the final system, we need to condition it
+on pitch so we can controlling which pitch/note the generator generates. This is
+what we have been working on this week. The main idea is to append a one-hot
+vector representation of notes (size of 88 which are the number of keys on a
+standard piano or number of tones in MIDI). The hope is that the generator then
+learns to generate random sounding tones according to that vector.
+
+Pitch conditioning is almost done but we cannot be sure it is entirely right.
+We may have to add another loss component to the discriminator called an
+/auxiliary classifier/ that would encourage the generator to care more about the
+conditioning vector.
+
+This idea came from the GANSynth paper. They do a lot of other things as well,
+including adding a phase channel to the network, allowing it to generate its own
+phase instead of having to reconstruct it using the Griffin-lim algorithm. They
+call this Instantaneous Frequency, which is the derivative of phase. We also
+want to implement this because even though our processing and inversion sounds
+"good enough", this could improve it.
+
+Due to limited training, we do not have a lot of great sounding examples yet so
+but hopefully we will have some by next week.
+
+*** Structure generation
+Structure generation is since last week pretty much done, maybe we could train
+it a bit more but our main concern is fixing note generation so that we can
+connect the two.
+
+*** Training
+We started using Bayes but we are not quite sure if we are using it correctly.
+The canvas course page states to ensure there are not more threads running than
+designated CPU cores, so the main concern is configuring TensorFlow to not spawn
+~200 threads.
+
+We also set up tensorboard to better log our results. We will most likely start
+auto generating our images and audio samples but it's not a priority.
+
+** Last weeks' goals
+- We did some extensive training on Bayes
+- Spectrogram processing is for the most part done (there are still some issues
+  with normalisation)
+- Wasserstein not implemented yet due to wanting to focus on processing, who we
+  deemed to be the thing making the note generation sound off.
+- Posterior collapse still an issue
+- We've come a good way with the report but there is a lot of theory
+** Summary of each member
+- *Christoffer*:
+  - Spent most of my time structuring and writing the report.
+  - Also worked with Eric and Elias to implement pitch conditioning on the
+    GAN.
+  - Also helped debug our spectrogram processing though most of that work was
+    Eric.
+  - Been really digging into the GANSynth details, even though they don't do
+    a great job of explaining their model.
+  - Finally, did some training on Bayes and attempted to configure
+    TensorFlow/numpy to only use x amount of threads.
+- *Eric*:
+  - I mostly worked on the VAE(which is starting to look like a dead-end to
+    me)
+  - Worked on GAN to add the pitch conditioning and fix normalisation.
+- *Carl*:
+  - Wrote on a few sections including ethics and music transformer, rewrote
+    midi pipeline
+- *Lovisa*:
+  - Working on Wasserstein GAN and the maths behind it.
+  - Have been reviewing GitHub issues and added content to the report.
+- *Cao*:
+  - Did some reading and expanded some of the subsections for the final
+    report.
+  - Also reviewed the specgan/ pipeline for more understanding so id be able
+    to help with writing the implementation section/ documentation for the
+    code.
+- *Elias*:
+  - Worked on getting pitch conditioning to work together with Christoffer and
+    Eric.
+  - Also worked on implemented an alternative GAN training scheme which
+    has some similarities to Wasserstein GAN.
+** Next week
+- Auxiliary classifier for the SpecGAN
+- Maybe incorporate WGAN if results are not great
+- Work on connecting structure and note, even if note is not on par with
+  structure yet.
+- Keep adding to the report, particularly the implementation sections.
+
+* Week 10
+** Progress
+*** Report
+More and more chapters are being handled, specifically the theory parts and
+techniques we have used over the course of the project. There is also a complete
+structure that makes it easy to add content. We have also been thinking about
+how we present our journey in the report, and decided that we would add an
+experiments section.
+*** Note Generation
+We are currently trying to implement a Wasserstein GAN, which should improve the
+results of the GAN. Below are some audio files that have been processed back
+from spectrograms generated by our model.
+
+Generated results after training on the GANSynth dataset (slight changes from the NSynth
+dataset) . *Warning, these are quite loud!*
+
+{{{AUDIO(audio/our_inverted_specs_fixed.wav)}}}
+
+They do not sound that good but some tonality is there. We think there may be a
+problem with the inversion back into audio. To demonstrate this, the following
+audio snippet is from real notes inverted into spectrograms and then back with
+the same data pipeline:
+
+{{{AUDIO(audio/actual_inverted_spec_fixed.wav)}}}
+
+There are similar results indicating that there is an issue. Whether this is
+due to errors in spectrogram generation or from inverting back, we have not
+concluded yet.
+
+A real inversion (with all parameters set properly) will not sound perfect due
+to processing audio into a spectrogram throws away the phase information of the
+signal. There are algorithms for rebuilding this (Griffith-lim) but they are not
+perfect. Early tests in the project showed that the quality is good enough, much
+better than the results we get now.
+
+*** Structure Generation
+Last week, the results sounded quite good. That is because the prior was very
+long, the model ended up copying too much resulting in an existing song (with
+some minor alterations). We think it may be due to overfitting on the dataset
+(MAESTRO). The following audio snippet was generated with a smaller prior:
+
+{{{AUDIO(audio/mutrans_half_prior_half_gen.wav)}}}
+
+We believe the MIDI encoding is fine (good enough) since encoding and decoding a
+real song gives good results (besides it not being lossless).
+
+*** Bayes Training
+We finally started training on Bayes; the first round is currently scheduled to
+train 50 epochs of our VAE implementation. We do not yet have any results of this.
+** Summary of each member
+   - *Christoffer*:
+     - Wrote initial draft for a datasets chapter, explaining the NSynth and MAESTRO datasets
+     - Wrote an entire theory chapter on signal processing
+     - Read up on how to use Bayes for scheduling running tasks
+     - Review of pull requests and issues in our git report repo
+     - Did some basic reading on Wasserstein GANs, but nothing major.
+     - Looked into getting Tensorboard to work (required us to uninstall other versions of TensorFlow.
+   - *Eric*:
+     - Wrote on experiments section in report
+     - Tried to figure out why the transformer is copying the prior with a lot of trial and error
+     - Tried hyperparameter optimisation
+   - *Carl*:
+     - Some infrastructure and tech support
+     - Work on report, mainly overall style and front pages, but also some content
+     - Made some plots with pgfplots, but probably going to give that up
+   - *Lovisa*:
+     - Took over some of the email communications, have been writing to
+       Arne Linde about our computer at Chalmers and communicating with examinator
+       and supervisor too. Tried to be More active on git hub, reading comments and
+       making more reviews. Also kept working on wgan and the report.
+   - *Cao*:
+     - Read about RNN, LSTM, Transformer.
+     - Made documentation for the transformer model.
+     - Started writing subsections for the final report: What is ML and AI
+       models, Variational autoencoder and Deep neural networks.
+   - *Elias*:
+     - Added ability to generate samples of real and autoencoded audio samples
+       to the vae gan. Found that the results are very different so spent a lot
+       of time tweaking hyperparameters, modifying the training algorithm and
+       training to improve the results. Still no good results unfortunately.
+     - Also wrote on the report. Specifically about transformers, wavenet, and
+       musenet.
+** Next week
+- More extensive training of models on Bayes
+- Fix spectrogram processing
+- Implement Wasserstein GAN (already in progress)
+- Fix posterior collapse in the VAE (similar to mode collapse in GANS)
+- Keep adding content to report
+
+* Week 9
+** Progress
+*** Report
+We created a detailed outline of sections in the report that will make it
+easy to add things as we develop them. We've also started writing parts of the
+Theory chapter, explaining basic concepts. Finally, we want to write about the
+models we've implemented and tested.
+
+*** Shift of focus
+We decided to shift our focus entirely to the transformer and variational auto
+encoder since we felt the wave2midi2wave wouldn't pan out in a way we would
+hope.
+
+*** VAE
+Elias and cao were assigned to this task, but since exams, not a lot of progress
+in this area was made this week. The model has however had similar results to
+SpecGan, so we are still researching this.
+
+*** Transformer
+The transformer aims to deal with the structure of music. It trains on MIDI,
+learning the relationships between sequences of MIDI notes and outputs the most
+appropriate notes. The aim of this model is to connect it with the note
+generation to generate complete music.
+
+We've been working towards getting the music transformer model running and also
+implementing our own version of it. This week, we managed to run both and
+generate results. Below are the audio snippets of the two.
+
+*Our music transformer with prior*
+
+{{{AUDIO(audio/mutrans_our_prior.wav)}}}
+
+{{{AUDIO(audio/mutrans_our_prior2.wav)}}}
+
+*Music transformer implementation found online without prior*
+
+{{{AUDIO(audio/mutrans_test.wav)}}}
+
+As you can hear, all three examples have structure, which is promising. We
+will continue working on these and later connecting it with our note generation!
+
+*** Training resources
+We got access to another training platform, Bayes at DS&AI division. This server
+has much better hardware than the previous one, but also restrictions when it comes
+to time slots to train and amount of training. We'll eventually use it to most
+likely train the transformer since it requires better specs than we had.
+
+*** Meetings
+Meetings has been going well online, we try to work more in voice calls and limit
+how much we meet in person. It is still challenging ensuring everyone has tasks
+to work on and ensuring everyone is on the same page.
+
+*** Exam week
+Still exam week so some members haven't gotten a lot done
+   - *Christoffer*: Work on issues in the GitHub like structuring repo, Also
+     structured and started writing the report (signal processing in theory). A
+     lot of the time is writing scripts to generate plots we can use in the
+     report. Wrote guide on how to use training computer.
+   - *Eric*: Work on transformer, refactoring and general implementation details
+     (refactor project and split parts of code into separate runnable scripts).
+     Big issue for transformers is memory to train for long sequences and the
+     model copying it’s prior (initial input).
+   - *Carl*: Deploy script, refactoring and reviewing GitHub pull requests. Wrote
+     a progress bar module for our training scripts, showing progress of training.
+   - *Lovisa*: Skeleton/outline of report and also started on implementing
+     wasserstein loss for specgan(maths heavy so complete study mode of the
+     maths). Progress in understanding the subject so will add to report. Had
+     trouble setting up repo (our repo) on laptop, Carl helped with that.
+   - *Cao*: Set up things for the remote computer. Has been busy with other
+     courses to really participate much. Also as been missing an assigned task
+     which us in the group are working on fixing for next week.
+   - *Elias*: Not a lot of work since last meeting, mostly focused on other course
+     due to exam week.
+** Next week
+- Keep writing report
+- Continue work on music transformer
+- More extensive training with training computer and potentially Bayes
+- Create more thorough tests (unit and integration) (from last week)
+- Write a bunch of utility functions (flags, plotting etc). (from last week)
+- Continue work on the VAE and maybe begin connecting everything
 
 * Week 8
 ** Progress
@@ -42,7 +604,7 @@
 *** MIDI framework
     We now have a MIDI pipeline and library written, so we can now use this to
     create our models (as we've already begun to some extent).
-** Summary of each memeber
+** Summary of each member
    - *Christoffer*: Wrote code for flags used in specgan for training. Started
      training gansynth specgan on training computer. Kept communication for
      access to training resources.
@@ -51,20 +613,17 @@
      transformer.
    - *Carl*: Work on MIDI tools and get the music transformer repo running.
    - *Lovisa*: Been busy with other course, but worked on trello planning for the whole group.
-   - *Cao*: Been busy with other course, kept up with work by other gorup memebers
+   - *Cao*: Been busy with other course, kept up with work by other group members
    - *Elias*: Work on gan vae hybrid.
 ** Next week
    - Keep writing report
    - Continue work on music transformer
    - More extensive training with training computer
-   - Create guide for how to use the training computer
-   - Create more throrough tests (unit and integration)
-   - Write a bunch of utility functions (flags, plotting etc).
-
+   - Create guide for how to use the training
 * Week 7
 ** Important info
    We've migrated to a new drive, which means larger storage capacity but also
-   means the timelog link has been updated to a new link. Our progress will not
+   means the time log link has been updated to a new link. Our progress will not
    be updated on the old link so make sure you check the new one!
 
    Also regarding the time log feedback about members not putting in enough
@@ -80,7 +639,7 @@
     project.
 *** SpecGAN
     All we've done on specGAN this week is to setup training environment and
-    checkpointing so that we can train it for a longer period of time.
+    check pointing so that we can train it for a longer period of time.
 
     Below are some results of training the model on all kinds of guitar sounds
     in the NSynth dataset. Note that this set includes both acoustic and
@@ -100,7 +659,7 @@
 
     - X axis is the sample (time in discrete sense)
     - Y is the frequency, or tone if you will
-    - Color is the magnitude of the short-term fourier transform
+    - Color is the magnitude of the short-term Fourier transform
 
     The straight horizontal lines indicate a frequency or note was played for a long
     time. The reason for many horizontal lines are overtones of the note. These
@@ -135,7 +694,7 @@
     gets an additional loss that ensures that the new encoding is similar to the encoding of the original image.
 
 *** Transformer and MIDI
-    In the transoformer regard, we are working on getting the MIDI pipeline done
+    In the transformer regard, we are working on getting the MIDI pipeline done
     so that we can train the transformers on midi data. The dataset for this is
     MAESTRO, which includes both raw audio and MIDI of recordings.
 
@@ -148,11 +707,11 @@
     have encoded MIDI for use with machine learning.
 
 *** Problems
-    - *Resources*: Still no reply about resources for training on chalmers. Sent
+    - *Resources*: Still no reply about resources for training on Chalmers. Sent
       another mail asking for a response since it has been a week.
     - *Ambitions and scope of project*: We will discuss this more in the next
       meeting.
-    - *Low hours carl*: He has 3 other courses that take his time, which makes
+    - *Low hours Carl*: He has 3 other courses that take his time, which makes
       distributing the hours difficult.
 
 ** Summary of each member
@@ -170,7 +729,7 @@
    - *Lovisa*: Helped a bit with preparing presentation (along with the rest of
      the group), continued work on spectrogram GAN, started working on
      transformers with Elias and Christoffer. Mainly tried to get the Music
-     Transformer by Magenta on github to work, as well as collected some
+     Transformer by Magenta on GitHub to work, as well as collected some
      research relevant to the subject.
    - *Cao*: Worked on the presentation with the group and presented it with Elias.
      Did some light reading about wave2midi2wave.
@@ -200,11 +759,11 @@
 
 
     Eric managed to generate something loosely sounding like a flute using this
-    model. Loosely as in it's clearly a wind instrument and it is a recognizable
+    model. Loosely as in it's clearly a wind instrument and it is a recognisable
     note with overtones but it still needs some work/training.
 
 *** SpecGAN
-    Unfortuneately, the results from this model look decent, but sound terrible.
+    Unfortunately, the results from this model look decent, but sound terrible.
     It doesn't quite follow the implementation specGAN used, so that is an area we could improve.
 
     #+CAPTION: First specGAN generation using 2dConvTranspose layers and 20 epochs with the NSynth dataset.
@@ -241,7 +800,7 @@
 ** Summary of each member
    - Christoffer: Mostly worked on plan and the specGAN model. Also started a
      bit on final report and helped with presentation. Also been handling
-     communication wih examiner and sent mails about computing resources
+     communication with examiner and sent mails about computing resources
    - Eric: I started with training an existing model called WaveRNN where I
      managed to generate something that sounds like a flute note. I did the
      training on my personal computer at home which is not optimal. We need
@@ -281,7 +840,7 @@
    Most of the feedback applies to the entire plan, but here are some key points:
    - *Background*: Does not explain or motivate the problem well enough. It is meant to capture the reader but our background lacks a lot of passion required for that.
    - *Aim*: Same here generally, does not explain why this is an important and interesting field.
-   - *Timeplan*: Does not tell a story, how will we accomplish these things. Try and detail every week and what happens if we discover hurdles. It also has to detail consistent deliveries, ie if the project suddenly had to stop for whatever reason, what do we have to show for our work?
+   - *Time plan*: Does not tell a story, how will we accomplish these things. Try and detail every week and what happens if we discover hurdles. It also has to detail consistent deliveries, ie if the project suddenly had to stop for whatever reason, what do we have to show for our work?
 
    Deadline for the rewritten plan is Wednesday, <2020-02-26 Wed> at 12:00. We
    will also try to send it to our supervisor by Monday/Tuesday.
@@ -313,7 +872,7 @@
     signal processing. This did not have to be done manually, as there are
     plenty of libraries to use, but the challenge is to ensure all images of the
     entire dataset represent the same thing and have the same format and size.
-    As such, the data preprocessing has been one of the subtasks for this.
+    As such, the data preprocessing has been one of the sub tasks for this.
 
     The other task is to implement the actual model. There are many guides on
     implementing a GAN using the MNIST dataset (dataset consisting of
@@ -323,7 +882,7 @@
 ** Meetings and workshops
    Meetings and workshops were spent working on the two models in groups of
    three people. Working in groups ensures everyone is learning and are helping
-   eachother.
+   each other.
 
 ** Summary of each member
    - Christoffer: Work on the SpecGAN model, specifically the part of converting the entire NSynth dataset into spectrograph images
@@ -364,13 +923,13 @@
    should be easier to write as more individual tasks will be delegated.
 
 ** Meetings and workshops
-  A meeting with chalmers writing was booked, but since that required two groups
+  A meeting with Chalmers writing was booked, but since that required two groups
   to sign up, the meeting never went through. We will try to book another one,
   but since the plan now is delivered, getting feedback for it seems unneccesary.
 
-  On wednesday, the first draft was sent to the supervisor, with feedback
-  presented to the group on friday morning. The meeting and workshop held on
-  friday was primarily spent on refining the plan after the feedback received.
+  On Wednesday, the first draft was sent to the supervisor, with feedback
+  presented to the group on Friday morning. The meeting and workshop held on
+  Friday was primarily spent on refining the plan after the feedback received.
   All in all, the group is happy with how the plan turned out considering the
   project is very open and at a slightly more advanced level than common for
   bachelor theses.
@@ -378,7 +937,7 @@
 ** Project so far
    The project plan is complete. Some initial trial and error has been
    performed, though generating anything close to music is far off. According to
-   the timeplan, we are now in the phase of generating a musical note using
+   the time plan, we are now in the phase of generating a musical note using
    machine learning.
 
    A issue we currently face seems to be storage space. Datasets take a fair
@@ -389,15 +948,15 @@
    components or software), so that will have to be investigated.
 
 ** Summary of each member
-   We will use this section to detail problemsolving/tasks delegated to members.
+   We will use this section to detail problem solving/tasks delegated to members.
    Besides everyone working on the project plan, here are some tasks solved by each member
-   - Christoffer: So far been tasked with documentation, project log writing and generally being the secretary. Otherwise been learning tensorflow
+   - Christoffer: So far been tasked with documentation, project log writing and generally being the secretary. Otherwise been learning TensorFlow
    - Eric: Took on the challenge of creating a gantt chart, which he completed by
-     writing his own javascript script. Also have been very active in initial
+     writing his own JavaScript script. Also have been very active in initial
      development and testing of ideas using google colab.
    - Carl: Ensured our latex documents have proper systems for commenting and change requesting, which helped writing the plan immensely.
-   - Lovisa: Contacted AIVA (AI music company) for info on how their product worked but didn't get much back from them. Also went through tensorflow guides.
-   - Cao: Research autoencoders and attempted implementing and training basic models using Keras and tensorflow
+   - Lovisa: Contacted AIVA (AI music company) for info on how their product worked but didn't get much back from them. Also went through TensorFlow guides.
+   - Cao: Research autoencoders and attempted implementing and training basic models using Keras and TensorFlow
    - Elias: Made an architecture proposal (shown below), which we will look into more next week.
 
      #+CAPTION: Architecture proposal by Elias
@@ -408,23 +967,23 @@
 * Week 3
   As per usual, the week began with a meeting on Tuesday followed by a longer
   workshop. During the meeting, the members went through what they had worked on
-  since last friday. For the most part, that was research on tensorflow and a
+  since last Friday. For the most part, that was research on TensorFlow and a
   paper published by Spotify creator group.
 
   For the workshop, it was decided that the majority of time
   would be spent on writing the project plan. Basic outlining was conducted to
   ensure everyone was on the same page regarding the content.
 
-  On friday, there was a meeting with the supervisor where the group quickly
+  On Friday, there was a meeting with the supervisor where the group quickly
   went through some research notes they had taken from the presentations held
   last week. Additionally the focus of this meeting was on the project plan.
   There were a fair amount of criticism of the current rough draft.
 
   After this meeting, the rest of the day involved a long workshop on writing
   the plan according to the criticism received earlier. A lot was changed and
-  this brought the draft much closer to the final writeup.
+  this brought the draft much closer to the final write up.
 
-  There is still work to be done on the plan. The deadline is next friday with
+  There is still work to be done on the plan. The deadline is next Friday with
   the groups' deadline being set to Wednesday. Therefore, the next week will
   primarily deal with finishing the project plan.
 
@@ -438,26 +997,25 @@
    groups ambition to incorporate the more complex features of the project given
    that there is available time later on.
 
-
 * Week 2
-  The week began with a meeting on tuesday, during which a number of points were brought up
+  The week began with a meeting on Tuesday, during which a number of points were brought up
   - Decide report language and register that on canvas
   - Began talk about the project report
-  - Discussions on the current writeup of the contract
+  - Discussions on the current write up of the contract
 
   The meeting was immediately followed by a workshop, where how to efficiently
   structure out research was determined. we concluded that the
   group would divide into subgroups with the intent of each reading and
-  summarizing papers. Machine learning is a wide field, beyond basic concepts,
+  summarising papers. Machine learning is a wide field, beyond basic concepts,
   learning everything will take away too much time from the actual project.
 
-  After a meeting with the supervisor on friday, a research meeting was held.
+  After a meeting with the supervisor on Friday, a research meeting was held.
   The idea was to take the subgroups determined earlier and have them present
   their findings for the group. This process will be evaluated for future
   research meetings, but we felt it was a good start. If anything, the primary
   goal of them is to spark discussions, which it was very effective at.
 
-  Because Cao only returned on thursday, the contract wasn't sent to our
+  Because Cao only returned on Thursday, the contract wasn't sent to our
   supervisor until Friday evening, after the meeting. The contract is now
   considered finished.
 
@@ -483,4 +1041,5 @@
 
   For personal reasons, Cao was absent for part of the week, but this was notified well in advance.
 
-  For next week, we are looking to finish the group contract, continue researching and starting work on the project plan.
+  For next week, we are looking to finish the group contract, continue
+  researching and starting work on the project plan

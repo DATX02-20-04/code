@@ -13,6 +13,3 @@ tensorflow-datasets==2.1.0
 tensorflow-estimator==2.1.0
 tensorflow-metadata==0.21.1
 tensorflow-probability==0.9.0
-tf-estimator-nightly==2.1.0.dev2020031001
-tf-nightly==2.2.0.dev20200309
-tfp-nightly==0.10.0.dev20200310
