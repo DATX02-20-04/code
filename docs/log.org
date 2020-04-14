@@ -55,7 +55,7 @@ classifier loss to the network.
 The /ACGAN/ in figure [[fig:aux_overview]] shows pitch class as $c$, noise input as $z$,
 and the real image as x (which also needs a pitch class)
 
-Without explaining exactly how a GAN work, there are two networks, a generator
+Without explaining exactly how a GAN works, there are two networks, a generator
 and a discriminator. The aux classifier comes in at the discriminator, who
 normally only has the job of determining fake vs real images from its input
 (either an image from the dataset or form the generator). With an aux
