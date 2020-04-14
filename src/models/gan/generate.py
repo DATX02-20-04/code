@@ -10,7 +10,7 @@ import numpy as np
 def start(hparams):
     gan_stats = np.load('gan_stats.npz')
 
-    gan = GAN((128, 256), hparams)
+    gan = GAN((256, 128), hparams)
 
     trainer = Trainer(None, hparams)
 
@@ -24,22 +24,25 @@ def start(hparams):
 
     trainer.init_checkpoint(ckpt)
 
-    count = 8
+    count = 4
 
     # Random seed for each
-    seed = tf.random.normal((count, hparams['latent_size']))
+    #seed = tf.random.normal((count, hparams['latent_size']))
 
     # Same seed for all
-    # seed = tf.random.normal((1, hparams['latent_size']))
-    # seed = tf.repeat(seed, count, axis=0)
+    seed = tf.random.normal((1, hparams['latent_size']))
+    seed = tf.repeat(seed, count, axis=0)
 
     # Sample pitch from middle
-    mid = hparams['cond_vector_size']//2
-    pitches = range(mid-count//2, mid+count//2)
+    # mid = hparams['cond_vector_size']//2
+    # pitches = range(mid-count//2, mid+count//2)
 
     # Same pitch for each
     # pitch = 24
     # pitches = tf.repeat(pitch, count)
+
+    # Free pitches
+    pitches = [41,42,43,44]
 
     one_hot_pitches = tf.one_hot(pitches, hparams['cond_vector_size'], axis=1)
     
@@ -48,14 +51,15 @@ def start(hparams):
     x = tf.unstack(samples)
 
     width = 4
-    height = 2
+    height = 1
     plt.figure(figsize=(width * 2, height * 4))
 
     for i, img in enumerate(x):
         plt.subplot(height, width, i+1)
         plt.title(i)
         # plt.imshow(x[i])
-        plt.imshow(tf.reverse(x[i], axis=[1]))
+        plt.imshow(x[i])
+        plt.gca().invert_yaxis()
         plt.axis('off')
 
     plt.savefig('output.png')
@@ -66,4 +70,4 @@ def start(hparams):
 
     output = np.concatenate(list(audio))
 
-    librosa.output.write_wav('gan_sample.wav', output, hparams['sample_rate'], norm=False)
+    librosa.output.write_wav('gan_sample.wav', output, hparams['sample_rate'], norm=True)
