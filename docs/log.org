@@ -28,6 +28,65 @@
   A time log can be found at Google Sheets: https://bit.ly/2PRKRl8
 
   The time log has exact tasks worked on each entry, for each
+* Week 13
+** Progress
+*** Pitch conditioning
+Due to our audio results not being good enough, we experimented with a deeper
+model with more convolution layers. This ended up not being that easy to train,
+and had trouble learning anything at all.
+
+The shallow model used last week had a lot of trouble with classifying pitches.
+The primary reason we think is the resolution begin too smaller. To demonstrate
+this, we have increased the resolution of spectrograms to $128 \times 256$, ie
+double the number of frequency 'bins'.
+
+#+CAPTION:A mel spectrogram of every pitch available in the gansynth dataset. These are generated pitches from training our shallow model, so they are not perfect but they demonstrate how resolution matters. The label number indicates MIDI pitch. Note how a higher pitch decreases space between overtones.
+#+NAME: fig:high_res_pitch
+[[./img/high_res_pitch.png]]
+
+The spectrograms in figure [[fig:high_res_pitch]] are generated using our shallow
+model and the higher resolution. As we have already explained, the horizontal
+lines are overtones. Between a tone and an overtone, there is a finite amount of
+space that has to be large enough for 11 other notes, those being the other
+musical notes (12 tones in total).A larger resolution ensures these 11 notes fit
+into the spectrogram bins, which is vital for the auxiliary classifier to
+recognise them.
+
+The second, somewhat larger issue is that the space between overtones change
+depending on the pitch of note. The nth overtone frequency is calculated as
+$$f_{n} = n \times f_{0}$$ where $f_{0}$ is the base frequency of the note (or
+pitch). As such, a very low pitch has very little space between the overtones
+than a high note. Even though the spectrogram uses logarithmic scale on the
+y-axis, it only counteracts this so that large pitches stay within small images.
+It does not expand already low frequencies. The generated examples in
+[[fig:high_res_pitch]] demonstrate this by failing completely to generate very low
+frequency notes.
+
+A third issue form these results are that some single pitches also fail to
+generate. Our theory is that some pitches fall into the same bin, causing the
+classifier to have to pick between two images that look like they have the same
+pitch, but don't. A higher resolution should also solve this if that is the case.
+
+For our $128 \times 128$, the classifier the generator was never able to
+generate the correct pitches, never deceasing its loss. For the above
+$128 \times 256$, it can somehow manage, but not enough. At the time of writing,
+this model has trained for 107k steps, reaching great sounding results for some
+of the notes much faster than any other attempt. Here are some examples sampled
+from the middle of the pitch interval.
+
+#+begin_column
+#+caption: Sample pitches 42, 43, 44, 45
+#+name: fig:sample_pithes
+[[./img/sample_pitches.png]]
+
+{{{audio(audio/sample_pitches.wav)}}}
+#+end_column
+
+Of course, they don't sound perfect yet at such low period of training, but they
+demonstrate pitch classification and a somewhat good piano sound. Next thing to
+try is another step higher in resolution.
+
+
 * Week 12
 We had to cancel both the supervisor meeting and the Friday meeting with our
 group that we hold each week, so this week may not correctly reflect all
@@ -250,24 +309,24 @@ introduced a lot of extra noise but quickly eliminated it.
 
 #+begin_columns
 #+begin_column
-#+CAPTION:Generator loss from training at 800k steps
-#+NAME: fig:800k_gen_loss
+#+caption:generator loss from training at 800k steps
+#+name: fig:800k_gen_loss
 [[./img/800k_gen_loss.svg]]
 #+end_column
 
 #+begin_column
-#+CAPTION: Discriminator loss from training at 800k steps
-#+NAME: fig:800k_disc_loss
+#+caption: discriminator loss from training at 800k steps
+#+name: fig:800k_disc_loss
 [[./img/800k_disc_loss.svg]]
 #+end_column
 #+end_columns
 
 #+begin_column
-#+CAPTION: 64 different pitches generated with the same seed. The last 3 (61,62,63) do not exist so they look like junk. There is no discernible order or pattern in this set but the pitches generated do seem unique and changes depending on pitch class.
-#+NAME: fig:pitch_exp_64
+#+caption: 64 different pitches generated with the same seed. the last 3 (61,62,63) do not exist so they look like junk. there is no discernible order or pattern in this set but the pitches generated do seem unique and changes depending on pitch class.
+#+name: fig:pitch_exp_64
 [[./img/pitch_exp_64.png]]
 
-{{{AUDIO(audio/pitch_exp_64.wav)}}}
+{{{audio(audio/pitch_exp_64.wav)}}}
 #+end_column
 
 Figure [[fig:pitch_exp_64]] shows that pitch class matters and changes the item
