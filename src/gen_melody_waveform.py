@@ -22,20 +22,21 @@ midi = pre.decode_midi()(melody)
 # 	midi = M.read_midi(f)
 midi = midi.flatten()
 
-pitches = [a.pitch for a in midi if isinstance(a, M.Midi.NoteEvent)]
-amp     = [a.velocity / 127 for a in midi if isinstance(a, M.Midi.NoteEvent)]
-pitches = tf.cast(pitches, tf.float32)
-vel    = tf.ones_like(pitches)*2
+pitches = tf.cast([a.pitch for a in midi if isinstance(a, M.Midi.NoteEvent)], tf.float32)
+amp     = tf.cast([a.velocity / 127 for a in midi if isinstance(a, M.Midi.NoteEvent)], tf.float32)
+vel     = tf.ones_like(pitches)*2
 
 sr = 16000
 samples_per_note = 8000
 
+def generate_tones(pitches):
+	return scripts.gen_tone.generate(pitches, np.ones_like(pitches), vel, samples_per_note*4, sr)
+
+notes = generate_tones(pitches) * amp[:,None]
+
 times  = [int(a.time * samples_per_note) for a in midi if isinstance(a, M.Midi.NoteEvent)]
-
-note = scripts.gen_tone.generate(pitches, amp, vel, samples_per_note*4, sr)
-
-out = tf.zeros(max(times) + note.shape[1])
-for time, sound in zip(times, note):
+out = tf.zeros(max(times) + notes.shape[1])
+for time, sound in zip(times, notes):
 	out += tf.pad(sound, [(time, len(out)-len(sound)-time)])
 
 librosa.output.write_wav('gen_melody.wav', out.numpy(), sr=sr, norm=True)
