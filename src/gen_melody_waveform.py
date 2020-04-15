@@ -25,6 +25,7 @@ midi = midi.flatten()
 pitches = [a.pitch for a in midi if isinstance(a, M.Midi.NoteEvent)]
 amp     = [a.velocity / 127 for a in midi if isinstance(a, M.Midi.NoteEvent)]
 pitches = tf.cast(pitches, tf.float32)
+vel    = tf.ones_like(pitches)*2
 
 sr = 16000
 samples_per_note = 8000
@@ -32,8 +33,6 @@ samples_per_note = 8000
 length = max(int(a.time * samples_per_note) for a in midi) + samples_per_note*4
 times  = [int(a.time * samples_per_note) for a in midi if isinstance(a, M.Midi.NoteEvent)]
 
-n = len(pitches)
-vel = tf.ones(n)*2
 note = scripts.gen_tone.generate(pitches, amp, vel, samples_per_note*4, sr)
 
 out = tf.zeros(length)
