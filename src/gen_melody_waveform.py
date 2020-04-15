@@ -30,14 +30,12 @@ vel    = tf.ones_like(pitches)*2
 sr = 16000
 samples_per_note = 8000
 
-length = max(int(a.time * samples_per_note) for a in midi) + samples_per_note*4
 times  = [int(a.time * samples_per_note) for a in midi if isinstance(a, M.Midi.NoteEvent)]
 
 note = scripts.gen_tone.generate(pitches, amp, vel, samples_per_note*4, sr)
 
-out = tf.zeros(length)
+out = tf.zeros(max(times) + note.shape[1])
 for time, sound in zip(times, note):
 	out += tf.pad(sound, [(time, len(out)-len(sound)-time)])
-	print(time, len(sound), len(out))
 
 librosa.output.write_wav('gen_melody.wav', out.numpy(), sr=sr, norm=True)
