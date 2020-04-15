@@ -73,11 +73,11 @@ class GAN():
         inp = tfkl.concatenate([latent, pitch_class])
         inp = tfkl.Reshape((1, 1, 161))(inp) # TODO: Fix this to correctly reshape depending on inputs
 
-        o = tfkl.Dense((self.shape[0]//4)*(self.shape[1]//4)*self.hparams['generator_scale'])(inp)
+        o = tfkl.Dense((self.shape[0]//4)*(self.shape[1]//4)*self.hparams['generator_scale'] / 2)(inp)
         # o = tfkl.BatchNormalization()(o)
         o = tfkl.LeakyReLU()(o)
 
-        o = tfkl.Reshape((self.shape[0]//4, self.shape[1]//4, self.hparams['generator_scale']))(o)
+        o = tfkl.Reshape((self.shape[0]//4, self.shape[1]//4, int(self.hparams['generator_scale']/2)))(o)
 
         o = tfkl.Conv2D(128, (5, 5), strides=(1, 1), padding='same', use_bias=False)(o)
         o = tfkl.BatchNormalization()(o)

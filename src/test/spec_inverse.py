@@ -17,7 +17,7 @@ hparams = {
 
 dataset = pro.pipeline([
     pro.wav(),
-    pro.melspec(hparams['sample_rate'], n_mels=256),
+    pro.melspec(hparams['sample_rate'], n_mels=512),
     pro.pad([[0, 0], [0, 2]], 'CONSTANT', constant_values=hparams['log_amin']),
     pro.normalize(normalization='specgan', stats=stats),
     pro.numpy(),
