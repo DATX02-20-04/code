@@ -8,14 +8,14 @@ import tensorflow_datasets as tfds
 
 
 def generate(hparams):
-    input_vocab_size  = 128+128+100+100
-    target_vocab_size = 128+128+100+100
+    input_vocab_size  = 128+128+128+128
+    target_vocab_size = 128+128+128+128
 
     dataset = tf.data.Dataset.list_files('test.midi')
 
     dataset_single = pro.pipeline([
         pro.midi(),
-        pro.frame(hparams['frame_size'], hparams['frame_size'], True),
+        pro.frame(hparams['frame_size'], 1, True),
         pro.unbatch(),
     ])(dataset).as_numpy_iterator()
 
