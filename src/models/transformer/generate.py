@@ -7,19 +7,7 @@ from models.transformer.model import Transformer
 import tensorflow_datasets as tfds
 
 
-def generate(transformer, epoch, seed):
-    output = seed
-    print(output)
-    outputs = []
-    for i in range(1):
-        output, _ = transformer.evaluate(output)
-        outputs.append(output)
-        print(output)
-    decoded = next(pro.decode_midi()(iter([tf.concat(outputs, 0)])))
-    decoded.save('gen_e{}.midi'.format(epoch))
-
-
-def start(hparams):
+def generate(hparams):
     input_vocab_size  = 128+128+100+100
     target_vocab_size = 128+128+100+100
 
@@ -38,7 +26,6 @@ def start(hparams):
                               hparams=hparams)
 
 
-
     seed = next(dataset_single)
     seed = np.array(seed)
 
@@ -51,5 +38,20 @@ def start(hparams):
 
     trainer.init_checkpoint(ckpt)
 
-    generate(transformer, 5, seed)
+    output = seed
+    print(output)
+    outputs = []
+    for i in range(1):
+        output, _ = transformer.evaluate(output)
+        outputs.append(output)
+        print(output)
+        encoded = tf.concat(outputs, 0)
+        return encoded
+
+def start(hparams):
+    epoch = 5
+    encoded = generate(hparams)
+    decoded = next(pro.decode_midi()(iter([encoded])))
+    decoded.save('gen_e{}.midi'.format(epoch))
+
     print('Generated sample')
