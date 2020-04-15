@@ -6,11 +6,10 @@ import matplotlib.pyplot as plt
 import data.process as pro
 import numpy as np
 
-
-def start(hparams):
+def generate(hparams, seed, pitches):
     gan_stats = np.load('gan_stats.npz')
 
-    gan = GAN((128, 128), hparams)
+    gan = GAN((256, 128), hparams)
 
     trainer = Trainer(None, hparams)
 
@@ -24,20 +23,30 @@ def start(hparams):
 
     trainer.init_checkpoint(ckpt)
 
-    count = 16
-
-    seed = tf.random.normal((count, hparams['latent_size']))
     #seed = tf.repeat(seed, count, axis=0)
-    mid = hparams['cond_vector_size']//2
-    pitches = tf.one_hot(range(mid-count//2, mid+count//2), hparams['cond_vector_size'], axis=1)
+    pitches = tf.one_hot(pitches, hparams['cond_vector_size'], axis=1)
 
-    samples = tf.reshape(gan.generator([seed, pitches], training=False), [-1, 128, 128])
-    x = tf.unstack(samples)
+    samples = tf.reshape(gan.generator([seed, pitches], training=False), [-1, 256, 128])
+    audio = pro.pipeline([
+        pro.denormalize(normalization='specgan', stats=gan_stats),
+        pro.invert_log_melspec(hparams['sample_rate']),
+        list,     # Stupid workaround becuase invert_log_melspec only does
+        np.array, # one spectrogram at a time
+    ])(samples)
+    return samples, audio
+
+def start(hparams):
+    count = 16
+    seed = tf.random.normal((count, hparams['latent_size']))
+    mid = hparams['cond_vector_size']//2
+    pitches = range(mid-count//2, mid+count//2)
+    samples, audio = generate(hparams, seed, pitches)
 
     width = 4
     height = 4
     plt.figure(figsize=(width*2, height*2))
 
+    x = tf.unstack(samples)
     for i, img in enumerate(x):
         plt.subplot(width, height, i+1)
         plt.title(i)
@@ -45,10 +54,6 @@ def start(hparams):
         plt.axis('off')
 
     plt.savefig('output.png')
-    audio = pro.pipeline([
-        pro.denormalize(normalization='specgan', stats=gan_stats),
-        pro.invert_log_melspec(hparams['sample_rate'])
-    ])(x)
 
     output = np.concatenate(list(audio))
 
