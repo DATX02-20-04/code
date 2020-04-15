@@ -53,6 +53,8 @@ class Midi:
     rate: int
     tracks: [[Event]]
 
+    def flatten(self):
+        return sorted((event for track in self.tracks for event in track))
 
 #
 # = Parsing

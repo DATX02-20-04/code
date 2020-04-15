@@ -12,21 +12,33 @@ import numpy as np
 import librosa
 import scripts.gen_tone
 import models.transformer.generate as transformer
+import data.process as pre
+import data.midi as M
 
 hparams = util.load_hparams('hparams/transformer.yml')
 melody = transformer.generate(hparams)
-melody = melody.numpy()
-melody = list(filter(lambda x: x < 128, melody))
-melody = tf.cast(melody, tf.float32)
+midi = pre.decode_midi()(melody)
+# with open("test.midi", "rb") as f:
+# 	midi = M.read_midi(f)
+midi = midi.flatten()
 
-print(melody)
+pitches = [a.pitch for a in midi if isinstance(a, M.Midi.NoteEvent)]
+amp     = [a.velocity / 127 for a in midi if isinstance(a, M.Midi.NoteEvent)]
+pitches = tf.cast(pitches, tf.float32)
 
 sr = 16000
 samples_per_note = 8000
-n = len(melody)
-vel = tf.ones([n])*2
-amp = tf.ones([n])*0.5
-note = scripts.gen_tone.generate(melody, amp, vel, samples_per_note, sr)
 
-notes = tf.reshape(note, [-1])
-librosa.output.write_wav('gen_melody.wav', notes.numpy(), sr=sr)
+length = max(int(a.time * samples_per_note) for a in midi) + samples_per_note*4
+times  = [int(a.time * samples_per_note) for a in midi if isinstance(a, M.Midi.NoteEvent)]
+
+n = len(pitches)
+vel = tf.ones(n)*2
+note = scripts.gen_tone.generate(pitches, amp, vel, samples_per_note*4, sr)
+
+out = tf.zeros(length)
+for time, sound in zip(times, note):
+	out += tf.pad(sound, [(time, len(out)-len(sound)-time)])
+	print(time, len(sound), len(out))
+
+librosa.output.write_wav('gen_melody.wav', out.numpy(), sr=sr, norm=True)
