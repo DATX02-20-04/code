@@ -4,14 +4,19 @@ from fractions import Fraction
 import subprocess
 import base64
 import struct
-from yattag import Doc
-import IPython.display as display
+# from yattag import Doc
+# import IPython.display as display
 
 @dataclass
 class Midi:
     @dataclass
     class Event:
         time: Fraction
+
+        def __lt__(a, b): return a.time < b.time
+        def __le__(a, b): return a.time <= b.time
+        def __ge__(a, b): return a.time >= b.time
+        def __gt__(a, b): return a.time > b.time
 
     @dataclass
     class MetaEvent(Event):
@@ -38,7 +43,7 @@ class Midi:
 
     @dataclass
     class NoteEvent(BaseNoteEvent):
-        end: "Midi.NoteUpEvent" = None # This only exists as an utility, it's not used by the writer and is not dynamically updated
+        pass
 
     @dataclass
     class NoteUpEvent(BaseNoteEvent):
@@ -66,7 +71,6 @@ def read_midi_track(rate, data):
         return x
 
     t = 0
-    notes = [{} for _ in range(16)]
     command = None
     while data:
         t += Fraction(varint(), rate)
@@ -83,11 +87,6 @@ def read_midi_track(rate, data):
                 if type == 0x80:  e = Midi.NoteUpEvent(t, chan, pitch, vel)
                 elif vel == 0:    e = Midi.NoteUpEvent(t, chan, pitch, 0x40)
                 else:             e = Midi.NoteEvent  (t, chan, pitch, vel)
-                prev = notes[chan].pop(pitch, None)
-                if prev is not None:
-                    prev.end = e
-                if isinstance(e, Midi.NoteEvent):
-                    notes[chan][pitch] = e
                 yield e
             # Ax: aftertouch (pitch, pressure)
             elif type == 0xB0:
@@ -154,6 +153,7 @@ def write_midi(f, midi):
     for track in midi.tracks:
         chunk("MTrk", write_midi_track(midi.rate, track))
 
+"""
 
 #
 # = Rendering to html (really svg)
@@ -214,3 +214,4 @@ def play_midi(midi):
     proc.wait()
     b64 = base64.b64encode(data).decode("ascii")
     return display.HTML(f'<audio controls><source src="data:audio/wav;base64,{b64}" /></audio>')
+"""
