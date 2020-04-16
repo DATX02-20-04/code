@@ -54,7 +54,7 @@ def nsynth_to_melspec(dataset, hparams, stats=None):
     return dataset
 
 
-def nsynth_to_cqt(dataset, hparams, stats=None):
+def nsynth_to_cqt_inst(dataset, hparams, stats=None):
     if 'instrument' in hparams and hparams['instrument'] is not None:
         instrument = hparams['instrument']
         if 'family' in instrument and instrument['family'] is not None:
@@ -68,29 +68,10 @@ def nsynth_to_cqt(dataset, hparams, stats=None):
         pro.map_transform(lambda x: tf.cast(x, tf.float32)),
     ]))(dataset)
 
-    cqt = {
-        'sr': hparams['sample_rate'],
-        'hop_length': 512,
-        'res_factor': 0.8,
-        'fmin': librosa.note_to_hz("C2"),
-        'over_sample': 8,
-        'notes_per_octave': 10,
-        'octaves': 6,
-        }
-
-    dataset = pro.index_map('audio', pro.pipeline([
-        pro.map_transform(lambda x: tf.py_function(lambda x: librosa.cqt(
-            x.numpy(),
-            sr=hparams['sample_rate'],
-            hop_length=cqt['hop_length'],
-            bins_per_octave=cqt['notes_per_octave'] * cqt['over_sample'],
-            n_bins=256,
-            filter_scale=cqt['res_factor'],
-            fmin=cqt['fmin']
-        ), [x], x.dtype)),
-        pro.map_transform(lambda x: tf.py_function(lambda x: np.abs(x), [x], x.dtype)),
-        pro.map_transform(lambda x: tf.py_function(lambda x: librosa.amplitude_to_db(x.numpy(), ref=1.0), [x], x.dtype)),
-        pro.pad([[0, 0], [0, 2]], 'CONSTANT', constant_values=hparams['log_amin']),
+    dataset = pro.index_map)'audio', pro.pipeline([
+        pro.wav(),
+        pro.cqt_spec(),
+        # pro.pad([[0, 0], [0, 2]], 'CONSTANT', constant_values=hparams['log_amin']),
     ]))(dataset)
 
     if stats is not None:

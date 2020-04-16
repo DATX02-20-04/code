@@ -214,6 +214,66 @@ def melspec(sr, n_mels=256, n_fft=1024, hop_length=512, win_length=None, **kwarg
         # transpose2d()
     ])
 
+def cqt(sr=16000, hop_length=512, n_bins=256, bins_per_octave=80, filter_scale=0.8, fmin=librosa.note_to_hz("C2")):
+        return map_transform(lambda x: tf.py_function(lambda x: librosa.cqt(
+            x.numpy(),
+            sr=sr,
+            hop_length=hop_length,
+            bins_per_octave=bins_per_octave,
+            n_bins=n_bins,
+            filter_scale=filter_scale,
+            fmin=fmin,
+        ), [x], x.dtype))
+
+
+def icqt(sr=16000, hop_length=512, n_bins=256, bins_per_octave=80, filter_scale=0.8, fmin=librosa.note_to_hz("C2")):
+    return map_transform(lambda x: tf.py_function(lambda x: librosa.core.icqt(
+        x.numpy(),
+        sr=sr,
+        hop_length=hop_length,
+        bins_per_octave=bins_per_octave,
+        filter_scale=filter_scale,
+        fmin=fmin,
+    ), [x], x.dtype))
+
+def phase_to_inst_freq(phase):
+    return pipeline([
+        tf.math.angle,
+        np.unwrap,
+        lambda x: x[:, 1:] - x[:, :-1],
+        lambda x: np.concatenate([x[:, 0:1], x], axis=1),
+        lambda x: x / np.pi,
+    ])(phase)
+
+def inst_freq_to_phase(freq):
+    return pipeline([
+        lambda x: x * np.pi,
+        lambda x: tf.math.cumsum(x, axis=1),
+        lambda x: (x + np.pi) % (2 * np.pi) - np.pi,
+    ])(freq)
+
+
+def cqt_spec(sr=16000, hop_length=512, n_bins=256, bins_per_octave=80, filter_scale=0.8, fmin=librosa.note_to_hz("C2")):
+    return pipeline([
+        cqt(sr=sr, hop_length=hop_length, n_bins=n_bins, bins_per_octave=bins_per_octave, filter_scale=filter_scale, fmin=fmin),
+        map_transform(librosa.core.magphase),  # (mag, phase)
+        map_transform(lambda magphase: [magphase[0], magphase[1]]),
+        index_map(0, lambda x: tf.py_function(lambda x: librosa.amplitude_to_db(x.numpy(), ref=1.0), [x], x.dtype)),
+        index_map(1, phase_to_inst_freq)
+    ])
+
+def inverse_cqt_spec(sr=16000, hop_length=512, n_bins=256, bins_per_octave=80, filter_scale=0.8, fmin=librosa.note_to_hz("C2")):
+    return pipeline([
+        index_map(0, lambda x: tf.py_function(
+            lambda x: librosa.db_to_amplitude(x.numpy(), ref=1.0),
+            [x], x.dtype)),
+        index_map(1, inst_freq_to_phase),
+        map_transform(lambda mp: tf.cast(mp[0], tf.complex64) * tf.math.exp(1.0j * tf.cast(mp[1], tf.complex64))),
+        icqt(),
+        map_transform(lambda x: tf.cast(x, tf.float32))
+    ])
+
+
 def denormalize(normalization='neg_one_to_one', **kwargs):
     if normalization == 'neg_one_to_one':
         return map_transform(lambda x: (((x+1)*0.5)*(kwargs['denorm_amax']-kwargs['denorm_amin'])+kwargs['denorm_amin']))
