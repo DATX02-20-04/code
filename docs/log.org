@@ -302,6 +302,9 @@ This week was Easter, so many group members were busy elsewhere.
 - *Eric*:
 - *Carl*: Created tikz figures of RNN and seq2seq used in theory
 - *Lovisa*:
+  - Worked mostly on the background and loss functions sections of the report.
+  - Also did some reviews on github, participated in meetings and some collective work on the ACGAN.
+  - Still troubled by ongoing family issues.
 - *Cao*: I did a bit of pull request review and final report but mostly was sick
 - *Elias*: Worked with Christoffer on ACGAN. Minor work on the report.
 ** Next week
@@ -395,6 +398,7 @@ auto generating our images and audio samples but it's not a priority.
 - *Lovisa*:
   - Working on Wasserstein GAN and the maths behind it.
   - Have been reviewing GitHub issues and added content to the report.
+  - Had some family issues arise that consumed lots of time and energy.
 - *Cao*:
   - Did some reading and expanded some of the subsections for the final
     report.
