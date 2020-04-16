@@ -4,7 +4,7 @@ import numpy as np
 import functools
 import data.process as pro
 from models.common.training import Trainer
-from data.nsynth import nsynth_from_tfrecord, nsynth_to_melspec
+from data.nsynth import nsynth_from_tfrecord, nsynth_to_melspec, nsynth_to_cqt
 from models.gan.model import GAN
 import data.process as pro
 import tensorflow_datasets as tfds
@@ -41,7 +41,8 @@ def start(hparams):
     gan_stats = calculate_dataset_stats(hparams, dataset)
     #gan_stats = np.load('gan_stats.npz')
 
-    dataset = nsynth_to_melspec(dataset, hparams, gan_stats)
+    dataset = nsynth_to_cqt(dataset, hparams, gan_stats)
+    
 
     # Determine shape of the spectograms in the dataset
     spec_shape = None
