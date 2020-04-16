@@ -216,7 +216,6 @@ def melspec(sr, n_mels=256, n_fft=1024, hop_length=512, win_length=None, **kwarg
 
 def cqt(sr=16000, hop_length=512, n_bins=256, bins_per_octave=80, filter_scale=0.8, fmin=librosa.note_to_hz("C2")):
         return map_transform(lambda x: tf.py_function(lambda x: librosa.cqt(
-            x.numpy(),
             sr=sr,
             hop_length=hop_length,
             bins_per_octave=bins_per_octave,

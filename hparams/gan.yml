@@ -1,5 +1,5 @@
 hparams:
-  name: 'cqt_transform'
+  name: 'cqt_transform_phase'
   instrument:
     family: 'keyboard'
   epochs: 8000

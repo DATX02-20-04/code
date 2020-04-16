@@ -4,7 +4,7 @@ import numpy as np
 import functools
 import data.process as pro
 from models.common.training import Trainer
-from data.nsynth import nsynth_from_tfrecord, nsynth_to_melspec, nsynth_to_cqt
+from data.nsynth import nsynth_from_tfrecord, nsynth_to_melspec, nsynth_to_cqt_inst
 from models.gan.model import GAN
 import data.process as pro
 import tensorflow_datasets as tfds
@@ -38,10 +38,10 @@ def start(hparams):
     # Load nsynth dataset from tfds
     dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=True)
 
-    gan_stats = calculate_dataset_stats(hparams, dataset)
+    # gan_stats = calculate_dataset_stats(hparams, dataset)
     #gan_stats = np.load('gan_stats.npz')
 
-    dataset = nsynth_to_cqt(dataset, hparams, gan_stats)
+    dataset = nsynth_to_cqt_inst(dataset, hparams, None)
     
 
     # Determine shape of the spectograms in the dataset
@@ -60,7 +60,7 @@ def start(hparams):
     # This is because the generator is going to upscale it's state twice with a factor of 2.
     assert spec_shape[0] % 4 == 0 and spec_shape[1] % 4 == 0, "Spectogram dimensions is not divisible by 4"
 
-    dataset = pro.index_map('audio', pro.reshape([*spec_shape, 1]))(dataset)
+    #dataset = pro.index_map('audio', pro.reshape([*spec_shape, 1]))(dataset)
 
     # Create preprocessing pipeline for shuffling and batching
     dataset = pro.pipeline([

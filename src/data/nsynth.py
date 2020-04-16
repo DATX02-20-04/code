@@ -68,8 +68,7 @@ def nsynth_to_cqt_inst(dataset, hparams, stats=None):
         pro.map_transform(lambda x: tf.cast(x, tf.float32)),
     ]))(dataset)
 
-    dataset = pro.index_map)'audio', pro.pipeline([
-        pro.wav(),
+    dataset = pro.index_map('audio', pro.pipeline([
         pro.cqt_spec(),
         # pro.pad([[0, 0], [0, 2]], 'CONSTANT', constant_values=hparams['log_amin']),
     ]))(dataset)
