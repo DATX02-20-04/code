@@ -1,6 +1,7 @@
 import tensorflow as tf
 import data.process as pro
 import librosa
+import numpy as np
 
 def nsynth_from_tfrecord(nsynth_tfrecord_path):
     dataset = tf.data.TFRecordDataset([nsynth_tfrecord_path])
@@ -69,7 +70,7 @@ def nsynth_to_cqt(dataset, hparams, stats=None):
 
     cqt = {
         'sr': hparams['sample_rate'],
-        'hop_length': 256,
+        'hop_length': 512,
         'res_factor': 0.8,
         'fmin': librosa.note_to_hz("C2"),
         'over_sample': 8,
@@ -83,11 +84,12 @@ def nsynth_to_cqt(dataset, hparams, stats=None):
             sr=hparams['sample_rate'],
             hop_length=cqt['hop_length'],
             bins_per_octave=cqt['notes_per_octave'] * cqt['over_sample'],
-            n_bins=cqt['notes_per_octave'] * cqt['octaves'] * cqt['over_sample'],
+            n_bins=256,
             filter_scale=cqt['res_factor'],
             fmin=cqt['fmin']
         ), [x], x.dtype)),
-        pro.map_transform(lambda x: tf.py_function(lambda x: librosa.power_to_db(x.numpy(), ref=1.0), [x], x.dtype)),
+        pro.map_transform(lambda x: tf.py_function(lambda x: np.abs(x), [x], x.dtype)),
+        pro.map_transform(lambda x: tf.py_function(lambda x: librosa.amplitude_to_db(x.numpy(), ref=1.0), [x], x.dtype)),
         pro.pad([[0, 0], [0, 2]], 'CONSTANT', constant_values=hparams['log_amin']),
     ]))(dataset)
 

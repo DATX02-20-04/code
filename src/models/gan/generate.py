@@ -24,7 +24,7 @@ def start(hparams):
 
     trainer.init_checkpoint(ckpt)
 
-    count = 4
+    count = 60
 
     # Random seed for each
     #seed = tf.random.normal((count, hparams['latent_size']))
@@ -42,7 +42,7 @@ def start(hparams):
     # pitches = tf.repeat(pitch, count)
 
     # Free pitches
-    pitches = [41,42,43,44]
+    pitches = range(count)
 
     one_hot_pitches = tf.one_hot(pitches, hparams['cond_vector_size'], axis=1)
     
@@ -50,8 +50,8 @@ def start(hparams):
     samples = tf.reshape(output, [-1, 256, 128])
     x = tf.unstack(samples)
 
-    width = 4
-    height = 1
+    width = 16
+    height = 4
     plt.figure(figsize=(width * 2, height * 4))
 
     for i, img in enumerate(x):
@@ -63,11 +63,11 @@ def start(hparams):
         plt.axis('off')
 
     plt.savefig('output.png')
-    audio = pro.pipeline([
-        pro.denormalize(normalization='specgan', stats=gan_stats),
-        pro.invert_log_melspec(hparams['sample_rate'], n_mels=256)
-    ])(x)
+    #audio = pro.pipeline([
+        #pro.denormalize(normalization='specgan', stats=gan_stats),
+        #pro.invert_log_melspec(hparams['sample_rate'], n_mels=256)
+    #])(x)
 
-    output = np.concatenate(list(audio))
+    #output = np.concatenate(list(audio))
 
-    librosa.output.write_wav('gan_sample.wav', output, hparams['sample_rate'], norm=True)
+    #librosa.output.write_wav('gan_sample.wav', output, hparams['sample_rate'], norm=True)

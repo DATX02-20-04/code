@@ -1,5 +1,5 @@
 hparams:
-  name: 'deep_128x256_first_test'
+  name: 'cqt_transform'
   instrument:
     family: 'keyboard'
   epochs: 8000
