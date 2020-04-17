@@ -29,8 +29,13 @@
 
   The time log has exact tasks worked on each entry, for each
 * Week 13
+We have made a lot of progress this week on all three components, that being
+1. Audio generation
+2. Structure generation
+3. Combination of above
 ** Progress
-*** Pitch conditioning
+*** Audio generation
+**** Pitch conditioning
 Due to our audio results not being good enough, we experimented with a deeper
 model with more convolution layers. This ended up not being that easy to train,
 and had trouble learning anything at all.
@@ -83,9 +88,125 @@ from the middle of the pitch interval.
 #+end_column
 
 Of course, they don't sound perfect yet at such low period of training, but they
-demonstrate pitch classification and a somewhat good piano sound. Next thing to
-try is another step higher in resolution.
+demonstrate pitch classification and a somewhat good piano sound. We found an
+even higher resolution to both be too demanding for the computer, but also that
+our sample rate is too low for it to correctly fill all information in the
+spectrogram. This is visualized in figure [[fig:512_example]]
 
+#+caption: An example of a $128 \times 512$ spectrogram. Not the very tiny horizontal bars at the bottom, indicating that the sample frequency is to low to fill those bins.
+#+name: fig:512_example
+[[./img/512.png]]
+
+**** Constant Q transform
+As shown before, we have been having issues with some pitches not generating
+particularly well. The theory is that the resolution is not high enough for the
+model to differentiate between two pitches. To solve this problem, we have to
+delve deep into signal processing. Apologies if the following section is not
+very explanatory, we have not had a course in this.
+
+Right now, we use a simple fast fourier transform to generate our mel
+spectrograms. This is fast and easy to do, but keeps resolution constant across
+all frequencies. We visualised this last week, and there stated that we had
+trouble particularly with the lower frequencies having enough space. The
+~Constant Q transform~ somewhat solves this by letting the window length be a
+multiple of the previous window. The window then grows with each bin, making it
+larger for higher frequencies and smaller for lower. This means the
+transform works better for our hearing, which follows a log scale.
+
+To use this, we simple switch which function to use. Figure [[fig:cqt_exp_1]]
+illustrates some results after a short training period of 60K steps.
+
+#+CAPTION: CQT after around 60K steps. These are the usual notes sampled from the middle but because lower frequencies have more space, the appear further up in the spectrogram.
+#+NAME: fig:cqt_exp_1
+[[./img/cqt_exp_1.png]]
+
+Currently, not quite all notes fit in the spectrogram, we might be able to
+resolve this by changing the parameters a bit but for now, these show good results.
+
+It should be noted that this transform is significantly slower due to not being
+as easy to optimise as a standard fast fourier transform. Fortunately, we have
+cached the entire dataset by the first epoch, so we see minimal performance hit
+for this.
+
+**** Phase channel and instantaneous frequency
+One issue we have had for a while now is the Griffin-Lim algorithm for
+rebuilding phase. Spectrograms include only magnitude of the fourier transform
+and discards the phase entirely. This means inverting requires us to rebuild the
+phase, which is what the algorithm does. It is a slow algorithm, requiring
+multiple iterations of transforms to get it right. Additionally, it is not a
+perfect replica, so the result sounds artificial.
+
+The issues with this algorithms are
+1. Too slow for our product
+2. Mediocre results
+
+The following is not an original idea and first used by gansynth. One way to
+solve both these issues is not having to rebuild the phase. Instead, we let the
+network generate it. This sounds more difficult than it actually is. All we have
+to do is double the channels models into (magnitude, phase), and ensure the
+dataset is processed to not throw away the phase. Recreating the transformed
+signal is as easy as $\text{mag} \times \text{phase}$ as you would using
+phasors.
+
+The more difficult problem is how to get the network to correctly learn phase.
+It is easy for the network to learn magnitude because it is simply mapping the
+color of a pixel in the image and activating it whenever it learnt to. Phase is
+not constant for audio, the same pitch and note can have different phases
+depending on the actual audio recording. This means just feeding the network
+pitch would force it to map an infinite number of phases to our pitches, which
+is not very easy for it to learn. This is where instantaneous frequency comes
+in, which we have maybe mentioned before in this log. Basically, just take the
+derivative of the phase, which remains constant. Then, the second channel
+describes earlier is just another image channel for the GAN to learn, no more
+difficult than learning black and white images vs color.
+
+Currently, we are training a network to generate these two-channel images using
+Constant Q transform. We will probably have some results by next week.
+
+*** Structure generation
+*** Combining models
+*** Report
+We started working in sprints, defining clear small tasks that need to be solved
+before the next sprint meeting. This seems to be working well to get changes
+into the report before we send it to our supervisor each week. Other than that,
+we are slowly adding more chapters and restructuring things.
+
+** Summary of each member
+- *Christoffer*:
+  - Been focusing entirely on the note generation.
+  - Setup model for higher resolution, 128x256 works well, 128x512 is not possible due to too low sample rate
+  - A lot of research regarding signal processing transforms and their limitations so that we can correctly capture the full range of notes,
+  - Experimented with using constant Q transform rather than stft in order to widen low frequency resolution.
+  - Started training using Constant Q transform, added phase channel with the
+    help of the entire group debugging my code.
+  - Documented all that in the log, as well as wrote about ACGAN in the report.
+- *Eric*:
+  - Helped with combining models
+  - Training the transformer and debugging why it copies prior (the prior and target overlapped).
+  - Wrote on the transformer section in implementation.
+  - Reviewed some pull requests for the report.
+  -Read through and comment on the report for our weekly sprint.
+- *Carl*:
+  - Combining models
+  - Lots of implementation help all over the place
+  - Pull requests and reviews
+- *Lovisa*:
+- *Cao*:
+  - Writing introduction for machine learning section, solving some issues on github.
+- *Elias*:
+  - Read through the entire report and tried to comment on everything from style/structure to spelling mistakes.
+  - Experimented with a new vae gan model
+  - Connected the gan and transformer models together with Carl, Lovisa, and Eric.
+  - Implemented Constant Q transform and phase channel with Christoffer.
+  - Reviewed and merged PRs for the report.
+  - Planned next report writing sprint.
+** Last weeks' goals
+- Went way ahead of last weeks goals regarding pitch conditioning
+- We finished connecting structure and audio generation (in a simple way but still)
+** Next week
+- Probably mostly report writing, we got some good feedback from our supervisor
+  meeting this week.
+- Fine-tune all our components and wait while training them.
 
 * Week 12
 We had to cancel both the supervisor meeting and the Friday meeting with our
