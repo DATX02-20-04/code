@@ -254,12 +254,18 @@ def inst_freq_to_phase(freq):
 
 
 def cqt_spec(sr=16000, hop_length=512, n_bins=256, bins_per_octave=80, filter_scale=0.8, fmin=librosa.note_to_hz("C2")):
+    def temp(x):
+        mag, phase = librosa.core.magphase(x)
+        mag = librosa.amplitude_to_db(x.numpy())
+        phase = phase_to_inst_freq(phase)
+        magphase = np.transpose([mag, phase], [1,2,0])
+        return magphase
+
     return pipeline([
         cqt(sr=sr, hop_length=hop_length, n_bins=n_bins, bins_per_octave=bins_per_octave, filter_scale=filter_scale, fmin=fmin),
-        map_transform(librosa.core.magphase),  # (mag, phase)
-        map_transform(lambda magphase: [magphase[0], magphase[1]]),
-        index_map(0, lambda x: tf.py_function(lambda x: librosa.amplitude_to_db(x.numpy(), ref=1.0), [x], x.dtype)),
-        index_map(1, phase_to_inst_freq)
+        lambda x: tf.py_function(temp, [x], x.dtype)
+
+        #map_transform(lambda mag, phase: [mag, phase])
     ])
 
 def inverse_cqt_spec(sr=16000, hop_length=512, n_bins=256, bins_per_octave=80, filter_scale=0.8, fmin=librosa.note_to_hz("C2")):
