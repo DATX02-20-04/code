@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from fractions import Fraction
 
 import struct
+import matplotlib.pyplot as plt
 
 @dataclass
 class Midi:
@@ -49,6 +50,8 @@ class Midi:
     rate: int
     tracks: [[Event]]
 
+    def flatten(self):
+        return sorted((event for track in self.tracks for event in track))
 
 #
 # = Parsing
@@ -148,3 +151,33 @@ def write_midi(f, midi):
     chunk("MThd", struct.pack(">HHH", midi.type, len(midi.tracks), midi.rate))
     for track in midi.tracks:
         chunk("MTrk", write_midi_track(midi.rate, track))
+
+#
+# = Rendering
+#
+
+def display_midi(midi, axis=None, **kwargs):
+    if axis is None: axis = plt.gca()
+    notes = []
+    currentNotes = {}
+    for e in midi.flatten():
+        if isinstance(e, Midi.BaseNoteEvent) and (e.channel, e.pitch) in currentNotes:
+            notes.append((currentNotes.pop((e.channel, e.pitch)), e))
+        if isinstance(e, Midi.NoteEvent):
+            currentNotes[(e.channel, e.pitch)] = e
+
+    for e2 in currentNotes.values():
+        notes.append((e2, Midi.NoteUpEvent(e.time, e2.channel, e2.pitch, 0x40)))
+
+    axis.hlines(
+        [s.pitch for s, e in notes],
+        [s.time for s, e in notes],
+        [e.time for s, e in notes],
+        **kwargs
+    )
+
+if __name__ == "__main__":
+    with open("test.midi", "rb") as f:
+        midi = read_midi(f)
+    display_midi(midi)
+    plt.show()
