@@ -138,7 +138,7 @@ spectrogram. This is visualized in figure [[fig:512_example]]
 #+name: fig:512_example
 [[./img/512.png]]
 
-**** Constant Q transform
+*** Constant Q transform
 As shown before, we have been having issues with some pitches not generating
 particularly well. The theory is that the resolution is not high enough for the
 model to differentiate between two pitches. To solve this problem, we have to
@@ -169,7 +169,7 @@ as easy to optimise as a standard fast fourier transform. Fortunately, we have
 cached the entire dataset by the first epoch, so we see minimal performance hit
 for this.
 
-**** Phase channel and instantaneous frequency
+*** Phase channel and instantaneous frequency
 One issue we have had for a while now is the Griffin-Lim algorithm for
 rebuilding phase. Spectrograms include only magnitude of the fourier transform
 and discards the phase entirely. This means inverting requires us to rebuild the
@@ -204,9 +204,9 @@ difficult than learning black and white images vs color.
 Currently, we are training a network to generate these two-channel images using
 Constant Q transform. We will probably have some results by next week.
 
-*** Structure generation
-*** Combining models
-*** Report
+** Structure generation
+** Combining models
+** Report
 We started working in sprints, defining clear small tasks that need to be solved
 before the next sprint meeting. This seems to be working well to get changes
 into the report before we send it to our supervisor each week. Other than that,
