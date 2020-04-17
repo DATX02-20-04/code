@@ -31,7 +31,7 @@ class Transformer(tfk.Model):
 
         self.loss_obj = tfk.losses.SparseCategoricalCrossentropy(from_logits=True, reduction='none')
 
-        self.optimizer = tfk.optimizers.Adam(TransformerLRSchedule(hparams['d_model']),
+        self.optimizer = tfk.optimizers.Adam(hparams['lr'],# TransformerLRSchedule(hparams['d_model']),
                                              beta_1=hparams['beta_1'],
                                              beta_2=hparams['beta_2'],
                                              epsilon=hparams['epsilon'])

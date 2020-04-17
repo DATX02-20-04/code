@@ -10,6 +10,7 @@ hparams:
   batch_size: 16
   buffer_size: 1000
   dropout_rate: 0.1
+  lr: 0.0000001
   beta_1: 0.9
   beta_2: 0.98
   epsilon: 0.000000001
