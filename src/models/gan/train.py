@@ -97,10 +97,27 @@ def start(hparams):
 
         one_hot_pitches = tf.one_hot(pitches, hparams['cond_vector_size'], axis=1)
 
-        output = gan.generator([seed, one_hot_pitches], training=False)
-        samples = tf.reshape(output, [-1, 256, 128])
-        img = tf.unstack(samples)
+        magphase = gan.generator([seed, one_hot_pitches], training=False)
+        mag = tf.convert_to_tensor(magphase.numpy()[:,:,:,0])
+        phase = tf.convert_to_tensor(magphase.numpy()[:,:,:,1])
+
+        mag_samples = tf.reshape(mag, [count, 256, 128])
+        phase_samples = tf.reshape(phase, [count, 256, 128])
+
+        img = tf.unstack(mag_samples)
         img = tf.reverse(tf.concat(img, axis=1), axis=[0])
+
+        plt.figure(figsize=(count * 2, 4 * 2))
+        plt.subplot(2,1,1)
+        plt.title('Magnitude')
+        plt.axis('off')
+        plt.imshow(img)
+
+        img = tf.unstack(phase_samples)
+        img = tf.reverse(tf.concat(img, axis=1), axis=[0])
+
+        plt.subplot(2,1,2)
+        plt.title('Phase')
         plt.axis('off')
         plt.imshow(img)
 
@@ -115,16 +132,16 @@ def start(hparams):
         image = tf.expand_dims(image, 0)
 
         # Convert to audio
-        audio = pro.pipeline([
-            pro.denormalize(normalization='specgan', stats=gan_stats),
-            pro.invert_log_melspec(hparams['sample_rate'], n_mels=256)
-            ])(samples)
+        #audio = pro.pipeline([
+            #pro.denormalize(normalization='specgan', stats=gan_stats),
+            #pro.invert_log_melspec(hparams['sample_rate'], n_mels=256)
+            #])(samples)
 
-        audio = next(audio).reshape([1, -1, 1])
+        #audio = next(audio).reshape([1, -1, 1])
         # Convert to tf audio
         with tsw.as_default():
             tf.summary.image(f'Spectrogram', image, step=step)
-            tf.summary.audio(f'Audio', audio, hparams['sample_rate'], step=step, encoding='wav')
+            #tf.summary.audio(f'Audio', audio, hparams['sample_rate'], step=step, encoding='wav')
         print(f"Epoch: {epoch}, Step: {step}, Gen Loss: {gen_loss_avg.result()}, Disc Loss: {disc_loss_avg.result()}, Duration: {duration} s")
 
 

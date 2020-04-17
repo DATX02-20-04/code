@@ -69,8 +69,8 @@ def nsynth_to_cqt_inst(dataset, hparams, stats=None):
     ]))(dataset)
 
     dataset = pro.index_map('audio', pro.pipeline([
-        pro.cqt_spec(),
-        # pro.pad([[0, 0], [0, 2]], 'CONSTANT', constant_values=hparams['log_amin']),
+        pro.cqt_spec(sr=hparams['sample_rate']),
+        pro.pad([[0, 0], [0, 2], [0,0]], 'CONSTANT', constant_values=hparams['log_amin']),
     ]))(dataset)
 
     if stats is not None:

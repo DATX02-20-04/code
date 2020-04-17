@@ -89,13 +89,13 @@ class GAN():
         o = tfkl.LeakyReLU()(o)
 
         o = tfkl.UpSampling2D(size=(2, 2))(o)
-        o = tfkl.Conv2D(1, (5, 5), strides=(1, 1), padding='same', use_bias=False, activation='tanh')(o)
+        o = tfkl.Conv2D(2, (5, 5), strides=(1, 1), padding='same', use_bias=False, activation='tanh')(o)
 
         return tf.keras.Model(inputs=[latent, pitch_class], outputs=o)
 
 
     def create_discriminator(self):
-        image = tfkl.Input(shape=[*self.shape, 1])
+        image = tfkl.Input(shape=[*self.shape])
 
         o = tfkl.Conv2D(32, (3, 3), strides=(1, 1), padding='same')(image)
         o = tfkl.BatchNormalization()(o)
