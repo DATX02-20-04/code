@@ -67,9 +67,9 @@ def start(hparams):
 
     dataset_single = pro.pipeline([
         pro.midi(),
-        pro.frame(hparams['frame_size'], 1, True),
+        pro.frame(hparams['frame_size'], hparams['frame_size'], True),
         pro.unbatch(),
-    ])(dataset)
+    ])(dataset).take(81920).cache().repeat()
 
     def _reshape(inp, tar):
         inp = tf.reshape(inp, [hparams['frame_size']])
@@ -82,7 +82,7 @@ def start(hparams):
         pro.split(2),
         # pro.dupe(),
         pro.map_transform(_reshape),
-        pro.cache(),
+        #pro.cache(),
         pro.shuffle(hparams['buffer_size']),
         pro.batch(hparams['batch_size'], True),
         pro.prefetch(),
