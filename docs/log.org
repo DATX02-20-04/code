@@ -33,9 +33,50 @@ We have made a lot of progress this week on all three components, that being
 1. Audio generation
 2. Structure generation
 3. Combination of above
-** Progress
-*** Audio generation
-**** Pitch conditioning
+** Audio generation
+To start, here are some of the same note generated from piano notes over the
+course of 513K steps.
+
+#+begin_columns
+#+begin_column
+*44K*
+
+{{{AUDIO(audio/44k.wav)}}}
+#+end_column
+#+begin_column
+*62K*
+
+{{{AUDIO(audio/62k.wav)}}}
+#+end_column
+#+begin_column
+*83K*
+
+{{{AUDIO(audio/83k.wav)}}}
+#+end_column
+#+end_columns
+
+#+begin_columns
+#+begin_column
+*153K*
+
+{{{AUDIO(audio/153k.wav)}}}
+#+end_column
+#+begin_column
+*230K*
+
+{{{AUDIO(audio/230k.wav)}}}
+#+end_column
+#+begin_column
+*513K*
+
+{{{AUDIO(audio/513k.wav)}}}
+#+end_column
+#+end_columns
+
+They sound pretty good, but still very artificial. These are from spectrograms
+of size $128 \times 256$.
+
+*** Pitch conditioning
 Due to our audio results not being good enough, we experimented with a deeper
 model with more convolution layers. This ended up not being that easy to train,
 and had trouble learning anything at all.
