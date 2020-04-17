@@ -1,11 +1,7 @@
 from dataclasses import dataclass
 from fractions import Fraction
 
-import subprocess
-import base64
 import struct
-# from yattag import Doc
-# import IPython.display as display
 
 @dataclass
 class Midi:
@@ -152,66 +148,3 @@ def write_midi(f, midi):
     chunk("MThd", struct.pack(">HHH", midi.type, len(midi.tracks), midi.rate))
     for track in midi.tracks:
         chunk("MTrk", write_midi_track(midi.rate, track))
-
-"""
-
-#
-# = Rendering to html (really svg)
-#
-
-def display_midi_track(doc, track):
-    for e in track:
-        if isinstance(e, Midi.NoteEvent):
-            if e.velocity >  64: color = (255, 255-(e.velocity-64)*4, 0)
-            if e.velocity == 64: color = (255, 255, 0)
-            if e.velocity <  64: color = (e.velocity*4, 255, 0)
-            doc.stag(
-                "rect",
-                x=float(e.time),
-                y=127-e.pitch,
-                width=float(e.end.time - e.time)+.1,
-                height=1,
-                fill="#%02X%02X%02X" % color,
-                mask="url(#fade)",
-                )
-
-def display_midi(midi, xscale=16, yscale=2):
-    r = getattr(display_midi, "r", 0) # So that it can be used multiple times in one block
-    display_midi.r = r+1
-
-    assert midi.type in (0, 1)
-    w = max((e.time for track in midi.tracks for e in track), default=0)
-
-    doc = Doc()
-    for n, track in enumerate(midi.tracks):
-        doc.stag("input", type="checkbox", checked="checked", id=f"c{r}-{n}")
-        with doc.tag("style"):
-            doc.asis(f"#c{r}-{n}:not(:checked) ~ * #g{r}-{n} {{ display: none }}")
-    with doc.tag("div", style="overflow-x: scroll"):
-        with doc.tag("svg", preserveAspectRatio="none", width=float(w*xscale), height=128*yscale, viewBox=f"0 0 {float(w)} 128"):
-            with doc.tag("defs"):
-                with doc.tag("linearGradient", id="fadeGrad", x2=1, y2=0):
-                    doc.stag("stop", offset=0, **{"stop-color": "white", "stop-opacity": 1})
-                    doc.stag("stop", offset=1, **{"stop-color": "white", "stop-opacity": 0})
-                with doc.tag("mask", id="fade", maskContentUnits="objectBoundingBox"):
-                    doc.stag("rect", width=1, height=1, fill="url(#fadeGrad)")
-
-            for n, track in enumerate(midi.tracks):
-                with doc.tag("g", id=f"g{r}-{n}"):
-                    display_midi_track(doc, track)
-    return display.HTML(doc.getvalue())
-
-
-#
-# = Rendering to audio
-# Requires timidity to be installed: `!apt install timidity`
-#
-
-def play_midi(midi):
-    proc = subprocess.Popen(["timidity", "-", "-Ow", "-o-"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    write_midi(proc.stdin, midi)
-    data = proc.stdout.read()
-    proc.wait()
-    b64 = base64.b64encode(data).decode("ascii")
-    return display.HTML(f'<audio controls><source src="data:audio/wav;base64,{b64}" /></audio>')
-"""
