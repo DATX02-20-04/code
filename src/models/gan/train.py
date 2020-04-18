@@ -107,7 +107,7 @@ def start(hparams):
         img = tf.unstack(mag_samples)
         img = tf.reverse(tf.concat(img, axis=1), axis=[0])
 
-        plt.figure(figsize=(count * 2, 4 * 2))
+        plt.figure(0, figsize=(count * 2, 4 * 2), clear=True)
         plt.subplot(2,1,1)
         plt.title('Magnitude')
         plt.axis('off')
