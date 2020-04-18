@@ -40,6 +40,9 @@ def generate(hparams):
 
     trainer.init_checkpoint(ckpt)
 
+    return generate_from_model(hparams, transformer)
+
+def generate_from_model(hparams, transformer):
     output = seed
     outputs = []
     gen_iters = hparams['gen_iters'] if 'gen_iters' in hparams else 1

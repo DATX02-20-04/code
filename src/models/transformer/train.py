@@ -6,6 +6,7 @@ import os
 from models.common.training import Trainer
 import data.process as pro
 from models.transformer.model import Transformer
+from models.transformer.generate import generate_from_model
 import tensorflow_datasets as tfds
 from evolve.hparams import HParams
 from evolve.pool import Pool
@@ -21,18 +22,10 @@ def on_epoch_start(epoch, step, tsw):
     train_loss.reset_states()
     train_accuracy.reset_states()
 
-# This runs at every step in the training (for each batch in dataset)
-def on_step(epoch, step, stats, tsw):
-    loss, tar_real, predictions = stats
-    train_loss(loss)
-    train_accuracy(tar_real, predictions)
-    if step % 100 == 0:
-        print(f"Epoch: {epoch}, Step: {step}, Loss: {train_loss.result()}, Accuracy: {train_accuracy.result()}")
-    with tsw.as_default():
-        tf.summary.scalar('loss', train_loss.result(), step=step)
 
 # This runs at the end of every epoch and is used to display metrics
 def on_epoch_complete(epoch, step, duration, tsw):
+
     #display.clear_output(wait=True)
     print(f"Epoch: {epoch}, Step: {step}, Loss: {train_loss.result()}, Accuracy: {train_accuracy.result()}, Duration: {duration:.3f}")
 
@@ -110,6 +103,35 @@ def start(hparams):
     #     print("BEST:", pool.best, pool.fitness)
     #     pool.select(pop_size)
     #     pool.populate(pop_size, mutation_rate)
+    #
+
+    # This runs at every step in the training (for each batch in dataset)
+    def on_step(epoch, step, stats, tsw):
+        loss, tar_real, predictions = stats
+        train_loss(loss)
+        train_accuracy(tar_real, predictions)
+        if step % 100 == 0:
+            print(f"Epoch: {epoch}, Step: {step}, Loss: {train_loss.result()}, Accuracy: {train_accuracy.result()}")
+        if step % 2000 == 0:
+            print("Generating image...")
+            encoded = generate_from_model(hparams, transformer)
+            decoded = pro.decode_midi()(encoded)
+            M.display_midi(decoded)
+            buf = io.BytesIO()
+            plt.savefig(buf,  format='png')
+            buf.seek(0)
+
+            # Convert PNG buffer to TF image
+            image = tf.image.decode_png(buf.getvalue(), channels=4)
+
+            # Add the batch dimension
+            image = tf.expand_dims(image, 0)
+
+            with tsw.as_default():
+                tf.summary.image(f'MIDI', image, step=step)
+
+        with tsw.as_default():
+            tf.summary.scalar('loss', train_loss.result(), step=step)
 
 
     seed = next(dataset_single)
