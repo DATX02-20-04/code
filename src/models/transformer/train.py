@@ -13,6 +13,7 @@ from models.transformer.generate import generate_from_model
 import tensorflow_datasets as tfds
 from evolve.hparams import HParams
 from evolve.pool import Pool
+import util
 
 train_loss = tfk.metrics.Mean(name='train_loss')
 train_accuracy = tfk.metrics.SparseCategoricalAccuracy(name='train_accuracy')
@@ -109,6 +110,9 @@ def start(hparams):
     #
 
     seed = next(dataset_single)
+    decoded_seed = pro.decode_midi()(seed)
+    M.display_midi(decoded_seed)
+    image_seed = util.get_plot_image()
 
     # This runs at every step in the training (for each batch in dataset)
     def on_step(epoch, step, stats, tsw):
@@ -120,20 +124,14 @@ def start(hparams):
         if step % 2000 == 0:
             print("Generating image...")
             encoded = generate_from_model(hparams, transformer, seed)
-            decoded = pro.decode_midi()(tf.concat([seed, encoded], axis=0))
+            decoded = pro.decode_midi()(encoded)
+
             M.display_midi(decoded)
-            buf = io.BytesIO()
-            plt.savefig(buf,  format='png')
-            buf.seek(0)
-
-            # Convert PNG buffer to TF image
-            image = tf.image.decode_png(buf.getvalue(), channels=4)
-
-            # Add the batch dimension
-            image = tf.expand_dims(image, 0)
+            image = util.get_plot_image()
 
             with tsw.as_default():
                 tf.summary.image(f'MIDI', image, step=step)
+                tf.summary.image(f'MIDI_seed', image_seed, step=step)
 
         with tsw.as_default():
             tf.summary.scalar('loss', train_loss.result(), step=step)
