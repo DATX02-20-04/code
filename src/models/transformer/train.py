@@ -109,7 +109,7 @@ def start(hparams):
     #     pool.populate(pop_size, mutation_rate)
     #
 
-    seed = next(dataset_single)
+    seed = tf.constant(next(dataset_single))
     decoded_seed = pro.decode_midi()(seed)
     M.display_midi(decoded_seed)
     image_seed = util.get_plot_image()
