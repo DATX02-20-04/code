@@ -28,6 +28,8 @@ def on_step(epoch, step, stats, tsw):
     train_accuracy(tar_real, predictions)
     if step % 100 == 0:
         print(f"Epoch: {epoch}, Step: {step}, Loss: {train_loss.result()}, Accuracy: {train_accuracy.result()}")
+    with tsw.as_default():
+        tf.summary.scalar('loss', train_loss.result(), step=step)
 
 # This runs at the end of every epoch and is used to display metrics
 def on_epoch_complete(epoch, step, duration, tsw):
@@ -69,7 +71,7 @@ def start(hparams):
         pro.midi(),
         pro.frame(hparams['frame_size'], hparams['frame_size'], True),
         pro.unbatch(),
-    ])(dataset).take(81920).cache().repeat()
+    ])(dataset).take(hparams['datapoints']).cache().repeat()
 
     def _reshape(inp, tar):
         inp = tf.reshape(inp, [hparams['frame_size']])
@@ -120,6 +122,7 @@ def start(hparams):
     )
 
     trainer.init_checkpoint(ckpt)
+    trainer.init_tensorboard()
     trainer.set_train_step(transformer.train_step)
     trainer.on_epoch_start = on_epoch_start
     trainer.on_step = on_step
