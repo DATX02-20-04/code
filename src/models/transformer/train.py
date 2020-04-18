@@ -105,6 +105,8 @@ def start(hparams):
     #     pool.populate(pop_size, mutation_rate)
     #
 
+    seed = next(dataset_single)
+
     # This runs at every step in the training (for each batch in dataset)
     def on_step(epoch, step, stats, tsw):
         loss, tar_real, predictions = stats
@@ -114,8 +116,8 @@ def start(hparams):
             print(f"Epoch: {epoch}, Step: {step}, Loss: {train_loss.result()}, Accuracy: {train_accuracy.result()}")
         if step % 2000 == 0:
             print("Generating image...")
-            encoded = generate_from_model(hparams, transformer)
-            decoded = pro.decode_midi()(encoded)
+            encoded = generate_from_model(hparams, transformer, seed)
+            decoded = pro.decode_midi()(tf.concat([seed, encoded], axis=0))
             M.display_midi(decoded)
             buf = io.BytesIO()
             plt.savefig(buf,  format='png')
@@ -134,7 +136,6 @@ def start(hparams):
             tf.summary.scalar('loss', train_loss.result(), step=step)
 
 
-    seed = next(dataset_single)
 
     trainer = Trainer(dataset, hparams)
     ckpt = tf.train.Checkpoint(
