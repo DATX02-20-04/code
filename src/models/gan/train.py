@@ -38,8 +38,8 @@ def start(hparams):
     # Load nsynth dataset from tfds
     dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=True)
 
-    # gan_stats = calculate_dataset_stats(hparams, dataset)
-    gan_stats = np.load('gan_stats.npz')
+    gan_stats = calculate_dataset_stats(hparams, dataset)
+    # gan_stats = np.load('gan_stats.npz')
 
     dataset = nsynth_to_cqt_inst(dataset, hparams, gan_stats)
 
