@@ -2,6 +2,7 @@ import tensorflow as tf
 import gc
 import tensorflow.keras as tfk
 import numpy as np
+import data.midi as M
 import os
 from models.common.training import Trainer
 import data.process as pro
