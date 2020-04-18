@@ -56,7 +56,7 @@ def start(hparams):
     with open('gen_transformer_{}.midi'.format(i), 'wb') as f:
         M.write_midi(f, decoded)
 
-    display_midi(decoded)
+    M.display_midi(decoded)
     plt.savefig('gen_transformer_{}.png'.format(i))
 
     print('Generated sample')
