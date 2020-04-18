@@ -1,10 +1,12 @@
 import tensorflow as tf
 import gc
+import io
 import tensorflow.keras as tfk
 import numpy as np
 import data.midi as M
 import os
 from models.common.training import Trainer
+import matplotlib.pyplot as plt
 import data.process as pro
 from models.transformer.model import Transformer
 from models.transformer.generate import generate_from_model
