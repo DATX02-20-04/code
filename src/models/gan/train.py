@@ -39,9 +39,9 @@ def start(hparams):
     dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=True)
 
     # gan_stats = calculate_dataset_stats(hparams, dataset)
-    #gan_stats = np.load('gan_stats.npz')
+    gan_stats = np.load('gan_stats.npz')
 
-    dataset = nsynth_to_cqt_inst(dataset, hparams, None)
+    dataset = nsynth_to_cqt_inst(dataset, hparams, gan_stats)
 
 
     # Determine shape of the spectograms in the dataset
@@ -134,7 +134,7 @@ def start(hparams):
         # Convert to audio
         #audio = pro.pipeline([
             #pro.denormalize(normalization='specgan', stats=gan_stats),
-            #pro.invert_log_melspec(hparams['sample_rate'], n_mels=256)
+            #pro.inverse_cqt_spec(hparams['sample_rate'])
             #])(samples)
 
         #audio = next(audio).reshape([1, -1, 1])
