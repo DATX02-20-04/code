@@ -3,6 +3,7 @@ import tensorflow.keras as tfk
 import numpy as np
 from models.common.training import Trainer
 import data.process as pro
+import data.midi as M
 from models.transformer.model import Transformer
 import tensorflow_datasets as tfds
 
@@ -50,6 +51,7 @@ def start(hparams):
     epoch = 5
     encoded = generate(hparams)
     decoded = next(pro.decode_midi()(iter([encoded])))
-    decoded.save('gen_e{}.midi'.format(epoch))
+    with open('gen_{}.midi'.format(0)) as f:
+        M.write_midi(f, decoded)
 
     print('Generated sample')
