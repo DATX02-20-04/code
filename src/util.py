@@ -22,3 +22,13 @@ def parse_train_args(args, hparams):
     args = vars(parser.parse_args(args))
 
     return { **hparams, **args }
+
+def get_plot_image():
+    buf = io.BytesIO()
+    plt.savefig(buf,  format='png')
+    buf.seek(0)
+
+    image = tf.image.decode_png(buf.getvalue(), channels=4)
+    image = tf.expand_dims(image, 0)
+
+    return image
