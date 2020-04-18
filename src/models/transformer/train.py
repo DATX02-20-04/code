@@ -114,6 +114,8 @@ def start(hparams):
     M.display_midi(decoded_seed)
     image_seed = util.get_plot_image()
 
+    image_save_step = hparams['image_save_step'] if 'image_save_step' in hparams else 2000
+
     # This runs at every step in the training (for each batch in dataset)
     def on_step(epoch, step, stats, tsw):
         loss, tar_real, predictions = stats
@@ -121,7 +123,7 @@ def start(hparams):
         train_accuracy(tar_real, predictions)
         if step % 100 == 0:
             print(f"Epoch: {epoch}, Step: {step}, Loss: {train_loss.result()}, Accuracy: {train_accuracy.result()}")
-        if step % 2000 == 0:
+        if step % image_save_step == 0:
             print("Generating image...")
             encoded = generate_from_model(hparams, transformer, seed)
             decoded = pro.decode_midi()(encoded)
