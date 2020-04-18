@@ -109,10 +109,6 @@ def start(hparams):
     #     pool.populate(pop_size, mutation_rate)
     #
 
-    seed = tf.constant(next(dataset_single))
-    decoded_seed = pro.decode_midi()(seed)
-    M.display_midi(decoded_seed)
-    image_seed = util.get_plot_image()
 
     image_save_step = hparams['image_save_step'] if 'image_save_step' in hparams else 2000
 
@@ -125,15 +121,22 @@ def start(hparams):
             print(f"Epoch: {epoch}, Step: {step}, Loss: {train_loss.result()}, Accuracy: {train_accuracy.result()}")
         if step % image_save_step == 0:
             print("Generating image...")
+            seed = tf.constant(next(dataset_single))
+
             encoded = generate_from_model(hparams, transformer, seed)
+
+            decoded_seed = pro.decode_midi()(seed)
             decoded = pro.decode_midi()(encoded)
+
+            M.display_midi(decoded_seed)
+            image_seed = util.get_plot_image()
 
             M.display_midi(decoded)
             image = util.get_plot_image()
 
             with tsw.as_default():
-                tf.summary.image(f'MIDI', image, step=step)
-                tf.summary.image(f'MIDI_seed', image_seed, step=step)
+                tf.summary.image(f'generated', image, step=step)
+                tf.summary.image(f'prior', image_seed, step=step)
 
         with tsw.as_default():
             tf.summary.scalar('loss', train_loss.result(), step=step)
