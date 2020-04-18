@@ -5,6 +5,7 @@ from models.common.training import Trainer
 import data.process as pro
 import data.midi as M
 from models.transformer.model import Transformer
+import matplotlib.pyplot as plt
 import tensorflow_datasets as tfds
 
 
