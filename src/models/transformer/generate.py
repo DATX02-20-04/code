@@ -51,7 +51,7 @@ def start(hparams):
     epoch = 5
     encoded = generate(hparams)
     decoded = next(pro.decode_midi()(iter([encoded])))
-    with open('gen_{}.midi'.format(0)) as f:
+    with open('gen_{}.midi'.format(0), 'wb') as f:
         M.write_midi(f, decoded)
 
     print('Generated sample')
