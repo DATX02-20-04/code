@@ -41,17 +41,22 @@ def generate(hparams):
 
     output = seed
     outputs = []
-    for i in range(1):
+    gen_iters = hparams['gen_iters'] if 'gen_iters' in hparams else 1
+    for i in range(gen_iters):
         output, _ = transformer.evaluate(output)
         outputs.append(output)
-        encoded = tf.concat(outputs, 0)
-        return encoded
+
+    encoded = tf.concat(outputs, 0)
+    return encoded
 
 def start(hparams):
-    epoch = 5
+    i = 0
     encoded = generate(hparams)
-    decoded = next(pro.decode_midi()(iter([encoded])))
-    with open('gen_{}.midi'.format(0), 'wb') as f:
+    decoded = pro.decode_midi()(encoded)
+    with open('gen_transformer_{}.midi'.format(i), 'wb') as f:
         M.write_midi(f, decoded)
+
+    display_midi(decoded)
+    plt.savefig('gen_transformer_{}.png'.format(i))
 
     print('Generated sample')
