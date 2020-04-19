@@ -66,9 +66,10 @@ def start(hparams):
 
     dataset_single = pro.pipeline([
         pro.midi(),
-        pro.frame(hparams['frame_size'], hparams['frame_size'], True),
+        pro.frame(hparams['frame_size']*2, 1, True),
         pro.unbatch(),
-    ])(dataset).take(hparams['datapoints']).cache().repeat()
+        pro.split(2),
+    ])(dataset)
 
     def _reshape(inp, tar):
         inp = tf.reshape(inp, [hparams['frame_size']])
@@ -77,17 +78,17 @@ def start(hparams):
 
 
     dataset = pro.pipeline([
-        pro.batch(2, True),
-        pro.split(2),
+        #pro.batch(2, True),
         # pro.dupe(),
         pro.map_transform(_reshape),
-        #pro.cache(),
+        pro.cache(),
         pro.shuffle(hparams['buffer_size']),
         pro.batch(hparams['batch_size'], True),
         pro.prefetch(),
     ])(dataset_single)
 
 
+    dataset_single = pro.shuffle(100000)(dataset_single)
     dataset_single = dataset_single.as_numpy_iterator()
 
     transformer = Transformer(input_vocab_size=input_vocab_size,
@@ -112,6 +113,36 @@ def start(hparams):
 
     image_save_step = hparams['image_save_step'] if 'image_save_step' in hparams else 2000
 
+    def generate_image(step, tsw):
+        print("Generating image...")
+        seed, target = tf.constant(next(dataset_single))
+
+        encoded = generate_from_model(hparams, transformer, seed)
+
+        decoded_seed = pro.decode_midi()(seed)
+        decoded_target = pro.decode_midi()(target)
+        decoded = pro.decode_midi()(encoded)
+
+        plt.title('Prior')
+        M.display_midi(decoded_seed)
+        image_seed = util.get_plot_image()
+
+        plt.title('Generated')
+        M.display_midi(decoded)
+        image = util.get_plot_image()
+
+        plt.title('Target')
+        M.display_midi(decoded_target)
+        image_target = util.get_plot_image()
+        plt.clf()
+
+        image_conc = tf.concat([image_seed, image, image_target], axis=1)
+
+        with tsw.as_default():
+            tf.summary.image(f'image', image_conc, step=step)
+        print("Generating image done.")
+
+
     # This runs at every step in the training (for each batch in dataset)
     def on_step(epoch, step, stats, tsw):
         loss, tar_real, predictions = stats
@@ -120,23 +151,7 @@ def start(hparams):
         if step % 100 == 0:
             print(f"Epoch: {epoch}, Step: {step}, Loss: {train_loss.result()}, Accuracy: {train_accuracy.result()}")
         if step % image_save_step == 0:
-            print("Generating image...")
-            seed = tf.constant(next(dataset_single))
-
-            encoded = generate_from_model(hparams, transformer, seed)
-
-            decoded_seed = pro.decode_midi()(seed)
-            decoded = pro.decode_midi()(encoded)
-
-            M.display_midi(decoded_seed)
-            image_seed = util.get_plot_image()
-
-            M.display_midi(decoded)
-            image = util.get_plot_image()
-
-            with tsw.as_default():
-                tf.summary.image(f'generated', image, step=step)
-                tf.summary.image(f'prior', image_seed, step=step)
+            generate_image(step, tsw)
 
         with tsw.as_default():
             tf.summary.scalar('loss', train_loss.result(), step=step)
@@ -156,5 +171,7 @@ def start(hparams):
     trainer.on_epoch_start = on_epoch_start
     trainer.on_step = on_step
     trainer.on_epoch_complete = on_epoch_complete
+
+    generate_image(trainer.step.numpy(), trainer.train_summary_writer)
 
     trainer.run()

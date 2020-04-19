@@ -13,13 +13,13 @@ def generate(hparams):
     input_vocab_size  = 128+128+128+128
     target_vocab_size = 128+128+128+128
 
-    dataset = tf.data.Dataset.list_files('test.midi')
+    dataset = tf.data.Dataset.list_files('/home/big/datasets/maestro-v2.0.0/**/*.midi')
 
     dataset_single = pro.pipeline([
         pro.midi(),
         pro.frame(hparams['frame_size'], 1, True),
         pro.unbatch(),
-    ])(dataset).as_numpy_iterator()
+    ])(dataset).skip(200).as_numpy_iterator()
 
     transformer = Transformer(input_vocab_size=input_vocab_size,
                               target_vocab_size=target_vocab_size,
@@ -54,7 +54,7 @@ def generate_from_model(hparams, transformer, seed):
     return encoded
 
 def start(hparams):
-    i = 0
+    i = 1
     encoded = generate(hparams)
     decoded = pro.decode_midi()(encoded)
     with open('gen_transformer_{}.midi'.format(i), 'wb') as f:
