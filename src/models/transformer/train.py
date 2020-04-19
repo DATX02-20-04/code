@@ -139,10 +139,12 @@ def start(hparams):
         plt.title('Prior')
         M.display_midi(decoded_seed)
         image_seed = util.get_plot_image()
+        plt.clf()
 
         plt.title('Generated')
         M.display_midi(decoded)
         image = util.get_plot_image()
+        plt.clf()
 
         plt.title('Target')
         M.display_midi(decoded_target)
