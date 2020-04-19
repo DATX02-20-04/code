@@ -269,14 +269,19 @@ def cqt_spec(sr=16000, hop_length=512, n_bins=256, bins_per_octave=80, filter_sc
     ])
 
 def inverse_cqt_spec(sr=16000, hop_length=512, n_bins=256, bins_per_octave=80, filter_scale=0.8, fmin=librosa.note_to_hz("C2")):
+    def temp(magphase):
+        mag = magphase[:,:,0]
+        phase = magphase[:,:,1]
+
+        mag = tf.cast(tf.py_function(lambda x: librosa.db_to_amplitude(x.numpy(), ref=1.0), [mag], mag.dtype), tf.complex64)
+        phase = tf.cast(tf.py_function(inst_freq_to_phase, [phase], phase.dtype), tf.complex64)
+        out = mag * tf.math.exp(1.0j * phase)
+        return out
+
     return pipeline([
-        index_map(0, lambda x: tf.py_function(
-            lambda x: librosa.db_to_amplitude(x.numpy(), ref=1.0),
-            [x], x.dtype)),
-        index_map(1, inst_freq_to_phase),
-        map_transform(lambda mp: tf.cast(mp[0], tf.complex64) * tf.math.exp(1.0j * tf.cast(mp[1], tf.complex64))),
+        map_transform(temp),
         icqt(),
-        map_transform(lambda x: tf.cast(x, tf.float32))
+        lambda x: tf.cast(x, tf.float32)
     ])
 
 
