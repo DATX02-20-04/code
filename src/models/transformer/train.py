@@ -88,7 +88,7 @@ def start(hparams):
     ])(dataset_single)
 
 
-    dataset_single = pro.shuffle(100000)(dataset_single)
+    dataset_single = pro.shuffle(hparams['buffer_size']//4)(dataset_single)
     dataset_single = dataset_single.as_numpy_iterator()
 
     transformer = Transformer(input_vocab_size=input_vocab_size,
