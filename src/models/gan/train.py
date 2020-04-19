@@ -166,7 +166,7 @@ def start(hparams):
 
 def calculate_dataset_stats(hparams, dataset):
     print("Calculating dataset stats...")
-    dataset = nsynth_to_melspec(dataset, hparams)
+    dataset = nsynth_to_cqt_inst(dataset, hparams)
 
     megabatch = dataset.batch(50000).as_numpy_iterator()
     x = next(megabatch)
