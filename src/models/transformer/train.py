@@ -114,15 +114,28 @@ def start(hparams):
     image_save_step = hparams['image_save_step'] if 'image_save_step' in hparams else 2000
 
     def generate_image(step, tsw):
-        print("Generating image...")
+        print("Generating sample...")
         seed, target = tf.constant(next(dataset_single))
 
         encoded = generate_from_model(hparams, transformer, seed)
+        print("Generating sample done.")
 
+        print("Decoding midi...")
         decoded_seed = pro.decode_midi()(seed)
         decoded_target = pro.decode_midi()(target)
         decoded = pro.decode_midi()(encoded)
+        print("Decoding midi done.")
 
+        print("Saving midi...")
+        with open(f'gen_transformer_{step}.midi', 'wb') as f:
+            M.write_midi(f, decoded)
+        with open(f'prior_transformer_{step}.midi', 'wb') as f:
+            M.write_midi(f, decoded_seed)
+        with open(f'target_transformer_{step}.midi', 'wb') as f:
+            M.write_midi(f, decoded_target)
+        print("Saving midi done.")
+
+        print("Plotting midi...")
         plt.title('Prior')
         M.display_midi(decoded_seed)
         image_seed = util.get_plot_image()
@@ -137,10 +150,11 @@ def start(hparams):
         plt.clf()
 
         image_conc = tf.concat([image_seed, image, image_target], axis=1)
+        print("Plotting done.")
 
         with tsw.as_default():
             tf.summary.image(f'image', image_conc, step=step)
-        print("Generating image done.")
+        print("Complete.")
 
 
     # This runs at every step in the training (for each batch in dataset)
