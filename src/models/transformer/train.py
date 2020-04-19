@@ -66,7 +66,7 @@ def start(hparams):
 
     dataset_single = pro.pipeline([
         pro.midi(),
-        pro.frame(hparams['frame_size']*2, 1, True),
+        pro.frame(hparams['frame_size']*2, hparams['frame_hop_len'], True),
         pro.unbatch(),
         pro.split(2),
     ])(dataset)

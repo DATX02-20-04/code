@@ -8,8 +8,9 @@ hparams:
   dff: 256
   num_heads: 4
   frame_size: 256
+  frame_hop_len: 128
   batch_size: 16
-  buffer_size: 10000000
+  buffer_size: 100000
   dropout_rate: 0.1
   lr: 0.00001
   beta_1: 0.9
