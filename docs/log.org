@@ -83,7 +83,7 @@ and had trouble learning anything at all.
 
 The shallow model used last week had a lot of trouble with classifying pitches.
 The primary reason we think is the resolution being too low. To demonstrate
-this, we have increased the resolution of spectrograms to $128 \times 256$, it
+this, we have increased the resolution of spectrograms to $128 \times 256$, which
 double the number of frequency 'bins'.
 
 #+CAPTION:A mel spectrogram of every pitch available in the gansynth dataset. These are generated pitches from training our shallow model, so they are not perfect but they demonstrate how resolution matters. The label number indicates MIDI pitch. Note how a higher pitch decreases space between overtones.
