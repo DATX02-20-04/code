@@ -102,7 +102,7 @@ The second, somewhat larger issue is that the space between overtones change
 depending on the pitch of note. The nth overtone frequency is calculated as
 $$f_{n} = n \times f_{0}$$ where $f_{0}$ is the base frequency of the note (or
 pitch). As such, a very low pitch has very little space between the overtones
-than a high note. Even though the spectrogram uses logarithmic scale on the
+compared to a high note. Even though the spectrogram uses logarithmic scale on the
 y-axis, it only counteracts this so that large pitches stay within small images.
 It does not expand already low frequencies. The generated examples in
 [[fig:high_res_pitch]] demonstrate this by failing completely to generate very low
