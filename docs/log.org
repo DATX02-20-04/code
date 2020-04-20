@@ -154,7 +154,7 @@ multiple of the previous window. The window then grows with each bin, making it
 larger for higher frequencies and smaller for lower. This means the
 transform works better for our hearing, which follows a log scale.
 
-To use this, we simple switch which function to use. Figure [[fig:cqt_exp_1]]
+To use this, we simply switch which function to use. Figure [[fig:cqt_exp_1]]
 illustrates some results after a short training period of 60K steps.
 
 #+CAPTION: CQT after around 60K steps. These are the usual notes sampled from the middle but because lower frequencies have more space, the appear further up in the spectrogram.
