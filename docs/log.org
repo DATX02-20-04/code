@@ -82,7 +82,7 @@ model with more convolution layers. This ended up not being that easy to train,
 and had trouble learning anything at all.
 
 The shallow model used last week had a lot of trouble with classifying pitches.
-The primary reason we think is the resolution begin too smaller. To demonstrate
+The primary reason we think is the resolution being too low. To demonstrate
 this, we have increased the resolution of spectrograms to $128 \times 256$, it
 double the number of frequency 'bins'.
 
