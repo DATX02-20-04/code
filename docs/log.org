@@ -198,7 +198,7 @@ pitch would force it to map an infinite number of phases to our pitches, which
 is not very easy for it to learn. This is where instantaneous frequency comes
 in, which we have maybe mentioned before in this log. Basically, just take the
 derivative of the phase, which remains constant. Then, the second channel
-describes earlier is just another image channel for the GAN to learn, no more
+described earlier is just another image channel for the GAN to learn, no more
 difficult than learning black and white images vs color.
 
 Currently, we are training a network to generate these two-channel images using
