@@ -28,6 +28,253 @@
   A time log can be found at Google Sheets: https://bit.ly/2PRKRl8
 
   The time log has exact tasks worked on each entry, for each
+* Week 13
+We have made a lot of progress this week on all three components, that being
+1. Audio generation
+2. Structure generation
+3. Combination of above
+** Audio generation
+To start, here are some of the same note generated from piano notes over the
+course of 513K steps.
+
+#+begin_columns
+#+begin_column
+*44K*
+
+{{{AUDIO(audio/44k.wav)}}}
+#+end_column
+#+begin_column
+*62K*
+
+{{{AUDIO(audio/62k.wav)}}}
+#+end_column
+#+begin_column
+*83K*
+
+{{{AUDIO(audio/83k.wav)}}}
+#+end_column
+#+end_columns
+
+#+begin_columns
+#+begin_column
+*153K*
+
+{{{AUDIO(audio/153k.wav)}}}
+#+end_column
+#+begin_column
+*230K*
+
+{{{AUDIO(audio/230k.wav)}}}
+#+end_column
+#+begin_column
+*513K*
+
+{{{AUDIO(audio/513k.wav)}}}
+#+end_column
+#+end_columns
+
+They sound pretty good, but still very artificial. These are from spectrograms
+of size $128 \times 256$.
+
+*** Pitch conditioning
+Due to our audio results not being good enough, we experimented with a deeper
+model with more convolution layers. This ended up not being that easy to train,
+and had trouble learning anything at all.
+
+The shallow model used last week had a lot of trouble with classifying pitches.
+The primary reason we think is the resolution being too low. To demonstrate
+this, we have increased the resolution of spectrograms to $128 \times 256$, which
+doubles the number of frequency 'bins'.
+
+#+CAPTION:A mel spectrogram of every pitch available in the gansynth dataset. These are generated pitches from training our shallow model, so they are not perfect but they demonstrate how resolution matters. The label number indicates MIDI pitch. Note how a higher pitch decreases space between overtones.
+#+NAME: fig:high_res_pitch
+[[./img/high_res_pitch.png]]
+
+The spectrograms in figure [[fig:high_res_pitch]] are generated using our shallow
+model and the higher resolution. As we have already explained, the horizontal
+lines are overtones. Between a tone and an overtone, there is a finite amount of
+space that has to be large enough for 11 other notes, those being the other
+musical notes (12 tones in total).A larger resolution ensures these 11 notes fit
+into the spectrogram bins, which is vital for the auxiliary classifier to
+recognise them.
+
+The second, somewhat larger issue is that the space between overtones change
+depending on the pitch of note. The nth overtone frequency is calculated as
+$$f_{n} = n \times f_{0}$$ where $f_{0}$ is the base frequency of the note (or
+pitch). As such, a very low pitch has very little space between the overtones
+compared to a high note. Even though the spectrogram uses logarithmic scale on the
+y-axis, it only counteracts this so that large pitches stay within small images.
+It does not expand already low frequencies. The generated examples in
+[[fig:high_res_pitch]] demonstrate this by failing completely to generate very low
+frequency notes.
+
+A third issue form these results are that some single pitches also fail to
+generate. Our theory is that some pitches fall into the same bin, causing the
+classifier to have to pick between two images that look like they have the same
+pitch, but don't. A higher resolution should also solve this if that is the case.
+
+For our $128 \times 128$, the classifier the generator was never able to
+generate the correct pitches, never deceasing its loss. For the above
+$128 \times 256$, it can somehow manage, but not enough. At the time of writing,
+this model has trained for 107k steps, reaching great sounding results for some
+of the notes much faster than any other attempt. Here are some examples sampled
+from the middle of the pitch interval.
+
+#+begin_column
+#+caption: Sample pitches 42, 43, 44, 45
+#+name: fig:sample_pithes
+[[./img/sample_pitches.png]]
+
+{{{audio(audio/sample_pitches.wav)}}}
+#+end_column
+
+Of course, they don't sound perfect yet at such low period of training, but they
+demonstrate pitch classification and a somewhat good piano sound. We found an
+even higher resolution to both be too demanding for the computer, but also that
+our sample rate is too low for it to correctly fill all information in the
+spectrogram. This is visualized in figure [[fig:512_example]]
+
+#+caption: An example of a $128 \times 512$ spectrogram. Note the very tiny horizontal bars at the bottom, indicating that the sample frequency is too low to fill those bins.
+#+name: fig:512_example
+[[./img/512.png]]
+
+*** Constant Q transform
+As shown before, we have been having issues with some pitches not generating
+particularly well. The theory is that the resolution is not high enough for the
+model to differentiate between two pitches. To solve this problem, we have to
+delve deep into signal processing. Apologies if the following section is not
+very explanatory, we have not had a course in this.
+
+Right now, we use a simple fast fourier transform to generate our mel
+spectrograms. This is fast and easy to do, but keeps resolution constant across
+all frequencies. We visualised this last week, and there stated that we had
+trouble particularly with the lower frequencies having enough space. The
+~Constant Q transform~ somewhat solves this by letting the window length be a
+multiple of the previous window. The window then grows with each bin, making it
+larger for higher frequencies and smaller for lower. This means the
+transform works better for our hearing, which follows a log scale.
+
+To use this, we simply switch which function to use. Figure [[fig:cqt_exp_1]]
+illustrates some results after a short training period of 60K steps.
+
+#+CAPTION: CQT after around 60K steps. These are the usual notes sampled from the middle but because lower frequencies have more space, the appear further up in the spectrogram.
+#+NAME: fig:cqt_exp_1
+[[./img/cqt_exp_1.png]]
+
+Currently, not quite all notes fit in the spectrogram, we might be able to
+resolve this by changing the parameters a bit but for now, these show good results.
+
+It should be noted that this transform is significantly slower due to not being
+as easy to optimise as a standard fast fourier transform. Fortunately, we have
+cached the entire dataset by the first epoch, so we see minimal performance hit
+for this.
+
+*** Phase channel and instantaneous frequency
+One issue we have had for a while now is the Griffin-Lim algorithm for
+rebuilding phase. Spectrograms include only magnitude of the fourier transform
+and discards the phase entirely. This means inverting requires us to rebuild the
+phase, which is what the algorithm does. It is a slow algorithm, requiring
+multiple iterations of transforms to get it right. Additionally, it is not a
+perfect replica, so the result sounds artificial.
+
+The issues with this algorithms are
+1. Too slow for our product
+2. Mediocre results
+
+The following is not an original idea and first used by gansynth. One way to
+solve both these issues is not having to rebuild the phase. Instead, we let the
+network generate it. This sounds more difficult than it actually is. All we have
+to do is double the channels models into (magnitude, phase), and ensure the
+dataset is processed to not throw away the phase. Recreating the transformed
+signal is as easy as $\text{mag} \times \text{phase}$ as you would using
+phasors.
+
+The more difficult problem is how to get the network to correctly learn phase.
+It is easy for the network to learn magnitude because it is simply mapping the
+color of a pixel in the image and activating it whenever it learnt to. Phase is
+not constant for audio, the same pitch and note can have different phases
+depending on the actual audio recording. This means just feeding the network
+pitch would force it to map an infinite number of phases to our pitches, which
+is not very easy for it to learn. This is where instantaneous frequency comes
+in, which we have maybe mentioned before in this log. Basically, just take the
+derivative of the phase, which remains constant. Then, the second channel
+described earlier is just another image channel for the GAN to learn, no more
+difficult than learning black and white images vs color.
+
+Currently, we are training a network to generate these two-channel images using
+Constant Q transform. We will probably have some results by next week.
+
+** Structure generation
+Mostly just training it and debugging so that it doesn't copy its primer.
+Training takes a long time, so we are also developing tools to analyse how it is
+doing.
+** Combining models
+We started work on combining the melody (transformer) and pitch (GAN) networks,
+with some success. It works, though as we did not have any trained transformer,
+the melodies are not great. The pitches are rather turbid, but we hope this will
+improve with the Constant Q transform. It is also quite slow (converting
+a manually chosen three minute MIDI file took half an hour), but this will also
+improve with the Constant Q transform and phase channel.
+
+#+begin_columns
+#+begin_column
+{{{AUDIO(audio/gen_melody_no_train.wav)}}}
+
+A melody generated by an untrained transformer, performed by a GAN
+#+end_column
+
+#+begin_column
+{{{AUDIO(audio/gen_melody_real_midi.wav)}}}
+
+A melody performed by the GAN using real MIDI to better show that part
+#+end_column
+#+end_columns
+** Report
+We have started working in an agile fashion, using sprints to ensure we merge
+our changes into the report. This means defining small tasks that have to be
+completed by next sprint planning session, which occurs each week. This should
+make it easier for everyone to contribute to the report and know what everyone
+is working on.
+
+We also had a meeting with our supervisor where we got a lot of great feedback
+on things to change in the report. We hope to do those by next Wednesday.
+** Summary of each member
+- *Christoffer*:
+  - Been focusing entirely on the note generation.
+  - Setup model for higher resolution, 128x256 works well, 128x512 is not possible due to too low sample rate
+  - A lot of research regarding signal processing transforms and their limitations so that we can correctly capture the full range of notes,
+  - Experimented with using constant Q transform rather than stft in order to widen low frequency resolution.
+  - Started training using Constant Q transform, added phase channel with the
+    help of the entire group debugging my code.
+  - Documented all that in the log, as well as wrote about ACGAN in the report.
+- *Eric*:
+  - Helped with combining models
+  - Training the transformer and debugging why it copies prior (the prior and target overlapped).
+  - Wrote on the transformer section in implementation.
+  - Reviewed some pull requests for the report.
+  -Read through and comment on the report for our weekly sprint.
+- *Carl*:
+  - Combining models
+  - Lots of implementation help all over the place
+  - Pull requests and reviews
+- *Lovisa*:
+- *Cao*:
+  - Writing introduction for machine learning section, solving some issues on github.
+- *Elias*:
+  - Read through the entire report and tried to comment on everything from style/structure to spelling mistakes.
+  - Experimented with a new vae gan model
+  - Connected the gan and transformer models together with Carl, Lovisa, and Eric.
+  - Implemented Constant Q transform and phase channel with Christoffer.
+  - Reviewed and merged PRs for the report.
+  - Planned next report writing sprint.
+** Last weeks' goals
+- Went way ahead of last weeks goals regarding pitch conditioning
+- We finished connecting structure and audio generation (in a simple way but still)
+** Next week
+- Probably mostly report writing, we got some good feedback from our supervisor
+  meeting this week.
+- Fine-tune all our components and wait while training them.
+
 * Week 12
 We had to cancel both the supervisor meeting and the Friday meeting with our
 group that we hold each week, so this week may not correctly reflect all
@@ -55,7 +302,7 @@ classifier loss to the network.
 The /ACGAN/ in figure [[fig:aux_overview]] shows pitch class as $c$, noise input as $z$,
 and the real image as x (which also needs a pitch class)
 
-Without explaining exactly how a GAN work, there are two networks, a generator
+Without explaining exactly how a GAN works, there are two networks, a generator
 and a discriminator. The aux classifier comes in at the discriminator, who
 normally only has the job of determining fake vs real images from its input
 (either an image from the dataset or form the generator). With an aux
@@ -250,24 +497,24 @@ introduced a lot of extra noise but quickly eliminated it.
 
 #+begin_columns
 #+begin_column
-#+CAPTION:Generator loss from training at 800k steps
-#+NAME: fig:800k_gen_loss
+#+caption:generator loss from training at 800k steps
+#+name: fig:800k_gen_loss
 [[./img/800k_gen_loss.svg]]
 #+end_column
 
 #+begin_column
-#+CAPTION: Discriminator loss from training at 800k steps
-#+NAME: fig:800k_disc_loss
+#+caption: discriminator loss from training at 800k steps
+#+name: fig:800k_disc_loss
 [[./img/800k_disc_loss.svg]]
 #+end_column
 #+end_columns
 
 #+begin_column
-#+CAPTION: 64 different pitches generated with the same seed. The last 3 (61,62,63) do not exist so they look like junk. There is no discernible order or pattern in this set but the pitches generated do seem unique and changes depending on pitch class.
-#+NAME: fig:pitch_exp_64
+#+caption: 64 different pitches generated with the same seed. the last 3 (61,62,63) do not exist so they look like junk. there is no discernible order or pattern in this set but the pitches generated do seem unique and changes depending on pitch class.
+#+name: fig:pitch_exp_64
 [[./img/pitch_exp_64.png]]
 
-{{{AUDIO(audio/pitch_exp_64.wav)}}}
+{{{audio(audio/pitch_exp_64.wav)}}}
 #+end_column
 
 Figure [[fig:pitch_exp_64]] shows that pitch class matters and changes the item
