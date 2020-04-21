@@ -1,4 +1,5 @@
 import tensorflow as tf
+import gc
 import tensorflow.keras as tfk
 import numpy as np
 import os
@@ -9,20 +10,19 @@ import tensorflow_datasets as tfds
 from evolve.hparams import HParams
 from evolve.pool import Pool
 
-
 train_loss = tfk.metrics.Mean(name='train_loss')
 train_accuracy = tfk.metrics.SparseCategoricalAccuracy(name='train_accuracy')
 
-input_vocab_size  = 128+128+100+100
-target_vocab_size = 128+128+100+100
+input_vocab_size  = 128+128+128+128
+target_vocab_size = 128+128+128+128
 
 # This runs at the start of every epoch
-def on_epoch_start(epoch, step):
+def on_epoch_start(epoch, step, tsw):
     train_loss.reset_states()
     train_accuracy.reset_states()
 
 # This runs at every step in the training (for each batch in dataset)
-def on_step(epoch, step, stats):
+def on_step(epoch, step, stats, tsw):
     loss, tar_real, predictions = stats
     train_loss(loss)
     train_accuracy(tar_real, predictions)
@@ -30,7 +30,7 @@ def on_step(epoch, step, stats):
         print(f"Epoch: {epoch}, Step: {step}, Loss: {train_loss.result()}, Accuracy: {train_accuracy.result()}")
 
 # This runs at the end of every epoch and is used to display metrics
-def on_epoch_complete(epoch, step, duration):
+def on_epoch_complete(epoch, step, duration, tsw):
     #display.clear_output(wait=True)
     print(f"Epoch: {epoch}, Step: {step}, Loss: {train_loss.result()}, Accuracy: {train_accuracy.result()}, Duration: {duration:.3f}")
 
@@ -61,24 +61,13 @@ def evaluate(dataset, hparams):
     return _eval
 
 def start(hparams):
-    print(hparams)
-    # pool = Pool(create_model, hparams)
-
-    dataset = tf.data.Dataset.list_files(os.path.join(hparams['dataset_root'] if 'dataset_root' in hparams else './maestro-v2.0.0/', '**/*.midi'))
-
-    dataset_single = pro.pipeline([
-        pro.midi(),
-        pro.frame(hparams['frame_size'], 1, True),
-
-def start(hparams):
-    input_vocab_size  = 128+128+100+100
-    target_vocab_size = 128+128+100+100
+    gc.collect()
 
     dataset = tf.data.Dataset.list_files('/home/big/datasets/maestro-v2.0.0/**/*.midi')
 
     dataset_single = pro.pipeline([
         pro.midi(),
-        pro.frame(hparams['frame_size'], hparams['frame_size'], True),
+        pro.frame(hparams['frame_size'], 1, True),
         pro.unbatch(),
     ])(dataset)
 

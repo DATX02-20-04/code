@@ -236,10 +236,10 @@ def load_midi():
     def load_midi_(fn):
         with open(fn, "rb") as f:
             return data.midi.read_midi(f)
-    return map_transform(load_midi_)
+    return map_transform(lambda x: tf.py_function(load_midi_, [x], tf.float32))
 
 
-def encode_midi(max_time_shift=8, time_shift=Fraction(1, 12)):
+def midi(max_time_shift=8, time_shift=Fraction(1, 12)):
     """
     Encodes a midi into a sequence of integers, suitable for one-hot encoding
     and usage for a neural network. The integers are as follows:
@@ -257,7 +257,9 @@ def encode_midi(max_time_shift=8, time_shift=Fraction(1, 12)):
     """
 
     assert max_time_shift % time_shift == 0
-    def _midi(x):
+    def _midi(fn):
+        with open(fn, "rb") as f:
+            x = data.midi.read_midi(f)
         current_time = 0
         for event in sorted((event for track in x.tracks for event in track)):
             if isinstance(event, data.midi.Midi.BaseNoteEvent):
@@ -273,7 +275,7 @@ def encode_midi(max_time_shift=8, time_shift=Fraction(1, 12)):
                 if isinstance(event, data.midi.Midi.NoteUpEvent):
                     yield 128+event.pitch
 
-    return map_transform(lambda x: tf.convert_to_tensor(list(_midi(x))))
+    return map_transform(lambda x: tf.reshape(tf.py_function(lambda z: tf.convert_to_tensor(list(_midi(z.numpy()))), [x], tf.int32), [-1]))
 
 def decode_midi(time_shift=Fraction(1, 12)):
     """
@@ -300,10 +302,3 @@ def decode_midi(time_shift=Fraction(1, 12)):
 
     return map_transform(lambda x: data.midi.Midi(0, time_shift.denominator, [list(_midi(x.numpy().tolist()))]))
 
-def midi(max_time_shift=8, time_shift=Fraction(1,12)):
-    return pipeline([
-        numpy(),
-        load_midi(),
-        encode_midi(max_time_shift=max_time_shift, time_shift=time_shift),
-        tensor(tf.int64),
-    ])

@@ -1,17 +1,18 @@
 hparams:
   name: 'transformer'
   epochs: 100
-  steps: 1000
+  steps: 0
   num_layers: 2
   d_model: 512
   dff: 256
   num_heads: 2
   frame_size: 1024
   batch_size: 16
-  buffer_size: 10000
-  dropout_rate: 0.1
+  buffer_size: 20000
+  dropout_rate: 0.3
   beta_1: 0.9
   beta_2: 0.98
   epsilon: 0.000000001
   save_dir: './'
   dataset_root: '/home/big/datasets/maestro-v2.0.0'
+  ckpt_every_step: 1000
