@@ -74,7 +74,7 @@ def nsynth_to_cqt_inst(dataset, hparams, stats=None):
     ]))(dataset)
 
     if stats is not None:
-        dataset = pro.index_map('audio', pro.normalize(normalization='specgan', stats=stats))(dataset)
+        dataset = pro.index_map('audio', pro.normalize(normalization='specgan_two_channel', stats=stats))(dataset)
 
     # Create preprocessing pipeline for the melspectograms
     return dataset

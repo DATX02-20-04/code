@@ -135,9 +135,11 @@ def start(hparams):
         #audio = pro.pipeline([
             #pro.denormalize(normalization='specgan', stats=gan_stats),
             #pro.inverse_cqt_spec(hparams['sample_rate'])
-            #])(samples)
+            #])(magphase)
 
         #audio = next(audio).reshape([1, -1, 1])
+        #audio = next(audio)
+        
         # Convert to tf audio
         with tsw.as_default():
             tf.summary.image(f'Spectrogram', image, step=step)
@@ -171,20 +173,22 @@ def calculate_dataset_stats(hparams, dataset):
     megabatch = dataset.batch(500).as_numpy_iterator()
     x = next(megabatch)
 
-    spec = x['audio']
+
+    spec = x['audio'][:,:,:,0]
+    print(f'SPECTROGRAM: {spec.shape}')
     s_mean = spec.mean(axis=0)
     s_min = spec.min(axis=0)
     s_max = spec.max(axis=0)
     s_variance = spec.var(axis=0)
+    print(f'mean:{s_mean}, min:{s_min}, max:{s_max}, var:{s_variance}')
 
 
-    phase = x['audio']
+    phase = x['audio'][:,:,:,1]
     p_mean = phase.mean(axis=0)
     p_min = phase.min(axis=0)
     p_max = phase.max(axis=0)
     p_variance = phase.var(axis=0)
 
-    print(f'SPECTROGRAM: {spec}')
 
     np.savez('gan_stats.npz',
              s_mean=s_mean,

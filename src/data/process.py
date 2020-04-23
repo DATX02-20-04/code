@@ -170,6 +170,32 @@ def _normalize(normalization='neg_one_to_one', **kwargs):
             norm = (x - stats['mean']) / (3*std)
             clipped = tf.math.minimum(tf.math.maximum(norm, -1), 1)
             return clipped
+        elif normalization == 'specgan_two_channel':
+            unstacked = tf.unstack(x, 2, axis=-1)
+            spec = unstacked[0]
+            phase = unstacked[1]
+
+
+            stats = kwargs['stats']
+            s_stats = stats['spec']
+            p_stats = stats['phase']
+
+            s_std = tf.math.sqrt(s_stats['variance'])
+            s_norm = (spec - s_stats['mean']) / (3*s_std)
+            s_clipped = tf.math.minimum(tf.math.maximum(s_norm, -1), 1)
+
+            p_std = tf.math.sqrt(p_stats['variance']) + 0.000000001
+            p_norm = (phase - p_stats['mean']) / (3*p_std)
+            p_clipped = tf.math.minimum(tf.math.maximum(p_norm, -1), 1)
+
+            tf.debugging.check_numerics(p_stats['mean'], 'p_stats mean')
+            tf.debugging.check_numerics(phase, 'phase')
+            tf.debugging.check_numerics(p_std, 'p_std')
+            tf.debugging.check_numerics(p_norm, f'p_norm')
+            tf.debugging.check_numerics(p_clipped, 'p_clipped')
+
+            stacked = tf.stack([s_clipped, p_clipped], axis=-1)
+            return stacked
     return _n
 
 def normalize(normalization='neg_one_to_one', **kwargs):

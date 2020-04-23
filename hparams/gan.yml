@@ -1,5 +1,5 @@
 hparams:
-  name: 'cqt_magphase_test'
+  name: 'cqt_magphase_norm2'
   instrument:
     family: 'keyboard'
   epochs: 8000
