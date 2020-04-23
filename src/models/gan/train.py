@@ -168,21 +168,48 @@ def calculate_dataset_stats(hparams, dataset):
     print("Calculating dataset stats...")
     dataset = nsynth_to_cqt_inst(dataset, hparams)
 
-    megabatch = dataset.batch(50000).as_numpy_iterator()
+    megabatch = dataset.batch(500).as_numpy_iterator()
     x = next(megabatch)
-    x = x['audio']
-    mean = x.mean(axis=0)
-    min_ = x.min(axis=0)
-    max_ = x.max(axis=0)
-    variance = x.var(axis=0)
 
-    np.savez('gan_stats.npz', mean=mean, min=min_, max=max_, variance=variance)
+    spec = x['audio']
+    s_mean = spec.mean(axis=0)
+    s_min = spec.min(axis=0)
+    s_max = spec.max(axis=0)
+    s_variance = spec.var(axis=0)
+
+
+    phase = x['audio']
+    p_mean = phase.mean(axis=0)
+    p_min = phase.min(axis=0)
+    p_max = phase.max(axis=0)
+    p_variance = phase.var(axis=0)
+
+    print(f'SPECTROGRAM: {spec}')
+
+    np.savez('gan_stats.npz',
+             s_mean=s_mean,
+             s_min=s_min,
+             s_max=s_max,
+             s_variance=s_variance,
+             p_mean=p_mean,
+             p_min=p_min,
+             p_max=p_max,
+             p_variance=p_variance,
+    )
 
     print("Calculating dataset stats, done.")
 
     return {
-        'mean': mean,
-        'min': min_,
-        'max': max_,
-        'variance': variance,
+        'spec': {
+            'mean': s_mean,
+            'min': s_min,
+            'max': s_max,
+            'variance': s_variance,
+        },
+        'phase': {
+            'mean': p_mean,
+            'min': p_min,
+            'max': p_max,
+            'variance': p_variance,
+        }
     }
