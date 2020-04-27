@@ -158,16 +158,7 @@ def write_midi(f, midi):
 
 def display_midi(midi, axis=None, **kwargs):
     if axis is None: axis = plt.gca()
-    notes = []
-    currentNotes = {}
-    for e in midi.flatten():
-        if isinstance(e, Midi.BaseNoteEvent) and (e.channel, e.pitch) in currentNotes:
-            notes.append((currentNotes.pop((e.channel, e.pitch)), e))
-        if isinstance(e, Midi.NoteEvent):
-            currentNotes[(e.channel, e.pitch)] = e
-
-    for e2 in currentNotes.values():
-        notes.append((e2, Midi.NoteUpEvent(e.time, e2.channel, e2.pitch, 0x40)))
+    notes = pairNotes(midi.flatten())
 
     axis.hlines(
         [s.pitch for s, e in notes],
@@ -175,6 +166,33 @@ def display_midi(midi, axis=None, **kwargs):
         [e.time for s, e in notes],
         **kwargs
     )
+
+#
+# = Utils
+#
+
+def pairNotes(track):
+    notes = []
+    currentNotes = {}
+    for e in track:
+        if isinstance(e, Midi.BaseNoteEvent) and (e.channel, e.pitch) in currentNotes:
+            notes.append((currentNotes.pop((e.channel, e.pitch)), e))
+        if isinstance(e, Midi.NoteEvent):
+            currentNotes[(e.channel, e.pitch)] = e
+
+    for e2 in currentNotes.values():
+        notes.append((e2, Midi.NoteUpEvent(e.time, e2.channel, e2.pitch, 0x40)))
+    return sorted(notes)
+
+import heapq
+def limitLength(midi, l):
+    for track in midi.tracks:
+        track[:] = heapq.merge(track, [
+            Midi.NoteUpEvent(s.time+l, s.channel, s.pitch, 0x40)
+            for s, e in pairNotes(track)
+            if s.time < e.time - l
+        ])
+
 
 if __name__ == "__main__":
     with open("test.midi", "rb") as f:
