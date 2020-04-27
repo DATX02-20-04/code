@@ -115,7 +115,7 @@ def read_midi(f):
 # Only a left inverse of read_midi
 #
 
-def write_midi_track(rate, track):
+def write_midi_track(rate, track, validate=True):
     data = bytearray()
 
     def varint(i):
@@ -130,6 +130,15 @@ def write_midi_track(rate, track):
 
     t = 0
     for e in track:
+        if validate:
+            assert e.time >= t, f"{e}: out of order"
+            assert not e.time % Fraction(1, rate), f"{e}: time is not a multiple of {Fraction(1, rate)}"
+            if isinstance(e, Midi.ChannelEvent):
+                assert 0 <= e.channel <= 15, f"{e}: invalid channel"
+            if isinstance(e, Midi.BaseNoteEvent):
+                assert 0 <= e.pitch <= 127, f"{e}: invalid pitch"
+                assert 0 <= e.velocity <= 127, f"{e}: invalid velocity"
+
         varint(int((e.time - t) * rate))
         t = e.time
         if isinstance(e, Midi.MetaEvent):
@@ -142,15 +151,19 @@ def write_midi_track(rate, track):
         elif isinstance(e, Midi.ProgramEvent): data.extend([0xC0 | e.channel, e.program])
         else: raise ValueError(e)
 
+    if validate:
+        assert isinstance(e, Midi.MetaEvent) and e.type == 47 and not e.data, \
+            f"{e}: invalid end event (should be 47)"
+
     return data
 
-def write_midi(f, midi):
+def write_midi(f, midi, validate=True):
     def chunk(name, data):
         f.write(struct.pack(">4sL", name.encode("ascii"), len(data)))
         f.write(data)
     chunk("MThd", struct.pack(">HHH", midi.type, len(midi.tracks), midi.rate))
     for track in midi.tracks:
-        chunk("MTrk", write_midi_track(midi.rate, track))
+        chunk("MTrk", write_midi_track(midi.rate, track, validate=validate))
 
 #
 # = Rendering
