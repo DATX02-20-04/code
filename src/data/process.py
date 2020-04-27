@@ -299,6 +299,6 @@ def decode_midi(time_shift=Fraction(1, 12)):
                 pass # Velocity events handled above
             else:
                 time += (event-384) * time_shift
+        yield data.midi.Midi.MetaEvent(time, 47, b"")
 
     return map_transform(lambda x: data.midi.Midi(0, time_shift.denominator, [list(_midi(x.numpy().tolist()))]))
-
