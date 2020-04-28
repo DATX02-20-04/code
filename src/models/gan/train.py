@@ -4,7 +4,7 @@ import numpy as np
 import functools
 import data.process as pro
 from models.common.training import Trainer
-from data.nsynth import nsynth_from_tfrecord, nsynth_to_melspec, nsynth_to_cqt_inst
+from data.nsynth import nsynth_from_tfrecord, nsynth_to_melspec, nsynth_to_cqt_inst, nsynth_to_stft_inst
 from models.gan.model import GAN
 import data.process as pro
 import tensorflow_datasets as tfds
@@ -41,7 +41,7 @@ def start(hparams):
     gan_stats = calculate_dataset_stats(hparams, dataset)
     # gan_stats = np.load('gan_stats.npz')
 
-    dataset = nsynth_to_cqt_inst(dataset, hparams, gan_stats)
+    dataset = nsynth_to_stft_inst(dataset, hparams, gan_stats)
 
 
     # Determine shape of the spectograms in the dataset
@@ -168,11 +168,10 @@ def start(hparams):
 
 def calculate_dataset_stats(hparams, dataset):
     print("Calculating dataset stats...")
-    dataset = nsynth_to_cqt_inst(dataset, hparams)
+    dataset = nsynth_to_stft_inst(dataset, hparams)
 
     megabatch = dataset.batch(500).as_numpy_iterator()
     x = next(megabatch)
-
 
     spec = x['audio'][:,:,:,0]
     print(f'SPECTROGRAM: {spec.shape}')

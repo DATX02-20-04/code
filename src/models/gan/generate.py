@@ -3,14 +3,19 @@ from models.common.training import Trainer
 from models.gan.model import GAN
 import librosa
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 import data.process as pro
 import numpy as np
 
 
 def start(hparams):
+
+    y, sr = librosa.load(librosa.util.example_audio_file())
+    print(librosa.stft(y).shape)
+
     gan_stats = np.load('gan_stats.npz')
 
-    gan = GAN((256, 128), hparams)
+    gan = GAN((256, 128, 2), hparams)
 
     trainer = Trainer(None, hparams)
 
@@ -23,51 +28,64 @@ def start(hparams):
     )
 
     trainer.init_checkpoint(ckpt)
-
-    count = 60
+    count = 1
 
     # Random seed for each
-    #seed = tf.random.normal((count, hparams['latent_size']))
+    seed = tf.random.normal((count, hparams['latent_size']))
 
     # Same seed for all
-    seed = tf.random.normal((1, hparams['latent_size']))
-    seed = tf.repeat(seed, count, axis=0)
+    # seed = tf.random.normal((1, hparams['latent_size']))
+    # seed = tf.repeat(seed, count, axis=0)
 
     # Sample pitch from middle
-    # mid = hparams['cond_vector_size']//2
-    # pitches = range(mid-count//2, mid+count//2)
+    #mid = hparams['cond_vector_size']//2
+    #pitches = range(mid-count//2, mid+count//2)
 
     # Same pitch for each
-    # pitch = 24
-    # pitches = tf.repeat(pitch, count)
-
-    # Free pitches
-    pitches = range(count)
+    pitch = 24
+    pitches = tf.repeat(pitch, count)
 
     one_hot_pitches = tf.one_hot(pitches, hparams['cond_vector_size'], axis=1)
-    
+
     output = gan.generator([seed, one_hot_pitches], training=False)
-    samples = tf.reshape(output, [-1, 256, 128])
-    x = tf.unstack(samples)
 
-    width = 16
-    height = 4
-    plt.figure(figsize=(width * 2, height * 4))
+    width = 1
+    height = 1
 
-    for i, img in enumerate(x):
-        plt.subplot(height, width, i+1)
-        plt.title(i)
-        # plt.imshow(x[i])
-        plt.imshow(x[i])
-        plt.gca().invert_yaxis()
-        plt.axis('off')
+    outer, out_axes = plt.subplots(width, height)
 
-    plt.savefig('output.png')
-    #audio = pro.pipeline([
-        #pro.denormalize(normalization='specgan', stats=gan_stats),
-        #pro.invert_log_melspec(hparams['sample_rate'], n_mels=256)
-    #])(x)
+    for i, img in enumerate(output):
+        magphase = tf.unstack(img, axis=-1)
+        mag_sample = magphase[0]
+        phase_sample = magphase[1]
 
-    #output = np.concatenate(list(audio))
+        mp, axes = plt.subplots(1,2)
+        magax, phax = axes
 
-    #librosa.output.write_wav('gan_sample.wav', output, hparams['sample_rate'], norm=True)
+        pitch = pitches.numpy()[i]
+        mp.suptitle(pitch)
+
+        magax.set_title('Magnitude')
+        #magax.axis('off')
+        magax.imshow(mag_sample, origin='lower')
+
+        phax.set_title('Phase')
+        #phax.axis('off')
+        phax.imshow(phase_sample, origin='lower')
+
+
+    plt.savefig('stft.png')
+
+    # Add the batch dimension
+    image = tf.expand_dims(output, 0)
+
+
+    # Convert to audio
+    audio = pro.pipeline([
+        pro.denormalize(normalization='specgan_two_channel', stats=gan_stats),
+        pro.istft_spec(hop_length=512, win_length=512),
+        ])(output)
+
+    print(audio)
+
+    librosa.output.write_wav('stft.wav', audio.numpy(), hparams['sample_rate'], norm=True)

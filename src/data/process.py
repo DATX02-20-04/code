@@ -142,13 +142,58 @@ def _debug(x):
     print(x)
     return x
 
-def stft(frame_length, frame_step, fft_length=None):
-    return map_transform(lambda x: tf.signal.stft(x, frame_length,
-                                                  frame_step, fft_length))
+def stft(n_fft=1024, hop_length=512, win_length=None):
+        return map_transform(lambda x: tf.py_function(lambda x: librosa.stft(
+        x.numpy(),
+        n_fft=n_fft,
+        hop_length=hop_length,
+        win_length=win_length
+        ), [x], tf.complex64))
 
-def istft(frame_length, frame_step, fft_length=None):
-    return map_transform(lambda x: tf.signal.inverse_stft(x, frame_length,
-                                                          frame_step, fft_length))
+def istft(hop_length=512, win_length=None):
+        return map_transform(lambda x: tf.py_function(lambda x: librosa.istft(
+        x.numpy(),
+        hop_length=hop_length,
+        win_length=win_length
+        ), [x], tf.float32))
+
+def stft_spec(n_fft=256, hop_length=512, win_length=None, **kwargs):
+    def temp(x):
+        x = x.numpy()
+        mag = librosa.amplitude_to_db(np.abs(x), ref=1.0)
+        phase = phase_to_inst_freq(np.angle(x))
+        magphase = np.transpose([mag, phase], [1,2,0])
+        return magphase
+
+    return pipeline([
+        stft(
+            n_fft=512,
+            hop_length=512,
+            win_length=512
+            ),
+        lambda x: tf.py_function(temp, [x], tf.float32),
+    ])
+
+def istft_spec(hop_length=512, win_length=None, **kwargs):
+    def temp(magphase):
+        magphase = tf.unstack(magphase, axis=-1)
+        mag = magphase[0]
+        phase = magphase[1]
+
+        mag = tf.cast(librosa.db_to_amplitude(mag.numpy(), ref=1.0), tf.complex64)
+        phase = tf.cast(inst_freq_to_phase(phase.numpy()), tf.complex64)
+        out = mag * tf.math.exp(1.0j * phase)
+        out = tf.squeeze(out)
+        return out
+    return pipeline([
+        map_transform(temp),
+        istft(
+            hop_length=512,
+            win_length=510
+            ),
+        lambda x: tf.cast(x, tf.float32)
+    ])
+
 
 def abs():
     return map_transform(lambda x: tf.abs(x))
@@ -264,7 +309,6 @@ def icqt(sr=16000, hop_length=512, n_bins=256, bins_per_octave=80, filter_scale=
 
 def phase_to_inst_freq(phase):
     return pipeline([
-        tf.math.angle,
         np.unwrap,
         lambda x: x[:, 1:] - x[:, :-1],
         lambda x: np.concatenate([x[:, 0:1], x], axis=1),
@@ -281,14 +325,14 @@ def inst_freq_to_phase(freq):
 
 def cqt_spec(sr=16000, hop_length=512, n_bins=256, bins_per_octave=80, filter_scale=0.8, fmin=librosa.note_to_hz("C2")):
     def temp(x):
-        mag, phase = librosa.core.magphase(x)
-        mag = librosa.amplitude_to_db(x.numpy())
-        phase = phase_to_inst_freq(phase)
+        mag = librosa.amplitude_to_db(np.abs(x), ref=1.0)
+        phase = phase_to_inst_freq(np.angle(x))
         magphase = np.transpose([mag, phase], [1,2,0])
         return magphase
 
     return pipeline([
         cqt(sr=sr, hop_length=hop_length, n_bins=n_bins, bins_per_octave=bins_per_octave, filter_scale=filter_scale, fmin=fmin),
+
         lambda x: tf.py_function(temp, [x], x.dtype)
 
         #map_transform(lambda mag, phase: [mag, phase])
@@ -312,6 +356,22 @@ def inverse_cqt_spec(sr=16000, hop_length=512, n_bins=256, bins_per_octave=80, f
 
 
 def denormalize(normalization='neg_one_to_one', **kwargs):
+    def two_channel_denorm(x, stats):
+        print(x)
+        magphase = tf.unstack(x, axis=-1)
+        print(magphase)
+        mag = x[0]
+        print(mag)
+        phase = x[1]
+
+        s_std = tf.math.sqrt(stats['s_variance'])
+        p_std = tf.math.sqrt(stats['p_variance'])
+        mag = mag * (3.0 * s_std) + stats['s_mean']
+        phase = mag * (3.0 * p_std) + stats['p_mean']
+
+        stacked = tf.stack([mag, phase], axis=-1)
+        return stacked
+
     if normalization == 'neg_one_to_one':
         return map_transform(lambda x: (((x+1)*0.5)*(kwargs['denorm_amax']-kwargs['denorm_amin'])+kwargs['denorm_amin']))
     elif normalization == 'zero_to_one':
@@ -320,6 +380,9 @@ def denormalize(normalization='neg_one_to_one', **kwargs):
         stats = kwargs['stats']
         std = tf.math.sqrt(stats['variance'])
         return map_transform(lambda x: (x * (3.0 * std)) + stats['mean'])
+    elif normalization == 'specgan_two_channel':
+        stats = kwargs['stats']
+        return map_transform(lambda x: two_channel_denorm(x, stats))
     else:
         raise Exception(f"No normalization type named '{normalization}'.")
 
