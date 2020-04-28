@@ -17,9 +17,9 @@ def generate(hparams):
 
     dataset_single = pro.pipeline([
         pro.midi(),
-        pro.frame(hparams['frame_size'], 1, True),
+        pro.frame(hparams['frame_size'], hparams['frame_size'], True),
         pro.unbatch(),
-    ])(dataset).skip(200).as_numpy_iterator()
+    ])(dataset).skip(16000).as_numpy_iterator()
 
     transformer = Transformer(input_vocab_size=input_vocab_size,
                               target_vocab_size=target_vocab_size,
@@ -27,9 +27,6 @@ def generate(hparams):
                               pe_target=target_vocab_size,
                               hparams=hparams)
 
-
-    seed = next(dataset_single)
-    seed = np.array(seed)
 
     trainer = Trainer(dataset, hparams)
     ckpt = tf.train.Checkpoint(
@@ -40,22 +37,27 @@ def generate(hparams):
 
     trainer.init_checkpoint(ckpt)
 
-    return generate_from_model(hparams, transformer, seed)
+    return generate_from_model(hparams, transformer, dataset_single)
 
-def generate_from_model(hparams, transformer, seed):
-    output = seed
+def generate_from_model(hparams, transformer, priors):
     outputs = []
+    prior_buf = []
     gen_iters = hparams['gen_iters'] if 'gen_iters' in hparams else 1
+    prior = np.array(next(priors))
+    output = prior
     for i in range(gen_iters):
+        print(f"Generating {i+1}/{gen_iters} sample...")
         output, _ = transformer.evaluate(output)
         outputs.append(output)
+        output = output + tf.random.uniform(output.shape, -4, 4, dtype=tf.int32)
 
     encoded = tf.concat(outputs, 0)
-    return encoded
+    prior = tf.concat(prior, 0)
+    return encoded, prior
 
 def start(hparams):
     i = 1
-    encoded = generate(hparams)
+    encoded, prior = generate(hparams)
     decoded = pro.decode_midi()(encoded)
     with open('gen_transformer_{}.midi'.format(i), 'wb') as f:
         M.write_midi(f, decoded)

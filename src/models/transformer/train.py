@@ -68,7 +68,6 @@ def start(hparams):
         pro.midi(),
         pro.frame(hparams['frame_size']*2, hparams['frame_hop_len'], True),
         pro.unbatch(),
-        pro.split(2),
     ])(dataset)
 
     def _reshape(inp, tar):
@@ -78,6 +77,7 @@ def start(hparams):
 
 
     dataset = pro.pipeline([
+        pro.split(2),
         #pro.batch(2, True),
         # pro.dupe(),
         pro.map_transform(_reshape),
@@ -115,14 +115,11 @@ def start(hparams):
 
     def generate_image(step, tsw):
         print("Generating sample...")
-        seed, target = tf.constant(next(dataset_single))
-
-        encoded = generate_from_model(hparams, transformer, seed)
+        encoded, seed = generate_from_model(hparams, transformer, dataset_single)
         print("Generating sample done.")
 
         print("Decoding midi...")
         decoded_seed = pro.decode_midi()(seed)
-        decoded_target = pro.decode_midi()(target)
         decoded = pro.decode_midi()(encoded)
         print("Decoding midi done.")
 
@@ -131,8 +128,6 @@ def start(hparams):
             M.write_midi(f, decoded)
         with open(f'prior_transformer_{step}.midi', 'wb') as f:
             M.write_midi(f, decoded_seed)
-        with open(f'target_transformer_{step}.midi', 'wb') as f:
-            M.write_midi(f, decoded_target)
         print("Saving midi done.")
 
         print("Plotting midi...")
@@ -146,12 +141,7 @@ def start(hparams):
         image = util.get_plot_image()
         plt.clf()
 
-        plt.title('Target')
-        M.display_midi(decoded_target)
-        image_target = util.get_plot_image()
-        plt.clf()
-
-        image_conc = tf.concat([image_seed, image, image_target], axis=1)
+        image_conc = tf.concat([image_seed, image], axis=1)
         print("Plotting done.")
 
         with tsw.as_default():
@@ -188,6 +178,6 @@ def start(hparams):
     trainer.on_step = on_step
     trainer.on_epoch_complete = on_epoch_complete
 
-    generate_image(trainer.step.numpy(), trainer.train_summary_writer)
+    #generate_image(trainer.step.numpy(), trainer.train_summary_writer)
 
     trainer.run()
