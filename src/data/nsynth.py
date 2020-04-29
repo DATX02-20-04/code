@@ -69,7 +69,7 @@ def nsynth_to_stft_inst(dataset, hparams, stats=None):
 
     dataset = pro.index_map('audio', pro.pipeline([
         pro.stft_spec(n_fft=512, hop_length=512, win_length=512),
-        pro.pad([[0, 0], [0, 2], [0,0]], 'CONSTANT', constant_values=hparams['log_amin']),
+        pro.pad([[0, 0], [0, 3], [0,0]], 'CONSTANT', constant_values=hparams['log_amin']),
     ]))(dataset)
 
     if stats is not None:
@@ -102,6 +102,7 @@ def nsynth_to_cqt_inst(dataset, hparams, stats=None):
 
     # Create preprocessing pipeline for the melspectograms
     return dataset
+
 instrument_families = {
     'bass': 0,
     'brass': 1,

@@ -142,27 +142,27 @@ def _debug(x):
     print(x)
     return x
 
-def stft(n_fft=1024, hop_length=512, win_length=None):
-        return map_transform(lambda x: tf.py_function(lambda x: librosa.stft(
-        x.numpy(),
-        n_fft=n_fft,
-        hop_length=hop_length,
-        win_length=win_length
-        ), [x], tf.complex64))
+def stft(n_fft=512, hop_length=512, win_length=None):
+        return map_transform(lambda x: tf.signal.stft(
+            x,
+            frame_step=hop_length//2,
+            frame_length=win_length,
+        ))
 
-def istft(hop_length=512, win_length=None):
-        return map_transform(lambda x: tf.py_function(lambda x: librosa.istft(
-        x.numpy(),
-        hop_length=hop_length,
-        win_length=win_length
-        ), [x], tf.float32))
+def istft(win_length=512, hop_length=512):
+        return map_transform(lambda x: tf.signal.inverse_stft(
+            x,
+            frame_step=hop_length//2,
+            frame_length=win_length,
+            window_fn=tf.signal.inverse_stft_window_fn(hop_length//2)
+        ))
 
-def stft_spec(n_fft=256, hop_length=512, win_length=None, **kwargs):
+def stft_spec(n_fft=512, hop_length=512, win_length=None, **kwargs):
     def temp(x):
         x = x.numpy()
         mag = librosa.amplitude_to_db(np.abs(x), ref=1.0)
         phase = phase_to_inst_freq(np.angle(x))
-        magphase = np.transpose([mag, phase], [1,2,0])
+        magphase = np.transpose([mag, phase], [2,1,0])
         return magphase
 
     return pipeline([
@@ -182,16 +182,16 @@ def istft_spec(hop_length=512, win_length=None, **kwargs):
 
         mag = tf.cast(librosa.db_to_amplitude(mag.numpy(), ref=1.0), tf.complex64)
         phase = tf.cast(inst_freq_to_phase(phase.numpy()), tf.complex64)
+
         out = mag * tf.math.exp(1.0j * phase)
         out = tf.squeeze(out)
+        out = tf.transpose(out, [1, 0])
         return out
+
     return pipeline([
         map_transform(temp),
-        istft(
-            hop_length=512,
-            win_length=510
-            ),
-        lambda x: tf.cast(x, tf.float32)
+        istft(),
+        lambda x: tf.cast(x, tf.float32),
     ])
 
 
@@ -222,22 +222,20 @@ def _normalize(normalization='neg_one_to_one', **kwargs):
 
 
             stats = kwargs['stats']
-            s_stats = stats['spec']
-            p_stats = stats['phase']
 
-            s_std = tf.math.sqrt(s_stats['variance'])
-            s_norm = (spec - s_stats['mean']) / (3*s_std)
+            s_std = tf.math.sqrt(stats['s_variance'])
+            s_norm = (spec - stats['s_mean']) / (3*s_std)
             s_clipped = tf.math.minimum(tf.math.maximum(s_norm, -1), 1)
 
-            p_std = tf.math.sqrt(p_stats['variance']) + 0.000000001
-            p_norm = (phase - p_stats['mean']) / (3*p_std)
-            p_clipped = tf.math.minimum(tf.math.maximum(p_norm, -1), 1)
+            # p_std = tf.math.sqrt(stats['p_variance']) + 0.000000001
+            # p_norm = (phase - stats['p_mean']) / (3*p_std)
+            p_clipped = phase#tf.math.minimum(tf.math.maximum(p_norm, -1), 1)
 
-            tf.debugging.check_numerics(p_stats['mean'], 'p_stats mean')
+            tf.debugging.check_numerics(stats['p_mean'], 'p_stats mean')
             tf.debugging.check_numerics(phase, 'phase')
-            tf.debugging.check_numerics(p_std, 'p_std')
-            tf.debugging.check_numerics(p_norm, f'p_norm')
-            tf.debugging.check_numerics(p_clipped, 'p_clipped')
+            # tf.debugging.check_numerics(p_std, 'p_std')
+            # tf.debugging.check_numerics(p_norm, f'p_norm')
+            # tf.debugging.check_numerics(p_clipped, 'p_clipped')
 
             stacked = tf.stack([s_clipped, p_clipped], axis=-1)
             return stacked
@@ -357,17 +355,15 @@ def inverse_cqt_spec(sr=16000, hop_length=512, n_bins=256, bins_per_octave=80, f
 
 def denormalize(normalization='neg_one_to_one', **kwargs):
     def two_channel_denorm(x, stats):
-        print(x)
+        print("X SHAPE", x.shape)
         magphase = tf.unstack(x, axis=-1)
-        print(magphase)
-        mag = x[0]
-        print(mag)
-        phase = x[1]
+        mag = magphase[0]
+        phase = magphase[1]
 
         s_std = tf.math.sqrt(stats['s_variance'])
-        p_std = tf.math.sqrt(stats['p_variance'])
+        # p_std = tf.math.sqrt(stats['p_variance'])
         mag = mag * (3.0 * s_std) + stats['s_mean']
-        phase = mag * (3.0 * p_std) + stats['p_mean']
+        # phase = mag * (3.0 * p_std) + stats['p_mean']
 
         stacked = tf.stack([mag, phase], axis=-1)
         return stacked

@@ -170,7 +170,7 @@ def calculate_dataset_stats(hparams, dataset):
     print("Calculating dataset stats...")
     dataset = nsynth_to_stft_inst(dataset, hparams)
 
-    megabatch = dataset.batch(500).as_numpy_iterator()
+    megabatch = dataset.batch(1000).as_numpy_iterator()
     x = next(megabatch)
 
     spec = x['audio'][:,:,:,0]
@@ -180,7 +180,6 @@ def calculate_dataset_stats(hparams, dataset):
     s_max = spec.max(axis=0)
     s_variance = spec.var(axis=0)
     print(f'mean:{s_mean}, min:{s_min}, max:{s_max}, var:{s_variance}')
-
 
     phase = x['audio'][:,:,:,1]
     p_mean = phase.mean(axis=0)
@@ -203,16 +202,12 @@ def calculate_dataset_stats(hparams, dataset):
     print("Calculating dataset stats, done.")
 
     return {
-        'spec': {
-            'mean': s_mean,
-            'min': s_min,
-            'max': s_max,
-            'variance': s_variance,
-        },
-        'phase': {
-            'mean': p_mean,
-            'min': p_min,
-            'max': p_max,
-            'variance': p_variance,
-        }
+        's_mean': s_mean,
+        's_min': s_min,
+        's_max': s_max,
+        's_variance': s_variance,
+        'p_mean': p_mean,
+        'p_min': p_min,
+        'p_max': p_max,
+        'p_variance': p_variance,
     }

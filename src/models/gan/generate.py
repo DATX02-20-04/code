@@ -1,33 +1,43 @@
 import tensorflow as tf
 from models.common.training import Trainer
+import data.process as pro
+import tensorflow_datasets as tfds
 from models.gan.model import GAN
+from data.nsynth import nsynth_from_tfrecord, nsynth_to_melspec, nsynth_to_cqt_inst, nsynth_to_stft_inst
 import librosa
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import data.process as pro
 import numpy as np
+from models.gan.train import calculate_dataset_stats
 
 
 def start(hparams):
 
-    y, sr = librosa.load(librosa.util.example_audio_file())
-    print(librosa.stft(y).shape)
+    dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=True)
 
+    # gan_stats = calculate_dataset_stats(hparams, dataset)
     gan_stats = np.load('gan_stats.npz')
 
-    gan = GAN((256, 128, 2), hparams)
+    use_norm = True
 
-    trainer = Trainer(None, hparams)
+    dataset = nsynth_to_stft_inst(dataset, hparams, gan_stats if use_norm else None)
+    dataset = pro.pipeline([
+        pro.extract('audio'),
+    ])(dataset).skip(100).as_numpy_iterator()
+# gan = GAN((256, 128, 2), hparams)
 
-    ckpt = tf.train.Checkpoint(
-        step=trainer.step,
-        generator=gan.generator,
-        discriminator=gan.discriminator,
-        gen_optimizer=gan.generator_optimizer,
-        disc_optimizer=gan.discriminator_optimizer,
-    )
+    # trainer = Trainer(None, hparams)
 
-    trainer.init_checkpoint(ckpt)
+    # ckpt = tf.train.Checkpoint(
+    #     step=trainer.step,
+    #     generator=gan.generator,
+    #     discriminator=gan.discriminator,
+    #     gen_optimizer=gan.generator_optimizer,
+    #     disc_optimizer=gan.discriminator_optimizer,
+    # )
+
+    # trainer.init_checkpoint(ckpt)
     count = 1
 
     # Random seed for each
@@ -47,45 +57,46 @@ def start(hparams):
 
     one_hot_pitches = tf.one_hot(pitches, hparams['cond_vector_size'], axis=1)
 
-    output = gan.generator([seed, one_hot_pitches], training=False)
+    # output = gan.generator([seed, one_hot_pitches], training=False)
+    output = next(dataset)
+    print("OUTPUT", output.shape)
 
     width = 1
     height = 1
 
     outer, out_axes = plt.subplots(width, height)
 
-    for i, img in enumerate(output):
-        magphase = tf.unstack(img, axis=-1)
-        mag_sample = magphase[0]
-        phase_sample = magphase[1]
+    # for i, img in enumerate(output):
+    magphase = tf.unstack(output, axis=-1)
+    mag_sample = magphase[0]
+    phase_sample = magphase[1]
 
-        mp, axes = plt.subplots(1,2)
-        magax, phax = axes
+    mp, axes = plt.subplots(1,2)
+    magax, phax = axes
 
-        pitch = pitches.numpy()[i]
-        mp.suptitle(pitch)
+    # pitch = pitches.numpy()[0]
+    # mp.suptitle(pitch)
 
-        magax.set_title('Magnitude')
-        #magax.axis('off')
-        magax.imshow(mag_sample, origin='lower')
+    magax.set_title('Magnitude')
+    #magax.axis('off')
+    magax.imshow(mag_sample, origin='lower')
 
-        phax.set_title('Phase')
-        #phax.axis('off')
-        phax.imshow(phase_sample, origin='lower')
+    phax.set_title('Phase')
+    #phax.axis('off')
+    phax.imshow(phase_sample, origin='lower')
 
+    name = f'stft_norm{use_norm}'
 
-    plt.savefig('stft.png')
-
-    # Add the batch dimension
-    image = tf.expand_dims(output, 0)
-
+    plt.savefig(f'{name}.png')
 
     # Convert to audio
+    output = tf.constant(output)
+    print("OUTPUT", output)
+    if use_norm:
+        output = pro.denormalize(normalization='specgan_two_channel', stats=gan_stats)(output)
+
     audio = pro.pipeline([
-        pro.denormalize(normalization='specgan_two_channel', stats=gan_stats),
         pro.istft_spec(hop_length=512, win_length=512),
-        ])(output)
+    ])(output)
 
-    print(audio)
-
-    librosa.output.write_wav('stft.wav', audio.numpy(), hparams['sample_rate'], norm=True)
+    librosa.output.write_wav(f'{name}.wav', audio.numpy(), hparams['sample_rate'], norm=False)
