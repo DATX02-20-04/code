@@ -23,7 +23,7 @@ def start(hparams):
     ])(dataset)
 
     gan.train_epochs(g_init, d_init, gan_init, scaled_dataset, hparams['epochs'][0], hparams['batch_sizes'][0])
-    gen = g_normal(tf.random.normal([4, hparams['latent_dim']]), training=False)
+    gen = g_init(tf.random.normal([4, hparams['latent_dim']]), training=False)
     plot_magphase(hparams, gen, f'generated_magphase_block{i:02d}')
 
     for i in range(1, hparams['n_blocks']):
