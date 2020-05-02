@@ -12,7 +12,7 @@ hparams:
   n_blocks: 6
   buffer_size: 100
   batch_sizes:
-    - 32
+    - 64
     - 32
     - 32
     - 16

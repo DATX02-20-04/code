@@ -23,7 +23,7 @@ def start(hparams):
     ])(dataset)
 
     gan.train_epochs(g_init, d_init, gan_init, scaled_dataset, hparams['epochs'][0], hparams['batch_sizes'][0])
-    gen = g_init(tf.random.normal([4, hparams['latent_dim']]), training=False)
+    gen = g_init(tf.random.normal([5, hparams['latent_dim']]), training=False)
     plot_magphase(hparams, gen, f'generated_magphase_block00')
 
     for i in range(1, hparams['n_blocks']):
@@ -46,7 +46,7 @@ def start(hparams):
         print("\nNormal training...")
         gan.train_epochs(g_normal, d_normal, gan_normal, scaled_dataset, epochs, batch_size)
 
-        gen = g_normal(tf.random.normal([4, hparams['latent_dim']]), training=False)
+        gen = g_normal(tf.random.normal([5, hparams['latent_dim']]), training=False)
         plot_magphase(hparams, gen, f'generated_magphase_block{i:02d}')
        
 
@@ -57,10 +57,16 @@ def plot_magphase(hparams, magphase, name, pitch=None):
         mag, phase = tf.unstack(magphase[i], axis=-1)
         if pitch is not None:
             plt.suptitle(f"Pitch: {tf.argmax(pitch)}")
-        axs[0+i].set_title("Magnitude")
-        axs[0+i].imshow(tf.transpose(mag, [1, 0]))
-        axs[1+i].set_title("Phase")
-        axs[1+i].imshow(tf.transpose(phase, [1, 0]))
+        axs[0+i*2].set_title("Mag")
+        axs[0+i*2].axes.get_xaxis().set_visible(False)
+        axs[0+i*2].axes.get_yaxis().set_visible(False)
+        axs[0+i*2].imshow(tf.transpose(mag, [1, 0]))
+        axs[1+i*2].set_title("Pha")
+        axs[1+i*2].axes.get_xaxis().set_visible(False)
+        axs[1+i*2].axes.get_yaxis().set_visible(False)
+        axs[1+i*2].imshow(tf.transpose(phase, [1, 0]))
+
+    plt.tight_layout()
     plt.savefig(f'{name}.png')
 
 def invert_magphase(hparams, stats, magphase, name):
