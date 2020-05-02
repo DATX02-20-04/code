@@ -15,7 +15,17 @@ def start(hparams):
     # Stack mag and phase into one tensor
     dataset = dataset.map(lambda mag, phase, pitch: (tf.stack([mag, phase], axis=-1), pitch))
 
+
     gan = GAN(hparams, stats)
+
+    ckpt = tf.train.Checkpoint(
+        gan=gan,
+        optimizer=gan.optimizer,
+    )
+
+    manager = tf.train.CheckpointManager(ckpt,
+                                         os.path.join(hparams['save_dir'], 'ckpts', hparams['name']),
+                                         max_to_keep=3)
 
     # Get the first models to train
     g_init, d_init, gan_init = gan.get_initial_models()
@@ -29,6 +39,7 @@ def start(hparams):
     gan.train_epochs(g_init, d_init, gan_init, scaled_dataset, hparams['epochs'][0], hparams['batch_sizes'][0])
     gen = g_init(tf.random.normal([5, hparams['latent_dim']]), training=False)
     plot_magphase(hparams, gen, f'generated_magphase_block00')
+    invert_magphase(hparams, stats, gen, f'generated_magphase_block00')
 
     for i in range(1, hparams['n_blocks']):
         down_scale = 2**(hparams['n_blocks']-i-1)
@@ -50,12 +61,16 @@ def start(hparams):
         print("\nNormal training...")
         gan.train_epochs(g_normal, d_normal, gan_normal, scaled_dataset, epochs, batch_size)
 
+        manager.save()
+
         gen = g_normal(tf.random.normal([5, hparams['latent_dim']]), training=False)
         plot_magphase(hparams, gen, f'generated_magphase_block{i:02d}')
+        invert_magphase(hparams, stats, gen, f'generated_magphase_block{i:02d}')
        
 
 def plot_magphase(hparams, magphase, name, pitch=None):
-    count = magphase.shape[0] if len(magphase.shape) == 4 else 1
+    assert len(magphase.shape) == 4, "Magphase needs to be in the form (batch, width, height, channels)"
+    count = magphase.shape[0]
     fig, axs = plt.subplots(1, 2*count)
     for i in range(count):
         mag, phase = tf.unstack(magphase[i], axis=-1)
@@ -74,7 +89,11 @@ def plot_magphase(hparams, magphase, name, pitch=None):
     plt.savefig(f'{name}.png')
 
 def invert_magphase(hparams, stats, magphase, name):
-    magphase = tf.squeeze(magphase)
-    mag, phase = tf.unstack(magphase, axis=-1)
-    audio = invert(hparams, stats)((mag, phase))
+    assert len(magphase.shape) == 4, "Magphase needs to be in the form (batch, width, height, channels)"
+    count = magphase.shape[0]
+    audio = []
+    for i in range(count):
+        mag, phase = tf.unstack(magphase[i], axis=-1)
+        audio.append(invert(hparams, stats)((mag, phase)))
+    audio = tf.concat(audio, axis=0)
     librosa.output.write_wav(f'{name}.wav', audio.numpy(), sr=hparams['sample_rate'])

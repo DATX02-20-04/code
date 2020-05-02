@@ -11,6 +11,7 @@ hparams:
   latent_dim: 128
   n_blocks: 6
   buffer_size: 100
+  save_dir: '.'
   batch_sizes:
     - 64
     - 32
