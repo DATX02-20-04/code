@@ -9,7 +9,7 @@ class GAN(tfk.Model):
         super(GAN, self).__init__()
         self.hparams = hparams
         self.stats = stats
-        self.optimizer = tfk.optimizers.Adam(lr=0.001, beta_1=0, beta_2=0.99, epsilon=10e-8)
+        self.optimizer = tfk.optimizers.Adam(lr=0.0001, beta_1=0, beta_2=0.99, epsilon=10e-8)
 
         self.generators = self.create_generator()
         self.discriminators = self.create_discriminator()
@@ -25,7 +25,7 @@ class GAN(tfk.Model):
     def generate_fake(self, generator, samples):
         z = tf.random.normal([samples, self.hparams['latent_dim']])
         X = generator(z)
-        y = -tf.ones([samples, 1])
+        y = tf.zeros([samples, 1])
         return X, y
 
     def train_epochs(self, generator, discriminator, model, dataset, epochs, batch_size, fade=False):
