@@ -12,11 +12,15 @@ def start(hparams):
     def resize(image, down_scale):
         return tf.squeeze(tf.image.resize(tf.reshape(image, [1, 128, 1024, 2]), [128//down_scale, 1024//down_scale]))
 
+    # Stack mag and phase into one tensor
     dataset = dataset.map(lambda mag, phase, pitch: (tf.stack([mag, phase], axis=-1), pitch))
 
     gan = GAN(hparams, stats)
+
+    # Get the first models to train
     g_init, d_init, gan_init = gan.get_initial_models()
 
+    # Create the smallest scaled dataset to train the first
     scaled_dataset = pro.pipeline([
         pro.map_transform(lambda magphase, pitch: (resize(magphase, 2**(hparams['n_blocks']-1)), pitch)),
         pro.cache(),
