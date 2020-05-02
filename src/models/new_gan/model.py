@@ -39,8 +39,9 @@ class GAN(tfk.Model):
         step = 0
         for e in range(epochs):
             for (X_real, pitch_real), y_real in dataset:
+                alpha = 0.0
                 if fade:
-                    self.update_fadein([generator, discriminator, model], step, steps)
+                    alpha = self.update_fadein([generator, discriminator, model], step, steps)
 
                 X_fake, y_fake = self.generate_fake(generator, half_batch)
 
@@ -51,7 +52,7 @@ class GAN(tfk.Model):
                 y_real2 = tf.ones([batch_size, 1])
                 g_loss = model.train_on_batch(z_input, y_real2)
 
-                print(f"e{e}, {int((step/steps)*100)}%, {step+1}/{steps}, dr={d_loss1}, df={d_loss2} g={g_loss}", end='\r')
+                print(f"e{e}, {int((step/steps)*100)}%, {step+1}/{steps}, dr={d_loss1}, df={d_loss2} g={g_loss} a={alpha}", end='\r')
 
                 step += 1
 
@@ -194,3 +195,5 @@ class GAN(tfk.Model):
             for layer in model.layers:
                 if isinstance(layer, l.WeightedSum):
                     layer.alpha = alpha
+
+        return alpha
