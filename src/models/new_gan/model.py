@@ -9,7 +9,7 @@ class GAN(tfk.Model):
         super(GAN, self).__init__()
         self.hparams = hparams
         self.stats = stats
-        self.optimizer = tfk.optimizers.Adam(lr=0.001, beta_1=0, beta_2=0.99, epsilon=10e-8)
+        self.optimizer = tfk.optimizers.Adam(lr=0.0001, beta_1=0, beta_2=0.99, epsilon=10e-8)
 
         self.generators = self.create_generator()
         self.discriminators = self.create_discriminator()
@@ -25,7 +25,7 @@ class GAN(tfk.Model):
     def generate_fake(self, generator, samples):
         z = tf.random.normal([samples, self.hparams['latent_dim']])
         X = generator(z)
-        y = -tf.ones([samples, 1])
+        y = tf.zeros([samples, 1])
         return X, y
 
     def train_epochs(self, generator, discriminator, model, dataset, epochs, batch_size, fade=False):
@@ -39,8 +39,9 @@ class GAN(tfk.Model):
         step = 0
         for e in range(epochs):
             for (X_real, pitch_real), y_real in dataset:
+                alpha = 0.0
                 if fade:
-                    self.update_fadein([generator, discriminator, model], step, steps)
+                    alpha = self.update_fadein([generator, discriminator, model], step, steps)
 
                 X_fake, y_fake = self.generate_fake(generator, half_batch)
 
@@ -51,7 +52,7 @@ class GAN(tfk.Model):
                 y_real2 = tf.ones([batch_size, 1])
                 g_loss = model.train_on_batch(z_input, y_real2)
 
-                print('e%d, %d, d1=%.3f, d2=%.3f g=%.3f' % (e, step+1, d_loss1, d_loss2, g_loss), end='\r')
+                print(f"e{e}, {int((step/steps)*100)}%, {step+1}/{steps}, dr={d_loss1}, df={d_loss2} g={g_loss} a={alpha}", end='\r')
 
                 step += 1
 
@@ -194,3 +195,5 @@ class GAN(tfk.Model):
             for layer in model.layers:
                 if isinstance(layer, l.WeightedSum):
                     layer.alpha = alpha
+
+        return alpha

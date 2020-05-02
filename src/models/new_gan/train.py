@@ -40,10 +40,10 @@ def start(hparams):
         [d_normal, d_fadein] = gan.discriminators[i]
         [gan_normal, gan_fadein] = gan.models[i]
 
-        print("Fading in next...")
+        print("\nFading in next...")
         gan.train_epochs(g_fadein, d_fadein, gan_fadein, scaled_dataset, epochs, batch_size, True)
 
-        print("Normal training...")
+        print("\nNormal training...")
         gan.train_epochs(g_normal, d_normal, gan_normal, scaled_dataset, epochs, batch_size)
 
         gen = g_normal(tf.random.normal([4, hparams['latent_dim']]), training=False)
