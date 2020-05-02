@@ -17,19 +17,37 @@ def start(hparams):
     gan = GAN(hparams, stats)
     g_init, d_init, gan_init = gan.get_initial_models()
 
-    for i in range(1):#range(hparams['n_blocks']):
+    scaled_dataset = pro.pipeline([
+        pro.map_transform(lambda magphase, pitch: (resize(magphase, 2**(hparams['n_blocks']-1)), pitch)),
+        pro.cache(),
+    ])(dataset)
+
+    gan.train_epochs(g_init, d_init, gan_init, scaled_dataset, hparams['epochs'][0], hparams['batch_sizes'][0])
+    gen = g_normal(tf.random.normal([4, hparams['latent_dim']]), training=False)
+    plot_magphase(hparams, gen, f'generated_magphase_block{i:02d}')
+
+    for i in range(1, hparams['n_blocks']):
         down_scale = 2**(hparams['n_blocks']-i-1)
         batch_size = hparams['batch_sizes'][i]
+        epochs = hparams['epochs'][i]
 
         scaled_dataset = pro.pipeline([
             pro.map_transform(lambda magphase, pitch: (resize(magphase, down_scale), pitch)),
             pro.cache(),
         ])(dataset)
 
-        gan.train_epochs(g_init, d_init, gan_init, scaled_dataset, 4, batch_size)
+        [g_normal, g_fadein] = gan.generators[i]
+        [d_normal, d_fadein] = gan.discriminators[i]
+        [gan_normal, gan_fadein] = gan.models[i]
 
-    gen = g_init(tf.random.normal([4, hparams['latent_dim']]), training=False)
-    plot_magphase(hparams, gen, f'generated_magphase')
+        print("Fading in next...")
+        gan.train_epochs(g_fadein, d_fadein, gan_fadein, scaled_dataset, epochs, batch_size, True)
+
+        print("Normal training...")
+        gan.train_epochs(g_normal, d_normal, gan_normal, scaled_dataset, epochs, batch_size)
+
+        gen = g_normal(tf.random.normal([4, hparams['latent_dim']]), training=False)
+        plot_magphase(hparams, gen, f'generated_magphase_block{i:02d}')
        
 
 def plot_magphase(hparams, magphase, name, pitch=None):
