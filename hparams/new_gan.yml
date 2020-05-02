@@ -12,12 +12,12 @@ hparams:
   n_blocks: 6
   buffer_size: 100
   batch_sizes:
-    - 16
-    - 16
+    - 32
+    - 32
+    - 32
     - 16
     - 8
-    - 4
-    - 4
+    - 8
   epochs:
     - 4
     - 6
