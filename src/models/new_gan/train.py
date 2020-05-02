@@ -26,7 +26,7 @@ def start(hparams):
             pro.cache(),
         ])(dataset)
 
-        gan.train_epochs(g_init, d_init, gan_init, scaled_dataset, 32, batch_size)
+        gan.train_epochs(g_init, d_init, gan_init, scaled_dataset, 4, batch_size)
 
     gen = g_init(tf.random.normal([1, hparams['latent_dim']]), training=False)
     plot_magphase(hparams, tf.squeeze(gen), f'generated_magphase')

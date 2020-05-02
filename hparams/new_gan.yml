@@ -1,7 +1,8 @@
 hparams:
   name: new_gan
   dataset: magphase
-  max_examples: 100
+  instrument:
+    family: 'guitar'
   pitches: 61
   sample_rate: 16000
   frame_length: 2048

@@ -3,6 +3,7 @@ import numpy as np
 import tensorflow_datasets as tfds
 import data.process as pro
 import matplotlib.pyplot as plt
+from data.nsynth import instrument_families_filter, instrument_sources_filter
 
 def serialize_example(mag, phase, pitch):
     feature = {
@@ -16,13 +17,6 @@ def serialize_example(mag, phase, pitch):
 
 
 def process(hparams, dataset):
-    if 'instrument' in hparams and hparams['instrument'] is not None:
-        instrument = hparams['instrument']
-        if 'family' in instrument and instrument['family'] is not None:
-            dataset = pro.filter(instrument_families_filter(instrument['family']))(dataset)
-        if 'source' in hparams and hparams['source'] is not None:
-            dataset = pro.filter(instrument_sources_filter(instrument['source']))(dataset)
-
     pitch_dataset = pro.pipeline([
         pro.extract('pitch'),
         pro.map_transform(lambda x: x - 24),
@@ -117,6 +111,13 @@ def invert(hparams, stats):
 def start(hparams):
     dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=False)
 
+    if 'instrument' in hparams and hparams['instrument'] is not None:
+        instrument = hparams['instrument']
+        if 'family' in instrument and instrument['family'] is not None:
+            dataset = pro.filter(instrument_families_filter(instrument['family']))(dataset)
+            print("FILTER FAMILY", instrument['family'])
+        if 'source' in hparams and hparams['source'] is not None:
+            dataset = pro.filter(instrument_sources_filter(instrument['source']))(dataset)
     if 'max_examples' in hparams:
         dataset = dataset.take(hparams['max_examples'])
 
