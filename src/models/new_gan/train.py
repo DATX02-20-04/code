@@ -51,16 +51,17 @@ def start(hparams):
        
 
 def plot_magphase(hparams, magphase, name, pitch=None):
-    for i in range(magphase.shape[0] if len(magphase.shape) == 4 else 1):
+    count = magphase.shape[0] if len(magphase.shape) == 4 else 1
+    fig, axs = plt.subplots(1, 2*count)
+    for i in range(count):
         mag, phase = tf.unstack(magphase[i], axis=-1)
-        fig, axs = plt.subplots(1, 2)
         if pitch is not None:
             plt.suptitle(f"Pitch: {tf.argmax(pitch)}")
-        axs[0].set_title("Magnitude")
-        axs[0].imshow(tf.transpose(mag, [1, 0]))
-        axs[1].set_title("Phase")
-        axs[1].imshow(tf.transpose(phase, [1, 0]))
-        plt.savefig(f'{name}_{i:02d}.png')
+        axs[0+i].set_title("Magnitude")
+        axs[0+i].imshow(tf.transpose(mag, [1, 0]))
+        axs[1+i].set_title("Phase")
+        axs[1+i].imshow(tf.transpose(phase, [1, 0]))
+    plt.savefig(f'{name}.png')
 
 def invert_magphase(hparams, stats, magphase, name):
     magphase = tf.squeeze(magphase)
