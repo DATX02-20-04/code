@@ -1,5 +1,6 @@
 import tensorflow as tf
 import librosa
+import data.process as pro
 import matplotlib.pyplot as plt
 from models.new_gan.process import load, invert
 from models.new_gan.model import GAN
@@ -14,23 +15,22 @@ def start(hparams):
     dataset = dataset.map(lambda mag, phase, pitch: (tf.stack([mag, phase], axis=-1), pitch))
 
     gan = GAN(hparams, stats)
+    g_init, d_init, gan_init = gan.get_initial_models()
 
-    for i in range(hparams['n_blocks']):
+    for i in range(1):#range(hparams['n_blocks']):
         down_scale = 2**(hparams['n_blocks']-i-1)
+        batch_size = hparams['batch_sizes'][i]
 
-        scaled_dataset = dataset.map(lambda magphase, pitch: (resize(magphase, down_scale), pitch))
+        scaled_dataset = pro.pipeline([
+            pro.map_transform(lambda magphase, pitch: (resize(magphase, down_scale), pitch)),
+            pro.cache(),
+        ])(dataset)
 
-        g_init, d_init, gan_init = gan.get_initial_models()
+        gan.train_epochs(g_init, d_init, gan_init, scaled_dataset, 32, batch_size)
 
-        gen = g_init(tf.random.normal([1, hparams['latent_dim']]), training=False)
-        gen = tf.squeeze(gen)
-        plot_magphase(hparams, gen, f"generated_magphase")
-        plt.clf()
-
-        for magphase, pitch in scaled_dataset.skip(14).take(1):
-            print(magphase.shape)
-            plot_magphase(hparams, magphase, f"magphase_plot_{down_scale}")
-            invert_magphase(hparams, stats, magphase, f"inverted_magphase_{down_scale}")
+    gen = g_init(tf.random.normal([1, hparams['latent_dim']]), training=False)
+    plot_magphase(hparams, tf.squeeze(gen), f'generated_magphase')
+       
 
 def plot_magphase(hparams, magphase, name, pitch=None):
     mag, phase = tf.unstack(magphase, axis=-1)

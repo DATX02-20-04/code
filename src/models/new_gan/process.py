@@ -94,8 +94,6 @@ def normalize(hparams, dataset, stats):
 
 def invert(hparams, stats):
     return pro.pipeline([
-        # pro.map_transform(lambda x: tf.squeeze(x)),
-        # pro.map_transform(lambda x: tuple(tf.unstack(x, axis=-1))),
         pro.index_map(0, pro.pipeline([
             pro.denormalize(normalization='neg_one_to_one', stats=stats),
             pro.log_to_amp(),
