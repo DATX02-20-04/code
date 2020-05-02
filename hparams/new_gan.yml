@@ -1,0 +1,19 @@
+hparams:
+  name: new_gan
+  dataset: magphase
+  max_examples: 100
+  pitches: 61
+  sample_rate: 16000
+  frame_length: 2048
+  frame_step: 512
+  n_mels: 1024
+  latent_dim: 128
+  n_blocks: 6
+  buffer_size: 100
+  batch_sizes:
+    - 16
+    - 16
+    - 16
+    - 8
+    - 4
+    - 4
