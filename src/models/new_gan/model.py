@@ -3,7 +3,9 @@ import tensorflow.keras as tfk
 import tensorflow.keras.layers as tfkl
 import models.new_gan.layers as l
 
-
+"""
+Based on https://machinelearningmastery.com/how-to-train-a-progressive-growing-gan-in-keras-for-synthesizing-faces/
+"""
 class GAN(tfk.Model):
     def __init__(self, hparams, stats):
         super(GAN, self).__init__()
@@ -16,8 +18,8 @@ class GAN(tfk.Model):
         self.models = self.create_composite(self.discriminators, self.generators)
 
     def wasserstein_loss(self, y_true, y_pred):
-        # return tf.math.reduce_mean(y_true * y_pred)
-        return tfk.losses.mean_squared_error(y_true, y_pred)
+        return tf.math.reduce_mean(y_true * y_pred)
+        # return tfk.losses.mean_squared_error(y_true, y_pred)
 
     def get_initial_models(self):
         return self.generators[0][0], self.discriminators[0][0], self.models[0][0]
