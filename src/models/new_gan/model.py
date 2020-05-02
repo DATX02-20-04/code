@@ -51,7 +51,7 @@ class GAN(tfk.Model):
                 y_real2 = tf.ones([batch_size, 1])
                 g_loss = model.train_on_batch(z_input, y_real2)
 
-                print('e%d, %d, d1=%.3f, d2=%.3f g=%.3f' % (e, step+1, d_loss1, d_loss2, g_loss), end='\r')
+                print(f"e{e}, {int((step/steps)*100)}%, {step+1}/{steps}, dr={d_loss1}, df={d_loss2} g={g_loss}", end='\r')
 
                 step += 1
 
