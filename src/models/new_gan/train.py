@@ -28,20 +28,21 @@ def start(hparams):
 
         gan.train_epochs(g_init, d_init, gan_init, scaled_dataset, 4, batch_size)
 
-    gen = g_init(tf.random.normal([1, hparams['latent_dim']]), training=False)
-    plot_magphase(hparams, tf.squeeze(gen), f'generated_magphase')
+    gen = g_init(tf.random.normal([4, hparams['latent_dim']]), training=False)
+    plot_magphase(hparams, gen, f'generated_magphase')
        
 
 def plot_magphase(hparams, magphase, name, pitch=None):
-    mag, phase = tf.unstack(magphase, axis=-1)
-    fig, axs = plt.subplots(1, 2)
-    if pitch is not None:
-        plt.suptitle(f"Pitch: {tf.argmax(pitch)}")
-    axs[0].set_title("Magnitude")
-    axs[0].imshow(tf.transpose(mag, [1, 0]))
-    axs[1].set_title("Phase")
-    axs[1].imshow(tf.transpose(phase, [1, 0]))
-    plt.savefig(f'{name}.png')
+    for i in range(magphase.shape[0] if len(magphase.shape) == 4 else 1):
+        mag, phase = tf.unstack(magphase[i], axis=-1)
+        fig, axs = plt.subplots(1, 2)
+        if pitch is not None:
+            plt.suptitle(f"Pitch: {tf.argmax(pitch)}")
+        axs[0].set_title("Magnitude")
+        axs[0].imshow(tf.transpose(mag, [1, 0]))
+        axs[1].set_title("Phase")
+        axs[1].imshow(tf.transpose(phase, [1, 0]))
+        plt.savefig(f'{name}_{i:02d}.png')
 
 def invert_magphase(hparams, stats, magphase, name):
     magphase = tf.squeeze(magphase)
