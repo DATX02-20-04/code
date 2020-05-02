@@ -29,9 +29,9 @@ class GAN(tfk.Model):
         return X, y
 
     def train_epochs(self, generator, discriminator, model, dataset, epochs, batch_size, fade=False):
-        bpe = self.stats['examples'] // batch_size
-        steps = bpe * epochs
         half_batch = batch_size // 2
+        bpe = self.stats['examples'] // half_batch
+        steps = bpe * epochs
 
         dataset = dataset.batch(half_batch, drop_remainder=True)
         dataset = dataset.map(lambda *x: (x, tf.ones([half_batch, 1])))
@@ -52,7 +52,7 @@ class GAN(tfk.Model):
                 y_real2 = tf.ones([batch_size, 1])
                 g_loss = model.train_on_batch(z_input, y_real2)
 
-                print(f"e{e}, {int((step/steps)*100)}%, {step+1}/{steps}, dr={d_loss1}, df={d_loss2} g={g_loss} a={alpha}", end='\r')
+                print(f"e{e}, {int((step/steps)*100)}%, {step+1}/{steps}, dr={d_loss1:.3f}, df={d_loss2:.3f} g={g_loss:.3f} a={alpha:.3f}", end='\r')
 
                 step += 1
 
