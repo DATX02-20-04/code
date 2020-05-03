@@ -15,8 +15,11 @@ hparams:
   fmin: C1
   latent_dim: 128
   n_blocks: 5
+  lr: 0.00002
   buffer_size: 100
   save_dir: '.'
+  finished_epochs: 4
+  finished_batch_size: 4
   batch_sizes:
     - 64
     - 32
