@@ -11,7 +11,9 @@ def start(hparams):
     dataset, stats = load(hparams)
 
     def resize(image, down_scale):
-        return tf.squeeze(tf.image.resize(tf.reshape(image, [1, 128, 1024, 2]), [128//down_scale, 1024//down_scale]))
+        return tf.squeeze(tf.image.resize(tf.reshape(image,
+            [1, hparams['height'], hparams['width'], 2]),
+            [hparams['height']//down_scale, hparams['width']//down_scale]))
 
     # Stack mag and phase into one tensor
     dataset = dataset.map(lambda mag, phase, pitch: (tf.stack([mag, phase], axis=-1), pitch))
@@ -51,7 +53,6 @@ def start(hparams):
         gan.train_epochs(g_init, d_init, gan_init, scaled_dataset, hparams['epochs'][0], hparams['batch_sizes'][0])
         gen = g_init(seed, training=False)
         plot_magphase(hparams, gen, f'generated_magphase_block00')
-        invert_magphase(hparams, stats, gen, f'generated_magphase_block00')
 
     for i in range(block.numpy(), hparams['n_blocks']):
         down_scale = 2**(hparams['n_blocks']-i-1)
@@ -78,7 +79,8 @@ def start(hparams):
 
         gen = g_normal(seed, training=False)
         plot_magphase(hparams, gen, f'generated_magphase_block{i:02d}')
-        invert_magphase(hparams, stats, gen, f'generated_magphase_block{i:02d}')
+        if i == hparams['n_blocks']-1:
+            invert_magphase(hparams, stats, gen, f'generated_magphase_block{i:02d}')
 
     print("\nGrowing complete, starting normal training...")
     [g_normal, g_fadein] = gan.generators[-1]
@@ -109,14 +111,16 @@ def plot_magphase(hparams, magphase, name, pitch=None):
         axs[0+i*2].set_title("Mag")
         axs[0+i*2].axes.get_xaxis().set_visible(False)
         axs[0+i*2].axes.get_yaxis().set_visible(False)
-        axs[0+i*2].imshow(tf.transpose(mag, [1, 0]))
+        axs[0+i*2].invert_yaxis()
+        axs[0+i*2].imshow(mag)
         axs[1+i*2].set_title("Pha")
         axs[1+i*2].axes.get_xaxis().set_visible(False)
         axs[1+i*2].axes.get_yaxis().set_visible(False)
-        axs[1+i*2].imshow(tf.transpose(phase, [1, 0]))
+        axs[1+i*2].invert_yaxis()
+        axs[1+i*2].imshow(phase)
 
     plt.tight_layout()
-    plt.savefig(f'{name}.png')
+    plt.savefig(f'{name}.png', bbox_inches='tight')
 
 def invert_magphase(hparams, stats, magphase, name):
     assert len(magphase.shape) == 4, "Magphase needs to be in the form (batch, width, height, channels)"
