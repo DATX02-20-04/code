@@ -168,9 +168,9 @@ model with more convolution layers. This ended up not being that easy to train,
 and had trouble learning anything at all.
 
 The shallow model used last week had a lot of trouble with classifying pitches.
-The primary reason we think is the resolution begin too smaller. To demonstrate
-this, we have increased the resolution of spectrograms to $128 \times 256$, it
-double the number of frequency 'bins'.
+The primary reason we think is the resolution being too low. To demonstrate
+this, we have increased the resolution of spectrograms to $128 \times 256$, which
+doubles the number of frequency 'bins'.
 
 #+CAPTION:A mel spectrogram of every pitch available in the gansynth dataset. These are generated pitches from training our shallow model, so they are not perfect but they demonstrate how resolution matters. The label number indicates MIDI pitch. Note how a higher pitch decreases space between overtones.
 #+NAME: fig:high_res_pitch
@@ -188,7 +188,7 @@ The second, somewhat larger issue is that the space between overtones change
 depending on the pitch of note. The nth overtone frequency is calculated as
 $$f_{n} = n \times f_{0}$$ where $f_{0}$ is the base frequency of the note (or
 pitch). As such, a very low pitch has very little space between the overtones
-than a high note. Even though the spectrogram uses logarithmic scale on the
+compared to a high note. Even though the spectrogram uses logarithmic scale on the
 y-axis, it only counteracts this so that large pitches stay within small images.
 It does not expand already low frequencies. The generated examples in
 [[fig:high_res_pitch]] demonstrate this by failing completely to generate very low
@@ -240,7 +240,7 @@ multiple of the previous window. The window then grows with each bin, making it
 larger for higher frequencies and smaller for lower. This means the
 transform works better for our hearing, which follows a log scale.
 
-To use this, we simple switch which function to use. Figure [[fig:cqt_exp_1]]
+To use this, we simply switch which function to use. Figure [[fig:cqt_exp_1]]
 illustrates some results after a short training period of 60K steps.
 
 #+CAPTION: CQT after around 60K steps. These are the usual notes sampled from the middle but because lower frequencies have more space, the appear further up in the spectrogram.
@@ -284,7 +284,7 @@ pitch would force it to map an infinite number of phases to our pitches, which
 is not very easy for it to learn. This is where instantaneous frequency comes
 in, which we have maybe mentioned before in this log. Basically, just take the
 derivative of the phase, which remains constant. Then, the second channel
-describes earlier is just another image channel for the GAN to learn, no more
+described earlier is just another image channel for the GAN to learn, no more
 difficult than learning black and white images vs color.
 
 Currently, we are training a network to generate these two-channel images using
