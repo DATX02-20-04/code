@@ -28,6 +28,92 @@
   A time log can be found at Google Sheets: https://bit.ly/2PRKRl8
 
   The time log has exact tasks worked on each entry, for each
+* Week 14 and 15
+We felt it appropriate to spend more time on the report and demo parts of the
+project rather than documenting this log. Most of the past two weeks have been
+writing the report. That said, we are doing some developing and training in the
+background to try and fine tune our results, particularly audio quality.
+** Report
+To efficiently work on the report from home, we have many meetings and work in
+sprints. This means we spend one day of the week finalizing our changes
+(mondays), and one day to plan our sprints. Planning our sprints involves
+everyone (including supervisor) reading the report, commenting, followed by the
+group creating issues while discussing. Issues are simple, quick fixes that can
+usually be solved in a few hours.
+
+We started this around week 13, but now a few weeks later, it has definitely
+sped up writing the report. We also feel the quality of everything has gone up
+significantly and it makes it very easy to just pick something to work on,
+without needing to meet the rest of the group.
+
+As of right now, we are almost done with the report. We would have been done
+sooner if training wasn't a bottle neck for the results section, but not much
+can be done about that.
+
+** Exhibition
+Elias wrote and recorded a video for the exhibition in week 14. This allows us
+to solely focus on report and demo, which is great.
+** Structure generator
+Training the structure generator takes a lot of time, and it has to be done in
+parallel with training audio generation. As of writing this, the structure
+generator is by far the most successful component in the system, performing very
+well (for a bachelor thesis anyway). We consider this model done being trained,
+though it could certainly improve with more training.
+
+** Audio generator
+The audio generator is not great. We have spent little time improving it these
+past two weeks. The improvements we are doing mostly revolve around
+hyperparameters, transform changes and experimentation with entire new modes.
+
+Progressive GAN is something Eric implemented that seems promising. Basically it
+is NVidia's way of progressively scaling up the resolution until a target
+resolution is held. Our theory is that it optimizes training significanly since
+it in stages adds detail. This model is currently being trained on guitar and
+keyboard.
+
+At the same time as above, we are working on generating the phase components as
+a separate channel to magnitude. All models use this now, but the most trained
+result still rebuilds it using Griffin-Lim, which is slow and provides bad
+results for audio.
+
+** Summary of each member
+Most of us have been working on the report, all of us are working all over the
+report due to the sprint stuff, but in general, these are the sections we are
+responsible for:
+- *Christoffer*:
+  - Theory -- signal processing
+  - Design -- System overview and audio generation
+  - Implementation -- audio generation
+  - Results -- (not a lot currently)
+- *Eric*:
+  - *PROJECT*: Been training transformer and prog GAN
+  - Design -- melody generation
+  - Implementation -- melody generator
+- *Carl*:
+  - Cover pages
+  - Figures across the report
+  - Design -- renderer
+  - Implementation -- renderer
+- *Lovisa*:
+  - Introduction
+  - Theory regarding machine learning
+  - Discussion -- section structure
+  - Conclusion
+  - Report language
+- *Cao*:
+  - Theory regarding machine learning
+  - Edits everywhere
+- *Elias*:
+  - Introduction
+  - Theory regarding VAEs and transformers
+  - Discussion -- alternative models
+  - Bibliographic notes
+
+** Next few weeks
+I will most likely update again in week 17 (when the report is due) since it'd
+rather spend more time writing report that this log. It's also tedious to
+document minor report additions everywhere.
+
 * Week 13
 We have made a lot of progress this week on all three components, that being
 1. Audio generation
