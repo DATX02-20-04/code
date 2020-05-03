@@ -10,8 +10,11 @@ hparams:
   n_mels: 1024
   latent_dim: 128
   n_blocks: 6
+  lr: 0.00002
   buffer_size: 100
   save_dir: '.'
+  finished_epochs: 4
+  finished_batch_size: 4
   batch_sizes:
     - 64
     - 32
@@ -25,4 +28,4 @@ hparams:
     - 6
     - 8
     - 10
-    - 10
+    - 1
