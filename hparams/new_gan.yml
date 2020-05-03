@@ -6,10 +6,15 @@ hparams:
   pitches: 61
   sample_rate: 16000
   frame_length: 2048
-  frame_step: 512
+  frame_step: 256
+  max_examples: 10
+  n_bins: 512
   n_mels: 1024
+  bins_per_octave: 81
+  filter_scale: 0.8
+  fmin: C1
   latent_dim: 128
-  n_blocks: 6
+  n_blocks: 5
   buffer_size: 100
   save_dir: '.'
   batch_sizes:
@@ -18,11 +23,9 @@ hparams:
     - 32
     - 16
     - 8
-    - 8
   epochs:
     - 4
     - 6
     - 6
     - 8
-    - 10
     - 10

@@ -7,21 +7,21 @@ from models.new_gan.process import load, invert
 def start(hparams):
     dataset, stats = load(hparams)
 
-    def resize(image, scale):
-        return tf.squeeze(tf.image.resize(tf.reshape(image, [1, 128, 1024, 1]), [128//scale, 1024//scale]))
+    def resize(image, down_scale):
+        return tf.squeeze(tf.image.resize(tf.reshape(image, [1, 512, 256, 1]), [512//down_scale, 256//down_scale]))
 
-    scale = 16
+    scale = 1
 
-    for mag, phase, pitch in dataset.skip(14).take(1):
+    for mag, phase, pitch in dataset.skip(9).take(1):
         print(mag.shape, phase.shape)
         mag = resize(mag, scale)
         phase = resize(phase, scale)
         fig, axs = plt.subplots(1, 2)
         plt.suptitle(f"Pitch: {tf.argmax(pitch)}")
         axs[0].set_title("Magnitude")
-        axs[0].imshow(tf.transpose(mag, [1, 0]))
+        axs[0].imshow(mag)
         axs[1].set_title("Phase")
-        axs[1].imshow(tf.transpose(phase, [1, 0]))
-        plt.savefig('non_inverted_plot.png')
+        axs[1].imshow(phase)
+        plt.savefig('non_inverted_plot_cqt.png')
         audio = invert(hparams, stats)((mag, phase))
         librosa.output.write_wav('inverted_audio.wav', audio.numpy(), sr=hparams['sample_rate'])

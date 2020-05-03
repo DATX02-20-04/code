@@ -1,4 +1,5 @@
 import tensorflow as tf
+import librosa
 import numpy as np
 import tensorflow_datasets as tfds
 import data.process as pro
@@ -25,14 +26,24 @@ def process(hparams, dataset):
 
     spec_dataset = pro.pipeline([
         pro.extract('audio'),
-        pro.map_transform(lambda x: tf.signal.stft(x, frame_length=hparams['frame_length'], frame_step=hparams['frame_step'])),
-        pro.map_transform(lambda x: x[:, :-1]),
-        pro.pad([[0, 6], [0, 0]], 'CONSTANT', constant_values=0)
+        # pro.map_transform(lambda x: tf.signal.stft(x, frame_length=hparams['frame_length'], frame_step=hparams['frame_step'])),
+        pro.map_transform(lambda x:
+                          tf.py_function(lambda z: librosa.cqt(z.numpy(),
+                                                               sr=hparams['sample_rate'],
+                                                               hop_length=hparams['frame_step'],
+                                                               n_bins=hparams['n_bins'],
+                                                               bins_per_octave=hparams['bins_per_octave'],
+                                                               filter_scale=hparams['filter_scale'],
+                                                               fmin=librosa.note_to_hz(hparams['fmin'])), [x], tf.complex64)),
+        # pro.map_transform(lambda x: tf.reshape(x, [256, 251]))
+        # pro.map_transform(lambda x: x[:, :-1]),
+        pro.pad([[0, 0], [0, 5]], 'CONSTANT', constant_values=0)
     ])(dataset)
 
     mag_dataset = pro.pipeline([
         pro.abs(),
         pro.amp_to_log(),
+        # pro.map_transform(lambda x: tf.py_function(lambda z: librosa.amplitude_to_db(z, ref=1.0), [x], tf.float32))
     ])(spec_dataset)
 
     phase_dataset = pro.pipeline([
@@ -54,11 +65,9 @@ def calculate_stats(hparams, dataset, examples):
     mag_mins = []
     step = 0
     for mag, _, _ in dataset:
-        # print(mag.shape)
-        # exit()
         mag = mag.numpy()
-        mag_means.append(np.mean(mag, axis=1))
-        mag_stds.append(np.std(mag, axis=1))
+        mag_means.append(np.mean(mag, axis=0))
+        mag_stds.append(np.std(mag, axis=0))
         mag_maxs.append(np.max(mag))
         mag_mins.append(np.min(mag))
         step += 1
@@ -78,33 +87,34 @@ def calculate_stats(hparams, dataset, examples):
 
 def normalize(hparams, dataset, stats):
     dataset = pro.index_map(0, pro.pipeline([
-        pro.normalize(normalization='neg_one_to_one', stats=stats),
-        # pro.mels(hparams['sample_rate'], n_fft=hparams['frame_length']//2+1, n_mels=hparams['n_mels']),
+        pro.normalize(normalization='specgan', stats=stats),
     ]))(dataset)
-    # dataset = pro.index_map(1, pro.pipeline([
-    #     pro.mels(hparams['sample_rate'], n_fft=hparams['frame_length']//2+1, n_mels=hparams['n_mels']),
-    # ]))(dataset)
     return dataset
 
 def invert(hparams, stats):
     return pro.pipeline([
         pro.index_map(0, pro.pipeline([
-            pro.denormalize(normalization='neg_one_to_one', stats=stats),
+            pro.denormalize(normalization='specgan', stats=stats),
             pro.log_to_amp(),
+            # pro.map_transform(lambda x: tf.py_function(lambda z: librosa.db_to_amplitude(z, ref=1.0), [x], tf.float32)),
             pro.cast(tf.complex64),
         ])),
         pro.index_map(1, pro.pipeline([
             pro.map_transform(lambda x: x * np.pi),
-            pro.map_transform(lambda x: tf.math.cumsum(x, axis=0)),
+            pro.map_transform(lambda x: tf.math.cumsum(x, axis=1)),
             pro.map_transform(lambda x: (x + np.pi) % (2 * np.pi) - np.pi),
             pro.cast(tf.complex64),
         ])),
         pro.pipeline([
             pro.map_transform(lambda mag, phase: mag * tf.math.exp(1.0j * phase)),
-            pro.map_transform(lambda spec: tf.signal.inverse_stft(spec,
-                                                                  frame_length=hparams['frame_length'],
-                                                                  frame_step=hparams['frame_step'],
-                                                                  window_fn=tf.signal.inverse_stft_window_fn(hparams['frame_step']))),
+            pro.map_transform(lambda x:
+                              tf.py_function(lambda z: librosa.icqt(z.numpy(),
+                                                                   sr=hparams['sample_rate'],
+                                                                   hop_length=hparams['frame_step'],
+                                                                   bins_per_octave=hparams['bins_per_octave'],
+                                                                   filter_scale=hparams['filter_scale'],
+                                                                   fmin=librosa.note_to_hz(hparams['fmin'])), [x], tf.float32)),
+            pro.map_transform(lambda x: tf.cast(x, tf.float32))
         ])
     ])
 
@@ -134,7 +144,7 @@ def start(hparams):
 
     print("Calculating dataset stats...")
     stats = calculate_stats(hparams, dataset, examples)
-    print(stats['mag_mean'].shape)
+    # print(stats['mag_mean'].shape)
     print("Calculating dataset stats done.")
 
     dataset = normalize(hparams, dataset, stats)
