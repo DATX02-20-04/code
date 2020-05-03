@@ -18,8 +18,8 @@ class GAN(tfk.Model):
         self.models = self.create_composite(self.discriminators, self.generators)
 
     def wasserstein_loss(self, y_true, y_pred):
-        return tf.math.reduce_mean(y_true * y_pred)
-        # return tfk.losses.mean_squared_error(y_true, y_pred)
+        # return tf.math.reduce_mean(y_true * y_pred)
+        return tfk.losses.mean_squared_error(y_true, y_pred)
 
     def get_initial_models(self):
         return self.generators[0][0], self.discriminators[0][0], self.models[0][0]

@@ -1,5 +1,6 @@
 import tensorflow as tf
 import librosa
+import os
 import data.process as pro
 import matplotlib.pyplot as plt
 from models.new_gan.process import load, invert
@@ -17,15 +18,23 @@ def start(hparams):
 
 
     gan = GAN(hparams, stats)
+    block = tf.Variable(1)
 
     ckpt = tf.train.Checkpoint(
         gan=gan,
         optimizer=gan.optimizer,
+        block=block,
     )
 
     manager = tf.train.CheckpointManager(ckpt,
                                          os.path.join(hparams['save_dir'], 'ckpts', hparams['name']),
                                          max_to_keep=3)
+
+    ckpt.restore(manager.latest_checkpoint)
+    if manager.latest_checkpoint:
+        print("Restored from {} block {}".format(manager.latest_checkpoint, block.numpy()))
+    else:
+        print("Initializing from scratch.")
 
     # Get the first models to train
     g_init, d_init, gan_init = gan.get_initial_models()
@@ -41,7 +50,7 @@ def start(hparams):
     plot_magphase(hparams, gen, f'generated_magphase_block00')
     invert_magphase(hparams, stats, gen, f'generated_magphase_block00')
 
-    for i in range(1, hparams['n_blocks']):
+    for i in range(block.numpy(), hparams['n_blocks']):
         down_scale = 2**(hparams['n_blocks']-i-1)
         batch_size = hparams['batch_sizes'][i]
         epochs = hparams['epochs'][i]
@@ -62,6 +71,7 @@ def start(hparams):
         gan.train_epochs(g_normal, d_normal, gan_normal, scaled_dataset, epochs, batch_size)
 
         manager.save()
+        block.assign_add(1)
 
         gen = g_normal(tf.random.normal([5, hparams['latent_dim']]), training=False)
         plot_magphase(hparams, gen, f'generated_magphase_block{i:02d}')
