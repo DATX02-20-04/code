@@ -110,7 +110,7 @@ responsible for:
   - Bibliographic notes
 
 ** Next few weeks
-I will most likely update again in week 17 (when the report is due) since it'd
+I will most likely update again in week 17 (when the report is due) since I'd
 rather spend more time writing report that this log. It's also tedious to
 document minor report additions everywhere.
 
