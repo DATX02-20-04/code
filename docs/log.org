@@ -77,9 +77,7 @@ result still rebuilds it using Griffin-Lim, which is slow and provides bad
 results for audio.
 
 ** Summary of each member
-Most of us have been working on the report, all of us are working all over the
-report due to the sprint stuff, but in general, these are the sections we are
-responsible for:
+We have all been working all over the report, picking issues from a backlog as detailed above. Still, here are the areas we are most responsible for (I reiterate: people have worked everywhere, not just what is listed here):
 - *Christoffer*:
   - Theory -- signal processing
   - Design -- System overview and audio generation
