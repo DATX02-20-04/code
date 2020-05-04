@@ -51,8 +51,8 @@ sooner if training wasn't a bottle neck for the results section, but not much
 can be done about that.
 
 ** Exhibition
-Elias wrote and recorded a video for the exhibition in week 14. This allows us
-to solely focus on report and demo, which is great.
+Elias and Cao wrote a script for the exhibition. We have a draft recording of
+it, but will probably record again when we are entirely sure it's perfect.
 ** Structure generator
 Training the structure generator takes a lot of time, and it has to be done in
 parallel with training audio generation. As of writing this, the structure
