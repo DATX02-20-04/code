@@ -7,14 +7,15 @@ import models.new_gan.layers as l
 Based on https://machinelearningmastery.com/how-to-train-a-progressive-growing-gan-in-keras-for-synthesizing-faces/
 """
 class GAN(tfk.Model):
-    def __init__(self, hparams, stats):
+    def __init__(self, hparams, stats, init_size):
         super(GAN, self).__init__()
         self.hparams = hparams
         self.stats = stats
+        self.init_size = init_size
         self.optimizer = tfk.optimizers.Adam(lr=hparams['lr'], beta_1=0, beta_2=0.99, epsilon=10e-8)
 
-        self.generators = self.create_generator()
-        self.discriminators = self.create_discriminator()
+        self.generators = self.create_generator(init_size)
+        self.discriminators = self.create_discriminator([*init_size, 2])
         self.models = self.create_composite(self.discriminators, self.generators)
 
     def wasserstein_loss(self, y_true, y_pred):
