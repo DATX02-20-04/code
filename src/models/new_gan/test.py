@@ -11,12 +11,17 @@ from models.new_gan.train import plot_magphase, invert_magphase
 def start(hparams):
     dataset, stats = load(hparams)
 
+    def size(down_scale):
+        return [hparams['height']//down_scale, hparams['width']//down_scale]
+
     def resize(image, down_scale):
-        return tf.squeeze(tf.image.resize(tf.reshape(image, [1, 512, 256, 1]), [512//down_scale, 256//down_scale]))
+        return tf.squeeze(tf.image.resize(tf.reshape(image,
+            [1, hparams['height'], hparams['width'], 1]),
+            size(down_scale)))
 
     scale = 1
 
-    for mag, phase, pitch in dataset.skip(9).take(1):
+    for i, (mag, phase, pitch) in enumerate(dataset.take(4)):
         print(mag.shape, phase.shape)
         mag = resize(mag, scale)
         phase = resize(phase, scale)
@@ -26,8 +31,7 @@ def start(hparams):
         axs[0].imshow(mag)
         axs[1].set_title("Phase")
         axs[1].imshow(phase)
-        plt.savefig('non_inverted_plot_cqt.png')
+        plt.savefig(f'non_inverted_plot_cqt{i}.png')
         audio = invert(hparams, stats)((mag, phase))
-        librosa.output.write_wav('inverted_audio.wav', audio.numpy(), sr=hparams['sample_rate'])
-        return tf.squeeze(tf.image.resize(tf.reshape(image, [1, 128, 1024, 2]), [128//down_scale, 1024//down_scale]))
+        librosa.output.write_wav(f'inverted_audio{i}.wav', audio.numpy(), sr=hparams['sample_rate'], norm=True)
 
