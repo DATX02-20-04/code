@@ -158,7 +158,7 @@ class GAN(tfk.Model):
         g = l.PixelNorm()(g)
         g = tfkl.LeakyReLU(alpha=0.2)(g)
 
-        out_image = tfkl.Conv2D(2, (1,1), padding='same', kernel_initializer=init, kernel_constraint=const)(g)
+        out_image = tfkl.Conv2D(2, (1,1), padding='same', activation='tanh', kernel_initializer=init, kernel_constraint=const)(g)
         model = tfk.Model(in_latent, out_image)
         model_list.append([model, model])
 
