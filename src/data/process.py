@@ -142,39 +142,47 @@ def _debug(x):
     print(x)
     return x
 
-def stft(n_fft=512, hop_length=512, win_length=None):
-        return map_transform(lambda x: tf.signal.stft(
-            x,
-            frame_step=hop_length//2,
-            frame_length=win_length,
-        ))
+def stft(n_fft, hop_length, win_length):
+    print(f'stft: {n_fft} {hop_length} {win_length}')
+    temp = lambda x: librosa.stft(
+        x.numpy(),
+        n_fft=n_fft,
+        hop_length=hop_length,
+        win_length=win_length,
+    )
+    
+    return map_transform(lambda x: tf.py_function(temp, [x], tf.complex64))
 
-def istft(win_length=512, hop_length=512):
-        return map_transform(lambda x: tf.signal.inverse_stft(
-            x,
-            frame_step=hop_length//2,
-            frame_length=win_length,
-            window_fn=tf.signal.inverse_stft_window_fn(hop_length//2)
-        ))
+def istft(win_length, hop_length):
+    print(f'istft: {hop_length} {win_length}')
+    temp = lambda x: librosa.istft(
+            x.numpy(),
+            hop_length=hop_length,
+            win_length=win_length,
+            )
 
-def stft_spec(n_fft=512, hop_length=512, win_length=None, **kwargs):
+    return map_transform(lambda x: tf.py_function(temp, [x], tf.float32))
+
+def stft_spec(n_fft, hop_length, win_length):
+    print(f'stft_spec: {n_fft} {hop_length} {win_length}')
     def temp(x):
-        x = x.numpy()
         mag = librosa.amplitude_to_db(np.abs(x), ref=1.0)
         phase = phase_to_inst_freq(np.angle(x))
-        magphase = np.transpose([mag, phase], [2,1,0])
+        magphase = np.transpose([mag, phase], [1,2,0])
+        magphase = magphase[:-3,:,:]
         return magphase
 
     return pipeline([
         stft(
-            n_fft=512,
-            hop_length=512,
-            win_length=512
+            n_fft=n_fft,
+            hop_length=hop_length,
+            win_length=win_length
             ),
         lambda x: tf.py_function(temp, [x], tf.float32),
     ])
 
-def istft_spec(hop_length=512, win_length=None, **kwargs):
+def istft_spec(hop_length, win_length):
+    print(f'istft_spec: {hop_length} {win_length}')
     def temp(magphase):
         magphase = tf.unstack(magphase, axis=-1)
         mag = magphase[0]
@@ -184,14 +192,14 @@ def istft_spec(hop_length=512, win_length=None, **kwargs):
         phase = tf.cast(inst_freq_to_phase(phase.numpy()), tf.complex64)
 
         out = mag * tf.math.exp(1.0j * phase)
-        out = tf.squeeze(out)
-        out = tf.transpose(out, [1, 0])
         return out
 
     return pipeline([
-        map_transform(temp),
-        istft(),
-        lambda x: tf.cast(x, tf.float32),
+        lambda x: tf.py_function(temp, [x], tf.complex64),
+        istft(
+            hop_length=hop_length,
+            win_length=win_length
+            ),
     ])
 
 

@@ -68,8 +68,8 @@ def nsynth_to_stft_inst(dataset, hparams, stats=None):
     ]))(dataset)
 
     dataset = pro.index_map('audio', pro.pipeline([
-        pro.stft_spec(n_fft=512, hop_length=512, win_length=512),
-        pro.pad([[0, 0], [0, 3], [0,0]], 'CONSTANT', constant_values=hparams['log_amin']),
+        pro.stft_spec(n_fft=1028, hop_length=256, win_length=1028),
+        pro.pad([[0, 0], [0, 5], [0,0]], 'CONSTANT', constant_values=hparams['log_amin']),
     ]))(dataset)
 
     if stats is not None:

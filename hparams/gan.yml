@@ -1,16 +1,16 @@
 hparams:
-  name: 'cqt_magphase_norm2'
+  name: 'stft_512x256'
   instrument:
     family: 'keyboard'
   epochs: 8000
   steps: 0
   sample_rate: 16000
-  batch_size: 32
+  batch_size: 4
   buffer_size: 1000
   latent_size: 100
   cond_vector_size: 61
-  generator_scale: 256
-  aux_loss_weight: 10
+  generator_scale: 128
+  aux_loss_weight: 1
   gen_lr: 0.0001
   disc_lr: 0.0004
   log_amin: 0.000001

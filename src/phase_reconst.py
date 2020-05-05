@@ -41,23 +41,21 @@ specs = pro.index_map('audio', pro.pipeline([
     #   fmin=librosa.note_to_hz("C1"),
     #   hop_length=256,
     #),
-    pro.stft(
-        n_fft=512,
-        hop_length=512,
-        win_length=512
+    pro.stft_spec(
+        n_fft=1028,
+        hop_length=256,
+        win_length=1028
         ),
-    lambda x: tf.py_function(temp, [x], tf.float32),
+    #pro.pad([[0, 0], [0, 2], [0, 0]], 'CONSTANT', constant_values=hparams['log_amin']) 
+
 ]))(dataset)
 
 
 for x in specs.take(1):
-    pitch = x['pitch']
-    print(f'Pitch: {pitch}')
     audio = tf.unstack(x['audio'], axis=-1)
     mag = audio[0]
     phase = audio[1]
-    print('mag:', mag)
-    print('phase:', mag)
+    print(f'img: {np.shape(mag)}')
 
     plt.subplot(1, 2, 1)
     plt.imshow(mag)
@@ -65,9 +63,9 @@ for x in specs.take(1):
     plt.subplot(1, 2, 2)
     plt.imshow(phase)
 
-    plt.savefig('recon.png')
+    plt.savefig('stft_specs.png', bbox_inches='tight')
 
-#inverse = pro.index_map('audio', pro.pipeline([
+inverse = pro.index_map('audio', pro.pipeline([
     #pro.inverse_cqt_spec(
         #sr=hparams['sample_rate'], 
         #bins_per_octave=40, 
@@ -75,15 +73,14 @@ for x in specs.take(1):
         #filter_scale=5,
         #fmin=librosa.note_to_hz("C1"),
         ##hop_length=256,
-    #)
-#]))(specs)
+    pro.istft_spec(
+        hop_length=256,
+        win_length=1028
+        )
+]))(specs)
 
 
-#for x in inverse.take(1):
-    #librosa.output.write_wav('recon.wav', x['audio'].numpy(), sr=hparams['sample_rate'])
-
-
-#inverse = pro.pipeline([
-#])(specs)
+for x in inverse.take(1):
+    librosa.output.write_wav('stft_specs.wav', x['audio'].numpy(), sr=hparams['sample_rate'])
 
 

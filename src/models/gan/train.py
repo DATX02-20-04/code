@@ -101,8 +101,8 @@ def start(hparams):
         mag = tf.convert_to_tensor(magphase.numpy()[:,:,:,0])
         phase = tf.convert_to_tensor(magphase.numpy()[:,:,:,1])
 
-        mag_samples = tf.reshape(mag, [count, 256, 128])
-        phase_samples = tf.reshape(phase, [count, 256, 128])
+        mag_samples = tf.reshape(mag, [count, 512, 256])
+        phase_samples = tf.reshape(phase, [count, 512, 256])
 
         img = tf.unstack(mag_samples)
         img = tf.reverse(tf.concat(img, axis=1), axis=[0])
@@ -133,9 +133,9 @@ def start(hparams):
 
         # Convert to audio
         #audio = pro.pipeline([
-            #pro.denormalize(normalization='specgan', stats=gan_stats),
-            #pro.inverse_cqt_spec(hparams['sample_rate'])
-            #])(magphase)
+            #pro.denormalize(normalization='specgan_two_channel', stats=gan_stats),
+            #pro.istft_spec(hop_length=256, win_length=1028)
+        #])(magphase)
 
         #audio = next(audio).reshape([1, -1, 1])
         #audio = next(audio)
@@ -174,12 +174,10 @@ def calculate_dataset_stats(hparams, dataset):
     x = next(megabatch)
 
     spec = x['audio'][:,:,:,0]
-    print(f'SPECTROGRAM: {spec.shape}')
     s_mean = spec.mean(axis=0)
     s_min = spec.min(axis=0)
     s_max = spec.max(axis=0)
     s_variance = spec.var(axis=0)
-    print(f'mean:{s_mean}, min:{s_min}, max:{s_max}, var:{s_variance}')
 
     phase = x['audio'][:,:,:,1]
     p_mean = phase.mean(axis=0)
