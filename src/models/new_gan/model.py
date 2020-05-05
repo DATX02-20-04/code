@@ -11,15 +11,15 @@ class GAN(tfk.Model):
         super(GAN, self).__init__()
         self.hparams = hparams
         self.stats = stats
-        self.optimizer = tfk.optimizers.Adam(lr=0.0001, beta_1=0, beta_2=0.99, epsilon=10e-8)
+        self.optimizer = tfk.optimizers.Adam(lr=hparams['lr'], beta_1=0, beta_2=0.99, epsilon=10e-8)
 
         self.generators = self.create_generator()
         self.discriminators = self.create_discriminator()
         self.models = self.create_composite(self.discriminators, self.generators)
 
     def wasserstein_loss(self, y_true, y_pred):
-        return tf.math.reduce_mean(y_true * y_pred)
-        # return tfk.losses.mean_squared_error(y_true, y_pred)
+        # return tf.math.reduce_mean(y_true * y_pred)
+        return tfk.losses.mean_squared_error(y_true, y_pred)
 
     def get_initial_models(self):
         return self.generators[0][0], self.discriminators[0][0], self.models[0][0]
@@ -93,7 +93,7 @@ class GAN(tfk.Model):
 
         return [model1, model2]
 
-    def create_discriminator(self, input_shape=(4, 32, 2)):
+    def create_discriminator(self, input_shape=(16, 8, 2)):
         init = tfk.initializers.RandomNormal(stddev=0.02)
         const = tfk.constraints.max_norm(1.0)
         model_list = []
@@ -143,7 +143,7 @@ class GAN(tfk.Model):
 
         return [model1, model2]
 
-    def create_generator(self, in_dim=(4, 32)):
+    def create_generator(self, in_dim=(16, 8)):
         init = tfk.initializers.RandomNormal(stddev=0.02)
         const = tfk.constraints.max_norm(1.0)
         model_list = []

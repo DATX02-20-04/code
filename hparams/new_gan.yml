@@ -3,29 +3,35 @@ hparams:
   dataset: magphase
   instrument:
     family: 'guitar'
+  width: 256
+  height: 512
   pitches: 61
   sample_rate: 16000
   frame_length: 2048
   frame_step: 256
-  max_examples: 10
   n_bins: 512
   n_mels: 1024
   bins_per_octave: 81
   filter_scale: 0.8
   fmin: C1
   latent_dim: 128
-  n_blocks: 5
+  n_blocks: 6
+  lr: 0.0001
   buffer_size: 100
   save_dir: '.'
+  finished_epochs: 4
+  finished_batch_size: 4
   batch_sizes:
     - 64
     - 32
     - 32
     - 16
     - 8
-  epochs:
     - 4
+  epochs:
     - 6
     - 6
+    - 8
+    - 8
     - 8
     - 10
