@@ -10,14 +10,21 @@ from models.new_gan.process import load, invert
 def start(hparams):
     dataset, stats = load(hparams)
 
-    def size(down_scale):
-        return [hparams['height']//down_scale, hparams['width']//down_scale]
+    def size(hparams, down_scale):
+        return [hparams['width']//down_scale, hparams['height']//down_scale]
 
-    # Stack mag and phase into one tensor
-    dataset = dataset.map(lambda mag, phase, pitch: (tf.stack([mag, phase], axis=-1), pitch))
+    def resize(image, down_scale):
+        return tf.reshape(tf.image.resize(tf.reshape(image,
+                                                     [1, hparams['width'], hparams['height'], 1]),
+                                          size(hparams, down_scale)), [*size(hparams, down_scale), 1])
 
     last = hparams['n_blocks']-1
-    init_size = size(2**(last))
+    dataset = pro.pipeline([
+        pro.map_transform(lambda magphase, pitch: (resize(magphase, 1), pitch)),
+        pro.cache(),
+    ])(dataset)
+
+    init_size = size(hparams, 2**(last))
     print(f"Init size: {init_size}")
 
     gan = GAN(hparams, stats, init_size)
