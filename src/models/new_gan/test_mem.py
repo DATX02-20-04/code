@@ -10,13 +10,17 @@ from models.new_gan.process import load, invert
 def start(hparams):
     dataset, stats = load(hparams)
 
+    def size(down_scale):
+        return [hparams['height']//down_scale, hparams['width']//down_scale]
+
     # Stack mag and phase into one tensor
     dataset = dataset.map(lambda mag, phase, pitch: (tf.stack([mag, phase], axis=-1), pitch))
 
-
-    gan = GAN(hparams, stats)
-
     last = hparams['n_blocks']-1
+    init_size = size(2**(last))
+    print(f"Init size: {init_size}")
+
+    gan = GAN(hparams, stats, init_size)
 
     [g_normal, g_fadein] = gan.generators[last]
     [d_normal, d_fadein] = gan.discriminators[last]

@@ -10,16 +10,21 @@ from models.new_gan.model import GAN
 def start(hparams):
     dataset, stats = load(hparams)
 
+    def size(down_scale):
+        return [hparams['height']//down_scale, hparams['width']//down_scale]
+
     def resize(image, down_scale):
         return tf.squeeze(tf.image.resize(tf.reshape(image,
             [1, hparams['height'], hparams['width'], 2]),
-            [hparams['height']//down_scale, hparams['width']//down_scale]))
+            size(down_scale)))
 
     # Stack mag and phase into one tensor
     dataset = dataset.map(lambda mag, phase, pitch: (tf.stack([mag, phase], axis=-1), pitch))
 
+    init_size = size(2**(hparams['n_blocks']-1))
+    print(f"Init size: {init_size}")
 
-    gan = GAN(hparams, stats)
+    gan = GAN(hparams, stats, init_size)
     block = tf.Variable(0)
     seed = tf.random.normal([5, hparams['latent_dim']])
 
@@ -130,4 +135,4 @@ def invert_magphase(hparams, stats, magphase, name):
         mag, phase = tf.unstack(magphase[i], axis=-1)
         audio.append(invert(hparams, stats)((mag, phase)))
     audio = tf.concat(audio, axis=0)
-    librosa.output.write_wav(f'{name}.wav', audio.numpy(), sr=hparams['sample_rate'])
+    librosa.output.write_wav(f'{name}.wav', audio.numpy(), sr=hparams['sample_rate'], norm=True)
