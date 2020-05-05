@@ -106,23 +106,15 @@ def start(hparams):
 
 def plot_magphase(hparams, audio, down_scale, name, pitch=None):
     sz = size(hparams, down_scale)
-    audio = tf.reshape(audio, [-1, sz[0]*sz[1]])
     print(audio.shape)
     count = audio.shape[0]
+    fig, axs = plt.subplots(1, count)
+    if pitch is not None:
+        plt.suptitle(f"Pitch: {tf.argmax(pitch)}")
     for i in range(count):
-        if pitch is not None:
-            plt.suptitle(f"Pitch: {tf.argmax(pitch)}")
-        S = librosa.feature.melspectrogram(y=audio.numpy().flatten(), sr=hparams['sample_rate']//down_scale, n_mels=128,
-                                            fmax=8000)
-        plt.figure(figsize=(10, 4))
-        S_dB = librosa.power_to_db(S, ref=np.max)
-        librosa.display.specshow(S_dB, x_axis='time',
-                                    y_axis='mel', sr=hparams['sample_rate']//down_scale,
-                                    fmax=8000)
-        plt.colorbar(format='%+2.0f dB')
-        plt.title('Mel-frequency spectrogram')
-        plt.tight_layout()
-        plt.savefig(f'{name}{i}.png', bbox_inches='tight')
+        axs[i].imshow(tf.reshape(audio[i], sz))
+    plt.tight_layout()
+    plt.savefig(f'{name}.png', bbox_inches='tight')
 
 def invert_magphase(hparams, stats, audio, down_scale, name):
     audio = tf.reshape(audio, [-1])
