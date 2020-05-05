@@ -3,8 +3,8 @@ hparams:
   dataset: magphase
   instrument:
     family: 'guitar'
-  width: 256
-  height: 512
+  width: 160
+  height: 400
   samples: 64000
   max_examples: 100
   pitches: 61

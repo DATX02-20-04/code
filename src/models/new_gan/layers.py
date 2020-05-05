@@ -18,7 +18,7 @@ class BatchStd(tfkl.Layer):
 
         shape = tf.shape(x)
 
-        y = tf.tile(mean_std, (shape[0], shape[1], 1))
+        y = tf.tile(mean_std, (shape[0], shape[1], shape[2], 1))
 
         return tf.concat([x, y], axis=-1)
 

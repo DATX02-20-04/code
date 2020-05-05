@@ -1,27 +1,28 @@
 import tensorflow as tf
 import librosa
+import librosa.display
+import numpy as np
 import os
 import data.process as pro
 import matplotlib.pyplot as plt
 from models.new_gan.process import load, invert
 from models.new_gan.model import GAN
 
+def size(hparams, down_scale):
+    return [hparams['width']//down_scale, hparams['height']//down_scale]
 
 def start(hparams):
     dataset, stats = load(hparams)
 
-    def size(down_scale):
-        return [hparams['samples']//down_scale, 1]
-
     def resize(image, down_scale):
-        return tf.squeeze(tf.image.resize(tf.reshape(image,
-            [1, hparams['samples'], 1, 1]),
-            size(down_scale)))
+        return tf.reshape(tf.image.resize(tf.reshape(image,
+                                                     [1, hparams['width'], hparams['height'], 1]),
+                                          size(hparams, down_scale)), [*size(hparams, down_scale), 1])
 
-    init_size = size(2**(hparams['n_blocks']-1))
+    init_size = size(hparams, 2**(hparams['n_blocks']-1))
     print(f"Init size: {init_size}")
 
-    gan = GAN(hparams, stats)
+    gan = GAN(hparams, stats, init_size)
     block = tf.Variable(0)
     seed = tf.random.normal([5, hparams['latent_dim']])
 
@@ -46,15 +47,17 @@ def start(hparams):
         # Get the first models to train
         g_init, d_init, gan_init = gan.get_initial_models()
 
+        down_scale = 2**(hparams['n_blocks']-1)
+
         # Create the smallest scaled dataset to train the first
         scaled_dataset = pro.pipeline([
-            pro.map_transform(lambda magphase, pitch: (resize(magphase, 2**(hparams['n_blocks']-1)), pitch)),
+            pro.map_transform(lambda magphase, pitch: (resize(magphase, down_scale), pitch)),
             pro.cache(),
         ])(dataset)
 
         gan.train_epochs(g_init, d_init, gan_init, scaled_dataset, hparams['epochs'][0], hparams['batch_sizes'][0])
         gen = g_init(seed, training=False)
-        plot_magphase(hparams, gen, f'generated_magphase_block00')
+        plot_magphase(hparams, gen, down_scale, f'generated_magphase_block00')
 
     for i in range(block.numpy(), hparams['n_blocks']):
         down_scale = 2**(hparams['n_blocks']-i-1)
@@ -80,9 +83,8 @@ def start(hparams):
         manager.save()
 
         gen = g_normal(seed, training=False)
-        plot_magphase(hparams, gen, f'generated_magphase_block{i:02d}')
-        if i == hparams['n_blocks']-1:
-            invert_magphase(hparams, stats, gen, f'generated_magphase_block{i:02d}')
+        plot_magphase(hparams, gen, down_scale, f'generated_magphase_block{i:02d}')
+        invert_magphase(hparams, stats, gen, down_scale, f'generated_magphase_block{i:02d}')
 
     print("\nGrowing complete, starting normal training...")
     [g_normal, g_fadein] = gan.generators[-1]
@@ -98,38 +100,30 @@ def start(hparams):
         manager.save()
 
         gen = g_normal(seed, training=False)
-        plot_magphase(hparams, gen, f'generated_magphase_complete_e{i:02d}')
-        invert_magphase(hparams, stats, gen, f'generated_magphase_complete{i:02d}')
+        plot_magphase(hparams, gen, 1, f'generated_magphase_complete_e{i:02d}')
+        invert_magphase(hparams, stats, gen, down_scale, f'generated_magphase_complete{i:02d}')
        
 
-def plot_magphase(hparams, magphase, name, pitch=None):
-    assert len(magphase.shape) == 4, "Magphase needs to be in the form (batch, width, height, channels)"
-    count = magphase.shape[0]
-    fig, axs = plt.subplots(1, 2*count)
+def plot_magphase(hparams, audio, down_scale, name, pitch=None):
+    sz = size(hparams, down_scale)
+    audio = tf.reshape(audio, [-1, sz[0]*sz[1]])
+    print(audio.shape)
+    count = audio.shape[0]
     for i in range(count):
-        mag, phase = tf.unstack(magphase[i], axis=-1)
         if pitch is not None:
             plt.suptitle(f"Pitch: {tf.argmax(pitch)}")
-        axs[0+i*2].set_title("Mag")
-        axs[0+i*2].axes.get_xaxis().set_visible(False)
-        axs[0+i*2].axes.get_yaxis().set_visible(False)
-        axs[0+i*2].invert_yaxis()
-        axs[0+i*2].imshow(mag)
-        axs[1+i*2].set_title("Pha")
-        axs[1+i*2].axes.get_xaxis().set_visible(False)
-        axs[1+i*2].axes.get_yaxis().set_visible(False)
-        axs[1+i*2].invert_yaxis()
-        axs[1+i*2].imshow(phase)
+        S = librosa.feature.melspectrogram(y=audio.numpy().flatten(), sr=hparams['sample_rate']//down_scale, n_mels=128,
+                                            fmax=8000)
+        plt.figure(figsize=(10, 4))
+        S_dB = librosa.power_to_db(S, ref=np.max)
+        librosa.display.specshow(S_dB, x_axis='time',
+                                    y_axis='mel', sr=hparams['sample_rate']//down_scale,
+                                    fmax=8000)
+        plt.colorbar(format='%+2.0f dB')
+        plt.title('Mel-frequency spectrogram')
+        plt.tight_layout()
+        plt.savefig(f'{name}{i}.png', bbox_inches='tight')
 
-    plt.tight_layout()
-    plt.savefig(f'{name}.png', bbox_inches='tight')
-
-def invert_magphase(hparams, stats, magphase, name):
-    assert len(magphase.shape) == 4, "Magphase needs to be in the form (batch, width, height, channels)"
-    count = magphase.shape[0]
-    audio = []
-    for i in range(count):
-        mag, phase = tf.unstack(magphase[i], axis=-1)
-        audio.append(invert(hparams, stats)((mag, phase)))
-    audio = tf.concat(audio, axis=0)
+def invert_magphase(hparams, stats, audio, down_scale, name):
+    audio = tf.reshape(audio, [-1])
     librosa.output.write_wav(f'{name}.wav', audio.numpy(), sr=hparams['sample_rate'], norm=True)
