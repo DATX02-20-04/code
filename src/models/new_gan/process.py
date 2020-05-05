@@ -6,10 +6,9 @@ import data.process as pro
 import matplotlib.pyplot as plt
 from data.nsynth import instrument_families_filter, instrument_sources_filter
 
-def serialize_example(mag, phase, pitch):
+def serialize_example(audio, pitch):
     feature = {
-        'mag': tf.train.Feature(bytes_list=tf.train.BytesList(value=[tf.io.serialize_tensor(tf.cast(mag, tf.float32)).numpy()])),
-        'phase': tf.train.Feature(bytes_list=tf.train.BytesList(value=[tf.io.serialize_tensor(tf.cast(phase, tf.float32)).numpy()])),
+        'audio': tf.train.Feature(bytes_list=tf.train.BytesList(value=[tf.io.serialize_tensor(tf.cast(audio, tf.float32)).numpy()])),
         'pitch': tf.train.Feature(bytes_list=tf.train.BytesList(value=[tf.io.serialize_tensor(tf.cast(pitch, tf.float32)).numpy()]))
     }
 
@@ -24,38 +23,12 @@ def process(hparams, dataset):
         pro.one_hot(hparams['pitches']),
     ])(dataset)
 
-    spec_dataset = pro.pipeline([
+    audio_dataset = pro.pipeline([
         pro.extract('audio'),
         # pro.map_transform(lambda x: tf.signal.stft(x, frame_length=hparams['frame_length'], frame_step=hparams['frame_step'])),
-        pro.map_transform(lambda x:
-                          tf.py_function(lambda z: librosa.cqt(z.numpy(),
-                                                               sr=hparams['sample_rate'],
-                                                               hop_length=hparams['frame_step'],
-                                                               n_bins=hparams['n_bins'],
-                                                               bins_per_octave=hparams['bins_per_octave'],
-                                                               filter_scale=hparams['filter_scale'],
-                                                               fmin=librosa.note_to_hz(hparams['fmin'])), [x], tf.complex64)),
-        # pro.map_transform(lambda x: tf.reshape(x, [256, 251]))
-        # pro.map_transform(lambda x: x[:, :-1]),
-        pro.pad([[0, 0], [0, 5]], 'CONSTANT', constant_values=0)
     ])(dataset)
 
-    mag_dataset = pro.pipeline([
-        pro.abs(),
-        pro.amp_to_log(),
-        # pro.map_transform(lambda x: tf.py_function(lambda z: librosa.amplitude_to_db(z, ref=1.0), [x], tf.float32))
-    ])(spec_dataset)
-
-    phase_dataset = pro.pipeline([
-        pro.map_transform(lambda x: tf.numpy_function(np.angle, [x], tf.float32)),
-        pro.map_transform(lambda x: tf.numpy_function(np.unwrap, [x], tf.float64)),
-        pro.map_transform(lambda x: tf.cast(x, tf.float32)),
-        pro.map_transform(lambda x: x[:, 1:] - x[:, :-1]),
-        pro.map_transform(lambda x: tf.concat([x[:, 0:1], x], axis=1)),
-        pro.map_transform(lambda x: x / np.pi),
-    ])(spec_dataset)
-
-    return tf.data.Dataset.zip((mag_dataset, phase_dataset, pitch_dataset))
+    return tf.data.Dataset.zip((audio_dataset, pitch_dataset))
 
 
 def calculate_stats(hparams, dataset, examples):
@@ -64,12 +37,12 @@ def calculate_stats(hparams, dataset, examples):
     mag_maxs = []
     mag_mins = []
     step = 0
-    for mag, _, _ in dataset:
-        mag = mag.numpy()
-        mag_means.append(np.mean(mag, axis=0))
-        mag_stds.append(np.std(mag, axis=0))
-        mag_maxs.append(np.max(mag))
-        mag_mins.append(np.min(mag))
+    for audio, _ in dataset:
+        audio = audio.numpy()
+        mag_means.append(np.mean(audio, axis=0))
+        mag_stds.append(np.std(audio, axis=0))
+        mag_maxs.append(np.max(audio))
+        mag_mins.append(np.min(audio))
         step += 1
         print(f"Progress {int((step/examples)*100)}% | {step}/{examples}", end='\r')
 
@@ -87,15 +60,15 @@ def calculate_stats(hparams, dataset, examples):
 
 def normalize(hparams, dataset, stats):
     dataset = pro.index_map(0, pro.pipeline([
-        pro.normalize(normalization='specgan', stats=stats),
+        # pro.normalize(normalization='specgan', stats=stats),
     ]))(dataset)
     return dataset
 
 def invert(hparams, stats):
     return pro.pipeline([
         pro.index_map(0, pro.pipeline([
-            pro.denormalize(normalization='specgan', stats=stats),
-            pro.log_to_amp(),
+            # pro.denormalize(normalization='specgan', stats=stats),
+            # pro.log_to_amp(),
             # pro.map_transform(lambda x: tf.py_function(lambda z: librosa.db_to_amplitude(z, ref=1.0), [x], tf.float32)),
             pro.cast(tf.complex64),
         ])),
@@ -174,12 +147,10 @@ def load(hparams):
     dataset = tf.data.TFRecordDataset([f"{hparams['dataset']}_dataset.tfrecord"])
     return pro.pipeline([
         pro.parse_tfrecord({
-            'mag': tf.io.FixedLenFeature([], dtype=tf.string),
-            'phase': tf.io.FixedLenFeature([], dtype=tf.string),
+            'audio': tf.io.FixedLenFeature([], dtype=tf.string),
             'pitch': tf.io.FixedLenFeature([], dtype=tf.string),
         }),
-        pro.map_transform(lambda x: (tf.io.parse_tensor(x['mag'], out_type=tf.float32),
-                                     tf.io.parse_tensor(x['phase'], out_type=tf.float32),
+        pro.map_transform(lambda x: (tf.io.parse_tensor(x['audio'], out_type=tf.float32),
                                      tf.io.parse_tensor(x['pitch'], out_type=tf.float32)))
     ])(dataset), stats
 

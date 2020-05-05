@@ -7,15 +7,14 @@ import models.new_gan.layers as l
 Based on https://machinelearningmastery.com/how-to-train-a-progressive-growing-gan-in-keras-for-synthesizing-faces/
 """
 class GAN(tfk.Model):
-    def __init__(self, hparams, stats, init_size):
+    def __init__(self, hparams, stats):
         super(GAN, self).__init__()
         self.hparams = hparams
         self.stats = stats
-        self.init_size = init_size
         self.optimizer = tfk.optimizers.Adam(lr=hparams['lr'], beta_1=0, beta_2=0.99, epsilon=10e-8)
 
-        self.generators = self.create_generator(init_size)
-        self.discriminators = self.create_discriminator([*init_size, 2])
+        self.generators = self.create_generator((hparams['samples'],))
+        self.discriminators = self.create_discriminator([hparams['samples'], 2])
         self.models = self.create_composite(self.discriminators, self.generators)
 
     def wasserstein_loss(self, y_true, y_pred):
@@ -64,16 +63,16 @@ class GAN(tfk.Model):
         init = tfk.initializers.RandomNormal(stddev=0.02)
         const = tfk.constraints.max_norm(1.0)
         in_shape = list(old.input.shape)
-        input_shape = (in_shape[-3]*2, in_shape[-2]*2, in_shape[-1])
+        input_shape = (in_shape[-2]*2, in_shape[-1])
         in_image = tfkl.Input(shape=input_shape)
 
-        d = tfkl.Conv2D(128, (1,1), padding='same', kernel_initializer=init, kernel_constraint=const)(in_image)
+        d = tfkl.Conv1D(128, 1, padding='same', kernel_initializer=init, kernel_constraint=const)(in_image)
         d = tfkl.LeakyReLU(alpha=0.2)(d)
-        d = tfkl.Conv2D(128, (3,3), padding='same', kernel_initializer=init, kernel_constraint=const)(d)
+        d = tfkl.Conv1D(128, 3, padding='same', kernel_initializer=init, kernel_constraint=const)(d)
         d = tfkl.LeakyReLU(alpha=0.2)(d)
-        d = tfkl.Conv2D(128, (3,3), padding='same', kernel_initializer=init, kernel_constraint=const)(d)
+        d = tfkl.Conv1D(128, 3, padding='same', kernel_initializer=init, kernel_constraint=const)(d)
         d = tfkl.LeakyReLU(alpha=0.2)(d)
-        d = tfkl.AveragePooling2D(pool_size=(2, 2))(d)
+        d = tfkl.AveragePooling1D(pool_size=2)(d)
 
         block_new = d
         for i in range(n_layers, len(old.layers)):
@@ -81,7 +80,7 @@ class GAN(tfk.Model):
 
         model1 = tfk.Model(in_image, d)
         model1.compile(loss=self.wasserstein_loss, optimizer=self.optimizer)
-        downsample = tfkl.AveragePooling2D(pool_size=(2, 2))(in_image)
+        downsample = tfkl.AveragePooling1D(pool_size=2)(in_image)
         block_old = old.layers[1](downsample)
         block_old = old.layers[2](block_old)
         d = l.WeightedSum()([block_old, block_new])
@@ -94,18 +93,18 @@ class GAN(tfk.Model):
 
         return [model1, model2]
 
-    def create_discriminator(self, input_shape=(16, 8, 2)):
+    def create_discriminator(self, input_shape):
         init = tfk.initializers.RandomNormal(stddev=0.02)
         const = tfk.constraints.max_norm(1.0)
         model_list = []
         in_image = tfkl.Input(shape=input_shape)
 
-        d = tfkl.Conv2D(128, (1,1), padding='same', kernel_initializer=init, kernel_constraint=const)(in_image)
+        d = tfkl.Conv1D(128, 1, padding='same', kernel_initializer=init, kernel_constraint=const)(in_image)
         d = tfkl.LeakyReLU(alpha=0.2)(d)
         d = l.BatchStd()(d)
-        d = tfkl.Conv2D(128, (3,3), padding='same', kernel_initializer=init, kernel_constraint=const)(d)
+        d = tfkl.Conv1D(128, 3, padding='same', kernel_initializer=init, kernel_constraint=const)(d)
         d = tfkl.LeakyReLU(alpha=0.2)(d)
-        d = tfkl.Conv2D(128, (4,4), padding='same', kernel_initializer=init, kernel_constraint=const)(d)
+        d = tfkl.Conv1D(128, 4, padding='same', kernel_initializer=init, kernel_constraint=const)(d)
         d = tfkl.LeakyReLU(alpha=0.2)(d)
         d = tfkl.Flatten()(d)
 
@@ -126,16 +125,16 @@ class GAN(tfk.Model):
         init = tfk.initializers.RandomNormal(stddev=0.02)
         const = tfk.constraints.max_norm(1.0)
         block_end = old.layers[-2].output
-        upsampling = tfkl.UpSampling2D()(block_end)
+        upsampling = tfkl.UpSampling1D()(block_end)
 
-        g = tfkl.Conv2D(128, (3,3), padding='same', kernel_initializer=init, kernel_constraint=const)(upsampling)
+        g = tfkl.Conv1D(128, 3, padding='same', kernel_initializer=init, kernel_constraint=const)(upsampling)
         g = l.PixelNorm()(g)
         g = tfkl.LeakyReLU(alpha=0.2)(g)
-        g = tfkl.Conv2D(128, (3,3), padding='same', kernel_initializer=init, kernel_constraint=const)(g)
+        g = tfkl.Conv1D(128, 3, padding='same', kernel_initializer=init, kernel_constraint=const)(g)
         g = l.PixelNorm()(g)
         g = tfkl.LeakyReLU(alpha=0.2)(g)
 
-        out_image = tfkl.Conv2D(2, (1,1), padding='same', kernel_initializer=init, kernel_constraint=const)(g)
+        out_image = tfkl.Conv1D(1, 1, padding='same', activation='tanh', kernel_initializer=init, kernel_constraint=const)(g)
         model1 = tfk.Model(old.input, out_image)
         out_old = old.layers[-1]
         out_image2 = out_old(upsampling)
@@ -144,22 +143,22 @@ class GAN(tfk.Model):
 
         return [model1, model2]
 
-    def create_generator(self, in_dim=(16, 8)):
+    def create_generator(self, in_dim):
         init = tfk.initializers.RandomNormal(stddev=0.02)
         const = tfk.constraints.max_norm(1.0)
         model_list = []
         in_latent = tfkl.Input(shape=(self.hparams['latent_dim'],))
 
-        g = tfkl.Dense(128 * in_dim[0] * in_dim[1], kernel_initializer=init, kernel_constraint=const)(in_latent)
-        g = tfkl.Reshape((in_dim[0], in_dim[1], 128))(g)
-        g = tfkl.Conv2D(128, (3,3), padding='same', kernel_initializer=init, kernel_constraint=const)(g)
+        g = tfkl.Dense(128 * in_dim[0], kernel_initializer=init, kernel_constraint=const)(in_latent)
+        g = tfkl.Reshape((in_dim[0], 128))(g)
+        g = tfkl.Conv1D(128, 3, padding='same', kernel_initializer=init, kernel_constraint=const)(g)
         g = l.PixelNorm()(g)
         g = tfkl.LeakyReLU(alpha=0.2)(g)
-        g = tfkl.Conv2D(128, (3,3), padding='same', kernel_initializer=init, kernel_constraint=const)(g)
+        g = tfkl.Conv1D(128, 3, padding='same', kernel_initializer=init, kernel_constraint=const)(g)
         g = l.PixelNorm()(g)
         g = tfkl.LeakyReLU(alpha=0.2)(g)
 
-        out_image = tfkl.Conv2D(2, (1,1), padding='same', activation='tanh', kernel_initializer=init, kernel_constraint=const)(g)
+        out_image = tfkl.Conv1D(1, 1, padding='same', activation='tanh', kernel_initializer=init, kernel_constraint=const)(g)
         model = tfk.Model(in_latent, out_image)
         model_list.append([model, model])
 

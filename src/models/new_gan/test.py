@@ -21,17 +21,15 @@ def start(hparams):
 
     scale = 1
 
-    for i, (mag, phase, pitch) in enumerate(dataset.take(4)):
-        print(mag.shape, phase.shape)
-        mag = resize(mag, scale)
-        phase = resize(phase, scale)
-        fig, axs = plt.subplots(1, 2)
-        plt.suptitle(f"Pitch: {tf.argmax(pitch)}")
-        axs[0].set_title("Magnitude")
-        axs[0].imshow(mag)
-        axs[1].set_title("Phase")
-        axs[1].imshow(phase)
-        plt.savefig(f'non_inverted_plot_cqt{i}.png')
-        audio = invert(hparams, stats)((mag, phase))
+    for i, (audio, pitch) in enumerate(dataset.take(4)):
+        print(audio.shape)
+        # fig, axs = plt.subplots(1, 2)
+        # plt.suptitle(f"Pitch: {tf.argmax(pitch)}")
+        # axs[0].set_title("Magnitude")
+        # axs[0].imshow(mag)
+        # axs[1].set_title("Phase")
+        # axs[1].imshow(phase)
+        # plt.savefig(f'non_inverted_plot_cqt{i}.png')
+        # audio = invert(hparams, stats)((mag, phase))
         librosa.output.write_wav(f'inverted_audio{i}.wav', audio.numpy(), sr=hparams['sample_rate'], norm=True)
 
