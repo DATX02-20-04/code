@@ -14,7 +14,7 @@ def start(hparams):
     def resize(image, scale):
         return tf.squeeze(tf.image.resize(tf.reshape(image, [1, 128, 1024, 1]), [128//scale, 1024//scale]))
 
-    scale = 1
+    scale = 16
 
     for mag, phase, pitch in dataset.skip(4).take(1):
         print(mag.shape, phase.shape)
