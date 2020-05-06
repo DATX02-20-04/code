@@ -134,7 +134,7 @@ def start(hparams):
     print(f"Counted {examples} examples.")
 
     # Process dataset examples
-    dataset = process(hparams, dataset)
+    dataset = process(hparams, dataset).cache()
     # dataset = dataset.cache(filename='preprocess_cache')
 
     print("Calculating dataset stats...")

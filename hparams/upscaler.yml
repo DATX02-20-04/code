@@ -1,10 +1,9 @@
 hparams:
-  name: new_gan
+  name: upscaler
   dataset: upscale_magphase
   instrument:
     family: 'guitar'
   pitches: 61
-  max_examples: 10
   down_scale: 16
   sample_rate: 16000
   frame_length: 2048

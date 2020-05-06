@@ -43,9 +43,9 @@ class Upscaler(tfk.Model):
             # g = l.PixelNorm()(g)
             g = tfkl.LeakyReLU(alpha=0.2)(g)
             # g = tfkl.UpSampling2D()(i)
-            # g = tfkl.Conv2D(128, (3,3), padding='same')(g)
+            g = tfkl.Conv2D(32, (3,3), padding='same')(g)
             # g = l.PixelNorm()(g)
-            # g = tfkl.LeakyReLU(alpha=0.2)(g)
+            g = tfkl.LeakyReLU(alpha=0.2)(g)
 
         out_image = tfkl.Conv2D(2, (1,1), padding='same')(g)
 

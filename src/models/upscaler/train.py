@@ -1,6 +1,7 @@
+import os
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "-1"
 import tensorflow as tf
 import librosa
-import os
 import data.process as pro
 import matplotlib.pyplot as plt
 from models.upscaler.process import load, invert
@@ -10,27 +11,20 @@ from models.upscaler.model import Upscaler
 def start(hparams):
     dataset, stats = load(hparams)
 
-    dataset = dataset.batch(4, drop_remainder=True)
-    dataset = dataset.repeat()
+    dataset = dataset.shuffle(1000)
+    dataset = dataset.batch(8, drop_remainder=True)
+    #dataset = dataset.repeat()
 
     upscaler = Upscaler(hparams, stats)
 
-    ckpt = tf.train.Checkpoint(
-        upscaler=upscaler,
-        optimizer=upscaler.optimizer,
-    )
+    checkpoint_path = "training_1/cp.ckpt"
+    checkpoint_dir = os.path.dirname(checkpoint_path)
+    cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
+                                                 save_weights_only=True,
+                                                 verbose=1)
+    upscaler.model.load_weights(checkpoint_path)
 
-    manager = tf.train.CheckpointManager(ckpt,
-                                         os.path.join(hparams['save_dir'], 'ckpts', hparams['name']),
-                                         max_to_keep=3)
-
-    ckpt.restore(manager.latest_checkpoint)
-    if manager.latest_checkpoint:
-        print("Restored from {}".format(manager.latest_checkpoint))
-    else:
-        print("Initializing from scratch.")
-
-    upscaler.model.fit(x=dataset.as_numpy_iterator(), epochs=2)
+    upscaler.model.fit(x=dataset, epochs=100, callbacks=[cp_callback])
 
     # plot_magphase(hparams, gen, f'generated_magphase_block{i:02d}')
     # invert_magphase(hparams, stats, gen, f'generated_magphase_block{i:02d}')
