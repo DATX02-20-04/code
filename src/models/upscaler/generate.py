@@ -5,6 +5,7 @@ import data.process as pro
 import matplotlib.pyplot as plt
 from models.upscaler.process import load, invert
 from models.upscaler.train import plot_magphase, invert_magphase
+from models.upscaler.model import Upscaler
 
 
 def start(hparams):
@@ -18,7 +19,9 @@ def start(hparams):
 
     for x, y in dataset.skip(4).take(1):
         print(x.shape, y.shape)
-        upscaled = upscaler.model(x, training=False)
+        upscaled = upscaler.model(tf.reshape(x, [1, 32, 256, 2]), training=False)
+        upscaled = tf.squeeze(upscaled)
+
         u_m, u_p = tf.unstack(upscaled, axis=-1)
         x_m, x_p = tf.unstack(x, axis=-1)
         y_m, y_p = tf.unstack(y, axis=-1)
