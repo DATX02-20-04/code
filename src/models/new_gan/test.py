@@ -11,32 +11,21 @@ from models.new_gan.train import plot_magphase, invert_magphase
 def start(hparams):
     dataset, stats = load(hparams)
 
-    def resize(image, down_scale):
-        return tf.squeeze(tf.image.resize(tf.reshape(image, [1, 128, 1024, 2]), [128//down_scale, 1024//down_scale]))
+    def resize(image, scale):
+        return tf.squeeze(tf.image.resize(tf.reshape(image, [1, 128, 1024, 1]), [128//scale, 1024//scale]))
 
-    # Stack mag and phase into one tensor
-    dataset = dataset.map(lambda mag, phase, pitch: (tf.stack([mag, phase], axis=-1), pitch))
+    scale = 1
 
-    gan = GAN(hparams, stats)
-
-    for i in range(1, hparams['n_blocks']):
-        down_scale = 2**(hparams['n_blocks']-i-1)
-        batch_size = hparams['batch_sizes'][i]
-        epochs = 1
-
-        scaled_dataset = pro.pipeline([
-            pro.map_transform(lambda magphase, pitch: (resize(magphase, down_scale), pitch)),
-            pro.cache(),
-        ])(dataset).take(batch_size)
-
-        [g_normal, g_fadein] = gan.generators[i]
-        [d_normal, d_fadein] = gan.discriminators[i]
-        [gan_normal, gan_fadein] = gan.models[i]
-
-        print("\nFading in next...")
-        gan.train_epochs(g_fadein, d_fadein, gan_fadein, scaled_dataset, epochs, batch_size, True)
-
-        print("\nNormal training...")
-        gan.train_epochs(g_normal, d_normal, gan_normal, scaled_dataset, epochs, batch_size)
-        print(f"\nBlock {i+1} Size {128//down_scale} {1024//down_scale}")
-       
+    for mag, phase, pitch in dataset.skip(4).take(1):
+        print(mag.shape, phase.shape)
+        mag = resize(mag, scale)
+        phase = resize(phase, scale)
+        fig, axs = plt.subplots(1, 2)
+        plt.suptitle(f"Pitch: {tf.argmax(pitch)}")
+        axs[0].set_title("Magnitude")
+        axs[0].imshow(tf.transpose(mag, [1, 0]))
+        axs[1].set_title("Phase")
+        axs[1].imshow(tf.transpose(phase, [1, 0]))
+        plt.savefig('non_inverted_plot.png')
+        audio = invert(hparams, stats)((mag, phase))
+        librosa.output.write_wav('inverted_audio.wav', audio.numpy(), sr=hparams['sample_rate'])
