@@ -1,7 +1,11 @@
 import tensorflow as tf
 import librosa
+import os
+import data.process as pro
 import matplotlib.pyplot as plt
 from models.new_gan.process import load, invert
+from models.new_gan.model import GAN
+from models.new_gan.train import plot_magphase, invert_magphase
 
 
 def start(hparams):
