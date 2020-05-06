@@ -11,7 +11,12 @@ from models.upscaler.model import Upscaler
 def start(hparams):
     dataset, stats = load(hparams)
 
+    valid = stats['examples']//5
+    train = stats['examples']-valid
+
     dataset = dataset.shuffle(1000)
+    valid_dataset = dataset.take(valid)
+    dataset = dataset.skip(valid).take(train)
     dataset = dataset.batch(8, drop_remainder=True)
     #dataset = dataset.repeat()
 
@@ -24,7 +29,7 @@ def start(hparams):
                                                  verbose=1)
     upscaler.model.load_weights(checkpoint_path)
 
-    upscaler.model.fit(x=dataset, epochs=100, callbacks=[cp_callback])
+    upscaler.model.fit(x=dataset, validation_data=valid_dataset, epochs=100, callbacks=[cp_callback])
 
     # plot_magphase(hparams, gen, f'generated_magphase_block{i:02d}')
     # invert_magphase(hparams, stats, gen, f'generated_magphase_block{i:02d}')
