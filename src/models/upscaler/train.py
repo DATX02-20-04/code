@@ -16,6 +16,7 @@ def start(hparams):
 
     dataset = dataset.shuffle(1000)
     valid_dataset = dataset.take(valid)
+    valid_dataset = dataset.batch(8, drop_remainder=True)
     dataset = dataset.skip(valid).take(train)
     dataset = dataset.batch(8, drop_remainder=True)
     #dataset = dataset.repeat()

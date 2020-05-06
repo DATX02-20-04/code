@@ -40,3 +40,8 @@ def start(hparams):
         axs[5].imshow(tf.transpose(u_p, [1, 0]))
 
         plt.savefig('generated_plot.png')
+
+        audio = invert(hparams, stats)((u_m, u_p))
+        librosa.output.write_wav('inverted_audio.wav', audio.numpy(), sr=hparams['sample_rate'])
+        audio = invert(hparams, stats)((y_m, y_p))
+        librosa.output.write_wav('inverted_audio_real.wav', audio.numpy(), sr=hparams['sample_rate'])
