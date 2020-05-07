@@ -8,7 +8,6 @@ from data.nsynth import instrument_families_filter, instrument_sources_filter
 def serialize_example(mag, phase, pitch):
     feature = {
         'mag': tf.train.Feature(bytes_list=tf.train.BytesList(value=[tf.io.serialize_tensor(tf.cast(mag, tf.float32)).numpy()])),
-        'phase': tf.train.Feature(bytes_list=tf.train.BytesList(value=[tf.io.serialize_tensor(tf.cast(phase, tf.float32)).numpy()])),
         'pitch': tf.train.Feature(bytes_list=tf.train.BytesList(value=[tf.io.serialize_tensor(tf.cast(pitch, tf.float32)).numpy()]))
     }
 
@@ -35,16 +34,16 @@ def process(hparams, dataset):
         pro.amp_to_log(),
     ])(spec_dataset)
 
-    phase_dataset = pro.pipeline([
-        pro.map_transform(lambda x: tf.numpy_function(np.angle, [x], tf.float32)),
-        pro.map_transform(lambda x: tf.numpy_function(np.unwrap, [x], tf.float64)),
-        pro.map_transform(lambda x: tf.cast(x, tf.float32)),
-        pro.map_transform(lambda x: x[:, 1:] - x[:, :-1]),
-        pro.map_transform(lambda x: tf.concat([x[:, 0:1], x], axis=1)),
-        pro.map_transform(lambda x: x / np.pi),
-    ])(spec_dataset)
+    # phase_dataset = pro.pipeline([
+    #     pro.map_transform(lambda x: tf.numpy_function(np.angle, [x], tf.float32)),
+    #     pro.map_transform(lambda x: tf.numpy_function(np.unwrap, [x], tf.float64)),
+    #     pro.map_transform(lambda x: tf.cast(x, tf.float32)),
+    #     pro.map_transform(lambda x: x[:, 1:] - x[:, :-1]),
+    #     pro.map_transform(lambda x: tf.concat([x[:, 0:1], x], axis=1)),
+    #     pro.map_transform(lambda x: x / np.pi),
+    # ])(spec_dataset)
 
-    return tf.data.Dataset.zip((mag_dataset, phase_dataset, pitch_dataset))
+    return tf.data.Dataset.zip((mag_dataset, pitch_dataset))
 
 
 def calculate_stats(hparams, dataset, examples):
@@ -86,11 +85,11 @@ def normalize(hparams, dataset, stats):
         pro.map_transform(lambda magphase: tf.image.resize(magphase, [32, 256])),
         pro.map_transform(lambda magphase: tf.squeeze(magphase)),
     ]))(dataset)
-    dataset = pro.index_map(1, pro.pipeline([
-        pro.map_transform(lambda magphase: tf.reshape(magphase, [1, 128, 1024, 1])),
-        pro.map_transform(lambda magphase: tf.image.resize(magphase, [32, 256])),
-        pro.map_transform(lambda magphase: tf.squeeze(magphase)),
-    ]))(dataset)
+    # dataset = pro.index_map(1, pro.pipeline([
+    #     pro.map_transform(lambda magphase: tf.reshape(magphase, [1, 128, 1024, 1])),
+    #     pro.map_transform(lambda magphase: tf.image.resize(magphase, [32, 256])),
+    #     pro.map_transform(lambda magphase: tf.squeeze(magphase)),
+    # ]))(dataset)
     # dataset = pro.index_map(1, pro.pipeline([
     #     pro.mels(hparams['sample_rate'], n_fft=hparams['frame_length']//2+1, n_mels=hparams['n_mels']),
     # ]))(dataset)
@@ -175,11 +174,9 @@ def load(hparams):
     return pro.pipeline([
         pro.parse_tfrecord({
             'mag': tf.io.FixedLenFeature([], dtype=tf.string),
-            'phase': tf.io.FixedLenFeature([], dtype=tf.string),
             'pitch': tf.io.FixedLenFeature([], dtype=tf.string),
         }),
         pro.map_transform(lambda x: (tf.io.parse_tensor(x['mag'], out_type=tf.float32),
-                                     tf.io.parse_tensor(x['phase'], out_type=tf.float32),
                                      tf.io.parse_tensor(x['pitch'], out_type=tf.float32)))
     ])(dataset), stats
 

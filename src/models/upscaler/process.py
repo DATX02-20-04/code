@@ -80,11 +80,12 @@ def normalize(hparams, dataset, stats):
     ])(dataset)
 
     x_dataset = pro.pipeline([
-        pro.map_transform(lambda magphase: tf.reshape(magphase, [1, 128, 1024, 2])),
+        pro.map_transform(lambda mag, phase: mag),
+        pro.map_transform(lambda magphase: tf.reshape(magphase, [1, 128, 1024, 1])),
         pro.map_transform(lambda magphase: tf.image.resize(magphase, [128//(2**hparams['n_blocks']),
                                                                       1024//(2**hparams['n_blocks'])])),
         pro.map_transform(lambda magphase: tf.squeeze(magphase)),
-    ])(y_dataset)
+    ])(dataset)
 
     # dataset = pro.index_map(1, pro.pipeline([
     #     pro.mels(hparams['sample_rate'], n_fft=hparams['frame_length']//2+1, n_mels=hparams['n_mels']),
