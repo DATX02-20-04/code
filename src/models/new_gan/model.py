@@ -66,11 +66,11 @@ class GAN(tfk.Model):
         input_shape = (in_shape[-3]*2, in_shape[-2]*2, in_shape[-1])
         in_image = tfkl.Input(shape=input_shape)
 
-        d = tfkl.Conv2D(128, (1,1), padding='same', kernel_initializer=init, kernel_constraint=const)(in_image)
+        d = tfkl.Conv2D(64, (1,1), padding='same', kernel_initializer=init, kernel_constraint=const)(in_image)
         d = tfkl.LeakyReLU(alpha=0.2)(d)
-        d = tfkl.Conv2D(128, (3,3), padding='same', kernel_initializer=init, kernel_constraint=const)(d)
+        d = tfkl.Conv2D(64, (3,3), padding='same', kernel_initializer=init, kernel_constraint=const)(d)
         d = tfkl.LeakyReLU(alpha=0.2)(d)
-        d = tfkl.Conv2D(128, (3,3), padding='same', kernel_initializer=init, kernel_constraint=const)(d)
+        d = tfkl.Conv2D(64, (3,3), padding='same', kernel_initializer=init, kernel_constraint=const)(d)
         d = tfkl.LeakyReLU(alpha=0.2)(d)
         d = tfkl.AveragePooling2D(pool_size=(2, 2))(d)
 
@@ -99,12 +99,12 @@ class GAN(tfk.Model):
         model_list = []
         in_image = tfkl.Input(shape=input_shape)
 
-        d = tfkl.Conv2D(128, (1,1), padding='same', kernel_initializer=init, kernel_constraint=const)(in_image)
+        d = tfkl.Conv2D(64, (1,1), padding='same', kernel_initializer=init, kernel_constraint=const)(in_image)
         d = tfkl.LeakyReLU(alpha=0.2)(d)
         d = l.BatchStd()(d)
-        d = tfkl.Conv2D(128, (3,3), padding='same', kernel_initializer=init, kernel_constraint=const)(d)
+        d = tfkl.Conv2D(64, (3,3), padding='same', kernel_initializer=init, kernel_constraint=const)(d)
         d = tfkl.LeakyReLU(alpha=0.2)(d)
-        d = tfkl.Conv2D(128, (4,4), padding='same', kernel_initializer=init, kernel_constraint=const)(d)
+        d = tfkl.Conv2D(64, (4,4), padding='same', kernel_initializer=init, kernel_constraint=const)(d)
         d = tfkl.LeakyReLU(alpha=0.2)(d)
         d = tfkl.Flatten()(d)
 
@@ -127,10 +127,10 @@ class GAN(tfk.Model):
         block_end = old.layers[-2].output
         upsampling = tfkl.UpSampling2D()(block_end)
 
-        g = tfkl.Conv2D(128, (3,3), padding='same', kernel_initializer=init, kernel_constraint=const)(upsampling)
+        g = tfkl.Conv2D(64, (3,3), padding='same', kernel_initializer=init, kernel_constraint=const)(upsampling)
         g = l.PixelNorm()(g)
         g = tfkl.LeakyReLU(alpha=0.2)(g)
-        g = tfkl.Conv2D(128, (3,3), padding='same', kernel_initializer=init, kernel_constraint=const)(g)
+        g = tfkl.Conv2D(64, (3,3), padding='same', kernel_initializer=init, kernel_constraint=const)(g)
         g = l.PixelNorm()(g)
         g = tfkl.LeakyReLU(alpha=0.2)(g)
 
@@ -149,12 +149,12 @@ class GAN(tfk.Model):
         model_list = []
         in_latent = tfkl.Input(shape=(self.hparams['latent_dim'],))
 
-        g = tfkl.Dense(128 * in_dim[0] * in_dim[1], kernel_initializer=init, kernel_constraint=const)(in_latent)
-        g = tfkl.Reshape((in_dim[0], in_dim[1], 128))(g)
-        g = tfkl.Conv2D(128, (3,3), padding='same', kernel_initializer=init, kernel_constraint=const)(g)
+        g = tfkl.Dense(64 * in_dim[0] * in_dim[1], kernel_initializer=init, kernel_constraint=const)(in_latent)
+        g = tfkl.Reshape((in_dim[0], in_dim[1], 64))(g)
+        g = tfkl.Conv2D(64, (3,3), padding='same', kernel_initializer=init, kernel_constraint=const)(g)
         g = l.PixelNorm()(g)
         g = tfkl.LeakyReLU(alpha=0.2)(g)
-        g = tfkl.Conv2D(128, (3,3), padding='same', kernel_initializer=init, kernel_constraint=const)(g)
+        g = tfkl.Conv2D(64, (3,3), padding='same', kernel_initializer=init, kernel_constraint=const)(g)
         g = l.PixelNorm()(g)
         g = tfkl.LeakyReLU(alpha=0.2)(g)
 
