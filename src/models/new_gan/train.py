@@ -36,19 +36,20 @@ def start(hparams):
     else:
         print("Initializing from scratch.")
 
-    # Get the first models to train
-    g_init, d_init, gan_init = gan.get_initial_models()
+    if block == 1:
+        # Get the first models to train
+        g_init, d_init, gan_init = gan.get_initial_models()
 
-    # Create the smallest scaled dataset to train the first
-    scaled_dataset = pro.pipeline([
-        pro.map_transform(lambda magphase, pitch: (resize(magphase, 2**(hparams['n_blocks']-1)), pitch)),
-        pro.cache(),
-    ])(dataset)
+        # Create the smallest scaled dataset to train the first
+        scaled_dataset = pro.pipeline([
+            pro.map_transform(lambda magphase, pitch: (resize(magphase, 2**(hparams['n_blocks']-1)), pitch)),
+            pro.cache(),
+        ])(dataset)
 
-    gan.train_epochs(g_init, d_init, gan_init, scaled_dataset, hparams['epochs'][0], hparams['batch_sizes'][0])
-    gen = g_init(tf.random.normal([5, hparams['latent_dim']]), training=False)
-    plot_magphase(hparams, gen, f'generated_magphase_block00')
-    invert_magphase(hparams, stats, gen, f'generated_magphase_block00')
+        gan.train_epochs(g_init, d_init, gan_init, scaled_dataset, hparams['epochs'][0], hparams['batch_sizes'][0])
+        gen = g_init(tf.random.normal([5, hparams['latent_dim']]), training=False)
+        plot_magphase(hparams, gen, f'generated_magphase_block00')
+        invert_magphase(hparams, stats, gen, f'generated_magphase_block00')
 
     for i in range(block.numpy(), hparams['n_blocks']):
         down_scale = 2**(hparams['n_blocks']-i-1)
@@ -70,8 +71,8 @@ def start(hparams):
         print("\nNormal training...")
         gan.train_epochs(g_normal, d_normal, gan_normal, scaled_dataset, epochs, batch_size)
 
-        manager.save()
         block.assign_add(1)
+        manager.save()
 
         gen = g_normal(tf.random.normal([5, hparams['latent_dim']]), training=False)
         plot_magphase(hparams, gen, f'generated_magphase_block{i:02d}')
