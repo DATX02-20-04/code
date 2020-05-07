@@ -5,7 +5,7 @@ import data.process as pro
 import matplotlib.pyplot as plt
 from data.nsynth import instrument_families_filter, instrument_sources_filter
 
-def serialize_example(mag, phase, pitch):
+def serialize_example(mag, pitch):
     feature = {
         'mag': tf.train.Feature(bytes_list=tf.train.BytesList(value=[tf.io.serialize_tensor(tf.cast(mag, tf.float32)).numpy()])),
         'pitch': tf.train.Feature(bytes_list=tf.train.BytesList(value=[tf.io.serialize_tensor(tf.cast(pitch, tf.float32)).numpy()]))
@@ -52,7 +52,7 @@ def calculate_stats(hparams, dataset, examples):
     mag_maxs = []
     mag_mins = []
     step = 0
-    for mag, _, _ in dataset:
+    for mag, _ in dataset:
         # print(mag.shape)
         # exit()
         mag = mag.numpy()

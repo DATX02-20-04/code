@@ -2,7 +2,7 @@ hparams:
   name: upscaler
   dataset: upscale_magphase
   instrument:
-    family: 'guitar'
+    family: 'brass'
   pitches: 61
   down_scale: 16
   sample_rate: 16000

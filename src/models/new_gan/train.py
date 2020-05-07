@@ -11,11 +11,7 @@ def start(hparams):
     dataset, stats = load(hparams)
 
     def resize(image, down_scale):
-        return tf.squeeze(tf.image.resize(tf.reshape(image, [1, 32, 256, 2]), [32//down_scale, 256//down_scale]))
-
-    # Stack mag and phase into one tensor
-    dataset = dataset.map(lambda mag, phase, pitch: (tf.stack([mag, phase], axis=-1), pitch))
-
+        return tf.squeeze(tf.image.resize(tf.reshape(image, [1, 32, 256, 1]), [32//down_scale, 256//down_scale]))
 
     gan = GAN(hparams, stats)
     block = tf.Variable(1)
@@ -49,7 +45,6 @@ def start(hparams):
         gan.train_epochs(g_init, d_init, gan_init, scaled_dataset, hparams['epochs'][0], hparams['batch_sizes'][0])
         gen = g_init(tf.random.normal([5, hparams['latent_dim']]), training=False)
         plot_magphase(hparams, gen, f'generated_magphase_block00')
-        invert_magphase(hparams, stats, gen, f'generated_magphase_block00')
 
     for i in range(block.numpy(), hparams['n_blocks']):
         down_scale = 2**(hparams['n_blocks']-i-1)
@@ -76,7 +71,6 @@ def start(hparams):
 
         gen = g_normal(tf.random.normal([5, hparams['latent_dim']]), training=False)
         plot_magphase(hparams, gen, f'generated_magphase_block{i:02d}')
-        invert_magphase(hparams, stats, gen, f'generated_magphase_block{i:02d}')
 
     final_epochs = 100
     batch_size = 16
@@ -96,27 +90,14 @@ def plot_magphase(hparams, magphase, name, pitch=None):
     count = magphase.shape[0]
     fig, axs = plt.subplots(1, 2*count)
     for i in range(count):
-        mag, phase = tf.unstack(magphase[i], axis=-1)
+        mag = tf.squeeze(magphase[i])
         if pitch is not None:
             plt.suptitle(f"Pitch: {tf.argmax(pitch)}")
         axs[0+i*2].set_title("Mag")
         axs[0+i*2].axes.get_xaxis().set_visible(False)
         axs[0+i*2].axes.get_yaxis().set_visible(False)
         axs[0+i*2].imshow(tf.transpose(mag, [1, 0]))
-        axs[1+i*2].set_title("Pha")
-        axs[1+i*2].axes.get_xaxis().set_visible(False)
-        axs[1+i*2].axes.get_yaxis().set_visible(False)
-        axs[1+i*2].imshow(tf.transpose(phase, [1, 0]))
 
     plt.tight_layout()
     plt.savefig(f'{name}.png')
 
-def invert_magphase(hparams, stats, magphase, name):
-    assert len(magphase.shape) == 4, "Magphase needs to be in the form (batch, width, height, channels)"
-    count = magphase.shape[0]
-    audio = []
-    for i in range(count):
-        mag, phase = tf.unstack(magphase[i], axis=-1)
-        audio.append(invert(hparams, stats)((mag, phase)))
-    audio = tf.concat(audio, axis=0)
-    librosa.output.write_wav(f'{name}.wav', audio.numpy(), sr=hparams['sample_rate'])
