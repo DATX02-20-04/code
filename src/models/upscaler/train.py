@@ -28,7 +28,10 @@ def start(hparams):
     cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
                                                  save_weights_only=True,
                                                  verbose=1)
-    upscaler.model.load_weights(checkpoint_path)
+    try:
+        upscaler.model.load_weights(checkpoint_path)
+    except:
+        print("Initializing from scratch.")
 
     upscaler.model.fit(x=dataset, validation_data=valid_dataset, epochs=100, callbacks=[cp_callback])
 
