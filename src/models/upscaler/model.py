@@ -7,7 +7,7 @@ class Upscaler(tfk.Model):
         super(Upscaler, self).__init__()
         self.hparams = hparams
         self.stats = stats
-        self.optimizer = tfk.optimizers.Adam(lr=0.001, beta_1=0, beta_2=0.99, epsilon=10e-8)
+        self.optimizer = tfk.optimizers.Adam(lr=0.0001)
 
         self.model = self.create_model()
 

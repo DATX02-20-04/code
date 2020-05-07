@@ -11,7 +11,7 @@ from models.upscaler.model import Upscaler
 def start(hparams):
     dataset, stats = load(hparams)
 
-    valid = stats['examples']//5
+    valid = stats['examples']//10
     train = stats['examples']-valid
 
     dataset = dataset.shuffle(1000)

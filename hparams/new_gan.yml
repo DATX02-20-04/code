@@ -9,7 +9,7 @@ hparams:
   frame_step: 512
   n_mels: 1024
   latent_dim: 128
-  n_blocks: 6
+  n_blocks: 4
   buffer_size: 100
   save_dir: '.'
   batch_sizes:
@@ -17,12 +17,8 @@ hparams:
     - 32
     - 32
     - 16
-    - 8
-    - 4
   epochs:
     - 4
     - 6
-    - 6
     - 8
-    - 10
     - 10
