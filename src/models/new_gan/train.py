@@ -119,7 +119,7 @@ def plot_magphase(hparams, magphase, block, tsw, pitch=None):
         tfboard_save_image(img, f'Magphase', tsw, block)
 
 
-def invert_magphase(hparams, stats, magphase, name, tsw=None):
+def invert_magphase(hparams, stats, magphase, name):
     assert len(magphase.shape) == 4, "Magphase needs to be in the form (batch, width, height, channels)"
     count = magphase.shape[0]
     audio = []
