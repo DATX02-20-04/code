@@ -60,12 +60,11 @@ class GAN(tfk.Model):
                 # Save statistics
                 if tsw is not None:
                     tb_block = block.numpy()
-                    tb_step = step * tb_block
 
                     with tf.name_scope(f'Block {tb_block}') as scope:
-                        tfboard_save_numeric(g_loss, 'Gen. loss', tsw, tb_step)
-                        tfboard_save_numeric(d_loss1, 'Disc. real', tsw, tb_step)
-                        tfboard_save_numeric(d_loss2, 'Disc. fake', tsw, tb_step)
+                        tfboard_save_numeric(g_loss, 'Gen. loss', tsw, step)
+                        tfboard_save_numeric(d_loss1, 'Disc. real', tsw, step)
+                        tfboard_save_numeric(d_loss2, 'Disc. fake', tsw, step)
 
 
                 step += 1
