@@ -90,13 +90,15 @@ def start(hparams):
     [g_normal, g_fadein] = gan.generators[last]
     [d_normal, d_fadein] = gan.discriminators[last]
     [gan_normal, gan_fadein] = gan.models[last]
+
+    block.assign_add(1)
     for i in range(1, final_epochs+1):
         print(f"\nFinal training {i}/{final_epochs}...")
         gan.train_epochs(g_normal, d_normal, gan_normal, dataset, 1, batch_size, block, tsw=tsw)
 
         manager.save()
         gen = g_normal(tf.random.normal([5, hparams['latent_dim']]), training=False)
-        plot_magphase(hparams, gen, 4 + i, tsw=tsw)
+        plot_magphase(hparams, gen, block.numpy(), tsw=tsw)
 
 
 def plot_magphase(hparams, magphase, block, tsw, pitch=None):
