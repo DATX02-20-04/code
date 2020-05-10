@@ -8,6 +8,7 @@ import datetime
 import time
 from models.new_gan.process import load, invert
 from models.new_gan.model import GAN
+from util import get_plot_image
 
 
 def start(hparams):
@@ -17,7 +18,7 @@ def start(hparams):
         return tf.squeeze(tf.image.resize(tf.reshape(image, [1, 32, 256, 1]), [32//down_scale, 256//down_scale]))
 
     gan = GAN(hparams, stats)
-    block = tf.Variable(1)
+    block = tf.Variable(0)
 
     tsw = init_tensorboard(hparams)
 
@@ -37,7 +38,7 @@ def start(hparams):
     else:
         print("Initializing from scratch.")
 
-    if block == 1:
+    if block == 0:
         # Get the first models to train
         g_init, d_init, gan_init = gan.get_initial_models()
 
@@ -48,13 +49,13 @@ def start(hparams):
         ])(dataset)
 
 
+        block.assign_add(1)
         gan.train_epochs(g_init, d_init, gan_init, scaled_dataset, hparams['epochs'][0], hparams['batch_sizes'][0], block, tsw=tsw)
 
-        block.assign_add(1)
         manager.save()
 
         gen = g_init(tf.random.normal([5, hparams['latent_dim']]), training=False)
-        plot_magphase(hparams, gen, f'generated_magphase_block00')
+        plot_magphase(hparams, gen, block.numpy(), tsw=tsw)
 
     for i in range(block.numpy(), hparams['n_blocks']):
         down_scale = 2**(hparams['n_blocks']-i-1)
@@ -70,17 +71,20 @@ def start(hparams):
         [d_normal, d_fadein] = gan.discriminators[i]
         [gan_normal, gan_fadein] = gan.models[i]
 
+        block.assign_add(1)
+
         print("\nFading in next...")
-        gan.train_epochs(g_fadein, d_fadein, gan_fadein, scaled_dataset, epochs, batch_size, block, fade=True, tsw=tsw)
+        gan.train_epochs(g_fadein, d_fadein, gan_fadein, scaled_dataset, epochs, batch_size, block, fade=True)
 
         print("\nNormal training...")
         gan.train_epochs(g_normal, d_normal, gan_normal, scaled_dataset, epochs, batch_size, block, tsw=tsw)
 
-        block.assign_add(1)
         manager.save()
 
         gen = g_normal(tf.random.normal([5, hparams['latent_dim']]), training=False)
-        plot_magphase(hparams, gen, f'generated_magphase_block{i:02d}')
+        plot_magphase(hparams, gen, block.numpy(), tsw=tsw)
+
+    exit()
 
     final_epochs = 100
     batch_size = 16
@@ -95,21 +99,25 @@ def start(hparams):
         manager.save()
        
 
-def plot_magphase(hparams, magphase, name, pitch=None, tsw=None):
+def plot_magphase(hparams, magphase, block, tsw, pitch=None):
     assert len(magphase.shape) == 4, "Magphase needs to be in the form (batch, width, height, channels)"
     count = magphase.shape[0]
-    fig, axs = plt.subplots(1, 2*count)
+    fig, axs = plt.subplots(1, count)
     for i in range(count):
         mag = tf.squeeze(magphase[i])
         if pitch is not None:
             plt.suptitle(f"Pitch: {tf.argmax(pitch)}")
-        axs[0+i*2].set_title("Mag")
-        axs[0+i*2].axes.get_xaxis().set_visible(False)
-        axs[0+i*2].axes.get_yaxis().set_visible(False)
-        axs[0+i*2].imshow(tf.transpose(mag, [1, 0]))
+        axs[0+i].set_title("Mag")
+        axs[0+i].axes.get_xaxis().set_visible(False)
+        axs[0+i].axes.get_yaxis().set_visible(False)
+        axs[0+i].imshow(tf.transpose(mag, [1, 0]))
 
     plt.tight_layout()
-    plt.savefig(f'{name}.png')
+
+    img = get_plot_image()
+    with tf.name_scope(f'Block: {block}') as scope:
+        tfboard_save_image(img, f'Magphase', tsw, block)
+
 
 def invert_magphase(hparams, stats, magphase, name, tsw=None):
     assert len(magphase.shape) == 4, "Magphase needs to be in the form (batch, width, height, channels)"
@@ -127,3 +135,7 @@ def init_tensorboard(hparams):
     current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     train_log_dir = f"./logs/{hparams['name']}/{current_time}/train/"
     return tf.summary.create_file_writer(train_log_dir)
+
+def tfboard_save_image(image, label, tsw, block):
+        with tsw.as_default():
+            tf.summary.image(f'Spectrogram', image, step=block)

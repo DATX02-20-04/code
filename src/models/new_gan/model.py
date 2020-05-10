@@ -2,6 +2,7 @@ import tensorflow as tf
 import tensorflow.keras as tfk
 import tensorflow.keras.layers as tfkl
 import models.new_gan.layers as l
+from util import get_plot_image
 
 """
 Based on https://machinelearningmastery.com/how-to-train-a-progressive-growing-gan-in-keras-for-synthesizing-faces/
@@ -57,13 +58,15 @@ class GAN(tfk.Model):
                 print(f"e{e}, {int((step/steps)*100)}%, {step+1}/{steps}, dr={d_loss1:.3f}, df={d_loss2:.3f} g={g_loss:.3f} a={alpha:.3f}", end='\r')
 
                 # Save statistics
-                tb_block = block.numpy()
-                tb_step = step * tb_block
                 if tsw is not None:
+                    tb_block = block.numpy()
+                    tb_step = step * tb_block
+
                     with tf.name_scope(f'Block {tb_block}') as scope:
                         tfboard_save_numeric(g_loss, 'Gen. loss', tsw, tb_step)
                         tfboard_save_numeric(d_loss1, 'Disc. real', tsw, tb_step)
                         tfboard_save_numeric(d_loss2, 'Disc. fake', tsw, tb_step)
+
 
                 step += 1
 
