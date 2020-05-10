@@ -95,7 +95,9 @@ def start(hparams):
         gan.train_epochs(g_normal, d_normal, gan_normal, dataset, 1, batch_size, block, tsw=tsw)
 
         manager.save()
-       
+        gen = g_normal(tf.random.normal([5, hparams['latent_dim']]), training=False)
+        plot_magphase(hparams, gen, block.numpy(), tsw=tsw)
+
 
 def plot_magphase(hparams, magphase, block, tsw, pitch=None):
     assert len(magphase.shape) == 4, "Magphase needs to be in the form (batch, width, height, channels)"
