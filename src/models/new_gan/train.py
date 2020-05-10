@@ -96,7 +96,7 @@ def start(hparams):
 
         manager.save()
         gen = g_normal(tf.random.normal([5, hparams['latent_dim']]), training=False)
-        plot_magphase(hparams, gen, 'final', tsw=tsw)
+        plot_magphase(hparams, gen, 4 + i, tsw=tsw)
 
 
 def plot_magphase(hparams, magphase, block, tsw, pitch=None):
