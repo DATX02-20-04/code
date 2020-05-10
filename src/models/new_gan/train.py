@@ -84,8 +84,6 @@ def start(hparams):
         gen = g_normal(tf.random.normal([5, hparams['latent_dim']]), training=False)
         plot_magphase(hparams, gen, block.numpy(), tsw=tsw)
 
-    exit()
-
     final_epochs = 100
     batch_size = 16
     last = hparams['n_blocks']-1
