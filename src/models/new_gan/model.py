@@ -108,8 +108,10 @@ class GAN(tfk.Model):
         d = tfkl.LeakyReLU(alpha=0.2)(d)
         d = tfkl.Flatten()(d)
 
-        out_class = tfkl.Dense(1)(d)
-        model = tfk.Model(in_image, out_class)
+        out_fake = tfkl.Dense(1)(d)
+        out_aux = tfkl.Dense(self.hparams['pitches'])(d)
+
+        model = tfk.Model(inputs=in_image, outputs=[out_fake, out_aux])
         model.compile(loss=self.wasserstein_loss, optimizer=self.optimizer)
         model_list.append([model, model])
 
@@ -148,8 +150,11 @@ class GAN(tfk.Model):
         const = tfk.constraints.max_norm(1.0)
         model_list = []
         in_latent = tfkl.Input(shape=(self.hparams['latent_dim'],))
+        in_pitch = tfkl.Input(shape=(self.hparams['pitches'],))
 
-        g = tfkl.Dense(128 * in_dim[0] * in_dim[1], kernel_initializer=init, kernel_constraint=const)(in_latent)
+        g = tfkl.Concatenate()([in_latent, in_pitch])
+
+        g = tfkl.Dense(128 * in_dim[0] * in_dim[1], kernel_initializer=init, kernel_constraint=const)(g)
         g = tfkl.Reshape((in_dim[0], in_dim[1], 128))(g)
         g = tfkl.Conv2D(128, (3,3), padding='same', kernel_initializer=init, kernel_constraint=const)(g)
         g = l.PixelNorm()(g)
@@ -159,7 +164,7 @@ class GAN(tfk.Model):
         g = tfkl.LeakyReLU(alpha=0.2)(g)
 
         out_image = tfkl.Conv2D(1, (1,1), padding='same', kernel_initializer=init, kernel_constraint=const)(g)
-        model = tfk.Model(in_latent, out_image)
+        model = tfk.Model(inputs=[in_latent, in_pitch], outputs=out_image)
         model_list.append([model, model])
 
         for i in range(1, self.hparams['n_blocks']):
