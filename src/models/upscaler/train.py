@@ -7,6 +7,9 @@ import matplotlib.pyplot as plt
 from models.upscaler.process import load, invert
 from models.upscaler.model import Upscaler
 
+import datetime
+import time
+
 
 def start(hparams):
     dataset, stats = load(hparams)
@@ -30,16 +33,21 @@ def start(hparams):
     cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
                                                  save_weights_only=True,
                                                  verbose=1)
+    current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    log_dir = f"./logs/{hparams['name']}/{current_time}/train/"
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir)
+
+
     try:
         upscaler.model.load_weights(checkpoint_path)
     except:
         print("Initializing from scratch.")
 
-    upscaler.model.fit(x=dataset, validation_data=valid_dataset, epochs=100, callbacks=[cp_callback])
+    upscaler.model.fit(x=dataset, validation_data=valid_dataset, epochs=100, callbacks=[cp_callback, tensorboard_callback])
 
     # plot_magphase(hparams, gen, f'generated_magphase_block{i:02d}')
     # invert_magphase(hparams, stats, gen, f'generated_magphase_block{i:02d}')
-       
+
 
 def plot_magphase(hparams, magphase, name, pitch=None):
     assert len(magphase.shape) == 4, "Magphase needs to be in the form (batch, width, height, channels)"
