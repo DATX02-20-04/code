@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from models.new_gan.process import load as gan_load
 from models.upscaler.process import load as upscale_load
 from models.new_gan.model import GAN
-from models.new_gan.train import plot_magphase, invert_magphase
+from models.new_gan.train import plot_magphase
 from models.upscaler.model import Upscaler
 from models.upscaler.process import invert as upscale_invert
 from util import load_hparams
@@ -52,22 +52,20 @@ def start(hparams):
 
     for i in range(gen.shape[0]):
         u_m, u_p = tf.unstack(upscaled[i], axis=-1)
-        x_m, x_p = tf.unstack(gen[i], axis=-1)
+        x_m = tf.squeeze(gen[i])
         fig, axs = plt.subplots(1, 4)
 
-        axs[0].set_title("Magnitude")
+        axs[0].set_title("Gen Mag")
         axs[0].imshow(tf.transpose(x_m, [1, 0]))
-        axs[1].set_title("Phase")
-        axs[1].imshow(tf.transpose(x_p, [1, 0]))
 
-        axs[2].set_title("Magnitude")
+        axs[2].set_title("Ups Mag")
         axs[2].imshow(tf.transpose(u_m, [1, 0]))
-        axs[3].set_title("Phase")
+        axs[3].set_title("Ups Pha")
         axs[3].imshow(tf.transpose(u_p, [1, 0]))
 
         plt.savefig(f'generated_upscale_plot{i}.png')
 
         audio = upscale_invert(upscale_hparams, upscale_stats)((u_m, u_p))
-        librosa.output.write_wav(f'inverted_upscale_audio{i}.wav', audio.numpy(), sr=upscale_hparams['sample_rate'])
+        librosa.output.write_wav(f'inverted_upscale_audio{i}.wav', audio.numpy(), sr=upscale_hparams['sample_rate'], norm=True)
    
 

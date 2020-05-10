@@ -14,6 +14,8 @@ def start(hparams):
     valid = stats['examples']//10
     train = stats['examples']-valid
 
+    dataset = dataset.map(lambda x, y: (tf.reshape(x, [32, 256]), y))
+
     dataset = dataset.shuffle(1000)
     valid_dataset = dataset.take(valid)
     valid_dataset = dataset.batch(8, drop_remainder=True)
@@ -28,7 +30,10 @@ def start(hparams):
     cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
                                                  save_weights_only=True,
                                                  verbose=1)
-    upscaler.model.load_weights(checkpoint_path)
+    try:
+        upscaler.model.load_weights(checkpoint_path)
+    except:
+        print("Initializing from scratch.")
 
     upscaler.model.fit(x=dataset, validation_data=valid_dataset, epochs=100, callbacks=[cp_callback])
 
