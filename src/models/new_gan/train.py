@@ -107,10 +107,10 @@ def plot_magphase(hparams, magphase, block, tsw, pitch=None):
         mag = tf.squeeze(magphase[i])
         if pitch is not None:
             plt.suptitle(f"Pitch: {tf.argmax(pitch)}")
-        axs[0+i].set_title("Mag")
-        axs[0+i].axes.get_xaxis().set_visible(False)
-        axs[0+i].axes.get_yaxis().set_visible(False)
-        axs[0+i].imshow(tf.transpose(mag, [1, 0]))
+        axs[i].set_title("Mag")
+        axs[i].axes.get_xaxis().set_visible(False)
+        axs[i].axes.get_yaxis().set_visible(False)
+        axs[i].imshow(tf.transpose(mag, [1, 0]), origin='bottom')
 
     plt.tight_layout()
 
