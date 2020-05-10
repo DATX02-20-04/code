@@ -30,7 +30,7 @@ class GAN(tfk.Model):
         y = tf.zeros([samples, 1])
         return X, y
 
-    def train_epochs(self, generator, discriminator, model, dataset, epochs, batch_size, fade=False):
+    def train_epochs(self, generator, discriminator, model, dataset, epochs, batch_size, block, fade=False, tsw=None):
         half_batch = batch_size // 2
         bpe = self.stats['examples'] // half_batch
         steps = bpe * epochs
@@ -55,6 +55,15 @@ class GAN(tfk.Model):
                 g_loss = model.train_on_batch(z_input, y_real2)
 
                 print(f"e{e}, {int((step/steps)*100)}%, {step+1}/{steps}, dr={d_loss1:.3f}, df={d_loss2:.3f} g={g_loss:.3f} a={alpha:.3f}", end='\r')
+
+                # Save statistics
+                tb_block = block.numpy()
+                tb_step = step * tb_block
+                if tsw is not None:
+                    with tf.name_scope(f'Block {tb_block}') as scope:
+                        tfboard_save_numeric(g_loss, 'Gen. loss', tsw, tb_step)
+                        tfboard_save_numeric(d_loss1, 'Disc. real', tsw, tb_step)
+                        tfboard_save_numeric(d_loss2, 'Disc. fake', tsw, tb_step)
 
                 step += 1
 
@@ -199,3 +208,8 @@ class GAN(tfk.Model):
                     layer.alpha = alpha
 
         return alpha
+
+def tfboard_save_numeric(num, label, tsw, steps):
+    with tsw.as_default():
+        tf.summary.scalar(label, num, step=steps)
+

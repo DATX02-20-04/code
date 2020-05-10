@@ -1,8 +1,11 @@
 import tensorflow as tf
 import librosa
 import os
+import io
 import data.process as pro
 import matplotlib.pyplot as plt
+import datetime
+import time
 from models.new_gan.process import load, invert
 from models.new_gan.model import GAN
 
@@ -15,6 +18,8 @@ def start(hparams):
 
     gan = GAN(hparams, stats)
     block = tf.Variable(1)
+
+    tsw = init_tensorboard(hparams)
 
     ckpt = tf.train.Checkpoint(
         gan=gan,
@@ -42,7 +47,12 @@ def start(hparams):
             pro.cache(),
         ])(dataset)
 
-        gan.train_epochs(g_init, d_init, gan_init, scaled_dataset, hparams['epochs'][0], hparams['batch_sizes'][0])
+
+        gan.train_epochs(g_init, d_init, gan_init, scaled_dataset, hparams['epochs'][0], hparams['batch_sizes'][0], block, tsw=tsw)
+
+        block.assign_add(1)
+        manager.save()
+
         gen = g_init(tf.random.normal([5, hparams['latent_dim']]), training=False)
         plot_magphase(hparams, gen, f'generated_magphase_block00')
 
@@ -61,10 +71,10 @@ def start(hparams):
         [gan_normal, gan_fadein] = gan.models[i]
 
         print("\nFading in next...")
-        gan.train_epochs(g_fadein, d_fadein, gan_fadein, scaled_dataset, epochs, batch_size, True)
+        gan.train_epochs(g_fadein, d_fadein, gan_fadein, scaled_dataset, epochs, batch_size, block, fade=True, tsw=tsw)
 
         print("\nNormal training...")
-        gan.train_epochs(g_normal, d_normal, gan_normal, scaled_dataset, epochs, batch_size)
+        gan.train_epochs(g_normal, d_normal, gan_normal, scaled_dataset, epochs, batch_size, block, tsw=tsw)
 
         block.assign_add(1)
         manager.save()
@@ -80,12 +90,12 @@ def start(hparams):
     [gan_normal, gan_fadein] = gan.models[last]
     for i in range(1, final_epochs+1):
         print(f"\nFinal training {i}/{final_epochs}...")
-        gan.train_epochs(g_normal, d_normal, gan_normal, dataset, 1, batch_size)
+        gan.train_epochs(g_normal, d_normal, gan_normal, dataset, 1, batch_size, block, tsw=tsw)
 
         manager.save()
        
 
-def plot_magphase(hparams, magphase, name, pitch=None):
+def plot_magphase(hparams, magphase, name, pitch=None, tsw=None):
     assert len(magphase.shape) == 4, "Magphase needs to be in the form (batch, width, height, channels)"
     count = magphase.shape[0]
     fig, axs = plt.subplots(1, 2*count)
@@ -101,3 +111,19 @@ def plot_magphase(hparams, magphase, name, pitch=None):
     plt.tight_layout()
     plt.savefig(f'{name}.png')
 
+def invert_magphase(hparams, stats, magphase, name, tsw=None):
+    assert len(magphase.shape) == 4, "Magphase needs to be in the form (batch, width, height, channels)"
+    count = magphase.shape[0]
+    audio = []
+    for i in range(count):
+        mag, phase = tf.unstack(magphase[i], axis=-1)
+        audio.append(invert(hparams, stats)((mag, phase)))
+    audio = tf.concat(audio, axis=0)
+    librosa.output.write_wav(f'{name}.wav', audio.numpy(), sr=hparams['sample_rate'])
+
+
+def init_tensorboard(hparams):
+    # Tensorfboard logging
+    current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    train_log_dir = f"./logs/{hparams['name']}/{current_time}/train/"
+    return tf.summary.create_file_writer(train_log_dir)
