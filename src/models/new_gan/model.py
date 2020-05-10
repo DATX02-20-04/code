@@ -17,17 +17,28 @@ class GAN(tfk.Model):
         self.discriminators = self.create_discriminator()
         self.models = self.create_composite(self.discriminators, self.generators)
 
-    def wasserstein_loss(self, y_true, y_pred):
+    def fake_loss(self, y_true, y_pred):
         # return tf.math.reduce_mean(y_true * y_pred)
         return tfk.losses.mean_squared_error(y_true, y_pred)
+
+    def aux_loss(self, y_true, y_pred):
+        return tfk.losses.categorical_crossentropy(y_true, y_pred)
 
     def get_initial_models(self):
         return self.generators[0][0], self.discriminators[0][0], self.models[0][0]
 
+    def generate_pitch(self, samples):
+        fake_pitch_index = tf.random.uniform([samples], 0, self.hparams['pitches'], dtype=tf.int32)
+        return tf.one_hot(fake_pitch_index, self.hparams['pitches'], axis=1)
+
+
     def generate_fake(self, generator, samples):
         z = tf.random.normal([samples, self.hparams['latent_dim']])
-        X = generator(z)
-        y = tf.zeros([samples, 1])
+        fake_pitch = self.generate_pitch(samples)
+
+        X = generator([z, fake_pitch])
+        y = [tf.zeros([samples, 1]), fake_pitch]
+
         return X, y
 
     def train_epochs(self, generator, discriminator, model, dataset, epochs, batch_size, fade=False):
@@ -36,11 +47,11 @@ class GAN(tfk.Model):
         steps = bpe * epochs
 
         dataset = dataset.batch(half_batch, drop_remainder=True)
-        dataset = dataset.map(lambda *x: (x, tf.ones([half_batch, 1])))
+        dataset = dataset.map(lambda X_real, pitch_real: (X_real, [tf.ones([half_batch, 1]), pitch_real]))
 
         step = 0
         for e in range(epochs):
-            for (X_real, pitch_real), y_real in dataset:
+            for X_real, y_real in dataset:
                 alpha = 0.0
                 if fade:
                     alpha = self.update_fadein([generator, discriminator, model], step, steps)
@@ -75,21 +86,27 @@ class GAN(tfk.Model):
         d = tfkl.AveragePooling2D(pool_size=(2, 2))(d)
 
         block_new = d
-        for i in range(n_layers, len(old.layers)):
+        for i in range(n_layers, len(old.layers)-2):
             d = old.layers[i](d)
 
-        model1 = tfk.Model(in_image, d)
-        model1.compile(loss=self.wasserstein_loss, optimizer=self.optimizer)
+        d1 = old.layers[-2](d)
+        d2 = old.layers[-1](d)
+
+        model1 = tfk.Model(in_image, outputs=[d1, d2])
+        model1.compile(loss=[self.fake_loss, self.aux_loss], optimizer=self.optimizer)
         downsample = tfkl.AveragePooling2D(pool_size=(2, 2))(in_image)
         block_old = old.layers[1](downsample)
         block_old = old.layers[2](block_old)
         d = l.WeightedSum()([block_old, block_new])
 
-        for i in range(n_layers, len(old.layers)):
+        for i in range(n_layers, len(old.layers)-2):
             d = old.layers[i](d)
 
-        model2 = tfk.Model(in_image, d)
-        model2.compile(loss=self.wasserstein_loss, optimizer=self.optimizer)
+        d1 = old.layers[-2](d)
+        d2 = old.layers[-1](d)
+
+        model2 = tfk.Model(in_image, outputs=[d1, d2])
+        model2.compile(loss=[self.fake_loss, self.aux_loss], optimizer=self.optimizer)
 
         return [model1, model2]
 
@@ -112,7 +129,7 @@ class GAN(tfk.Model):
         out_aux = tfkl.Dense(self.hparams['pitches'])(d)
 
         model = tfk.Model(inputs=in_image, outputs=[out_fake, out_aux])
-        model.compile(loss=self.wasserstein_loss, optimizer=self.optimizer)
+        model.compile(loss=[self.fake_loss, self.aux_loss], optimizer=self.optimizer)
         model_list.append([model, model])
 
         for i in range(1, self.hparams['n_blocks']):
@@ -137,11 +154,11 @@ class GAN(tfk.Model):
         g = tfkl.LeakyReLU(alpha=0.2)(g)
 
         out_image = tfkl.Conv2D(1, (1,1), padding='same', kernel_initializer=init, kernel_constraint=const)(g)
-        model1 = tfk.Model(old.input, out_image)
+        model1 = tfk.Model(inputs=old.input, outputs=out_image)
         out_old = old.layers[-1]
         out_image2 = out_old(upsampling)
         merged = l.WeightedSum()([out_image2, out_image])
-        model2 = tfk.Model(old.input, merged)
+        model2 = tfk.Model(inputs=old.input, outputs=merged)
 
         return [model1, model2]
 
@@ -184,13 +201,13 @@ class GAN(tfk.Model):
             model1 = tfk.Sequential()
             model1.add(g_models[0])
             model1.add(d_models[0])
-            model1.compile(loss=self.wasserstein_loss, optimizer=self.optimizer)
+            model1.compile(loss=[self.fake_loss, self.aux_loss], optimizer=self.optimizer)
 
             d_models[1].trainable = False
             model2 = tfk.Sequential()
             model2.add(g_models[1])
             model2.add(d_models[1])
-            model2.compile(loss=self.wasserstein_loss, optimizer=self.optimizer)
+            model2.compile(loss=[self.fake_loss, self.aux_loss], optimizer=self.optimizer)
            
             model_list.append([model1, model2])
         return model_list
