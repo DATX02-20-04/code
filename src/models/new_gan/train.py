@@ -86,7 +86,7 @@ def start(hparams):
         plot_magphase(hparams, gen, f'generated_magphase_block{i:02d}', step, block, tsw=tsw, pitch=gen_pitch)
 
     final_epochs = 100
-    batch_size = 16
+    batch_size = 32
     last = hparams['n_blocks']-1
     [g_normal, g_fadein] = gan.generators[last]
     [d_normal, d_fadein] = gan.discriminators[last]
