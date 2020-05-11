@@ -103,7 +103,7 @@ class GAN(tfk.Model):
 
                 g_aux_loss = self.categorical_cross_entropy(y_fake_aux, Y_fake_aux)
                 g_source_loss = self.cross_entropy(tf.ones_like(X_fake), X_fake)
-                g_total_loss = g_source_loss + g_aux_loss * self.hparams['aux_loss_weight']
+                g_total_loss = g_source_loss - g_aux_loss * self.hparams['aux_loss_weight']
 
             gradients_of_generator = gen_tape.gradient(g_total_loss, generator.trainable_variables)
             gradients_of_discriminator = disc_tape.gradient(d_total_loss, discriminator.trainable_variables)
