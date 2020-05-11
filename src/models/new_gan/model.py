@@ -12,8 +12,8 @@ class GAN(tfk.Model):
         super(GAN, self).__init__()
         self.hparams = hparams
         self.stats = stats
-        self.generator_optimizer = tfk.optimizers.Adam(lr=0.00001, beta_1=0, beta_2=0.99, epsilon=10e-8)
-        self.discriminator_optimizer = tfk.optimizers.Adam(lr=0.00001, beta_1=0, beta_2=0.99, epsilon=10e-8)
+        self.generator_optimizer = tfk.optimizers.Adam(lr=self.hparams['gen_lr'], beta_1=0, beta_2=0.99, epsilon=10e-8)
+        self.discriminator_optimizer = tfk.optimizers.Adam(lr=self.hparams['disc_lr'], beta_1=0, beta_2=0.99, epsilon=10e-8)
 
         self.cross_entropy = tfk.losses.BinaryCrossentropy(from_logits=True)
         self.categorical_cross_entropy = tfk.losses.CategoricalCrossentropy()
