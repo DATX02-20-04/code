@@ -20,10 +20,11 @@ def start(hparams):
     gan = GAN(hparams, stats)
     block = tf.Variable(0)
     step = tf.Variable(0)
-    seed_examples = 5
-    pitch_start = 42
+    seed_examples = 10
+    pitch_start = 24
+    step_size = 2
     seed = tf.Variable(tf.random.normal([seed_examples, hparams['latent_dim']]))
-    seed_pitches = tf.range(pitch_start, pitch_start+seed_examples)
+    seed_pitches = tf.range(pitch_start, pitch_start+seed_examples*step_size, step_size)
     seed_pitches = tf.one_hot(seed_pitches, hparams['pitches'], axis=1)
 
     tsw = init_tensorboard(hparams)

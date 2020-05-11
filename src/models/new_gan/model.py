@@ -53,17 +53,17 @@ class GAN(tfk.Model):
         init_step = step.numpy()
 
         dataset = dataset.batch(half_batch, drop_remainder=True)
-        dataset = dataset.map(lambda X_real, pitch_real: (X_real, tf.ones([half_batch, 1]), pitch_real))
+        dataset = dataset.map(lambda X_real, pitch_real: (X_real, pitch_real))
 
         train_step = self.create_train_step(generator, discriminator, half_batch)
 
         for e in range(epochs):
-            for X_real, y_real, y_real_aux in dataset:
+            for X_real, y_real_aux in dataset:
                 alpha = 0.0
                 if fade:
                     alpha = self.update_fadein([generator, discriminator], step.numpy()-init_step, steps)
 
-                d_real_loss, d_fake_loss, d_real_aux_loss, d_fake_aux_loss, d_total_loss, g_aux_loss, g_source_loss, g_total_loss = train_step(X_real, y_real, y_real_aux)
+                d_real_loss, d_fake_loss, d_real_aux_loss, d_fake_aux_loss, d_total_loss, g_aux_loss, g_source_loss, g_total_loss = train_step(X_real, y_real_aux)
 
                 print(f"e{e}, dr={d_real_loss:.3f}, df={d_fake_loss:.3f} draux={d_real_aux_loss:.3f} dfaux={d_fake_aux_loss:.3f} gsrc={g_source_loss:.3f} gaux={g_aux_loss:.3f} a={alpha:.3f}", end='\r')
 
@@ -87,15 +87,15 @@ class GAN(tfk.Model):
 
     def create_train_step(self, generator, discriminator, half_batch):
         @tf.function
-        def apply_grad(X_real, y_real, y_real_aux):
+        def apply_grad(X_real, y_real_aux):
             with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
                 X_fake, y_fake_aux = self.generate_fake(generator, half_batch)
 
                 Y_real, Y_real_aux = discriminator(X_real, training=True)
                 Y_fake, Y_fake_aux = discriminator(X_fake, training=True)
 
-                d_real_loss = self.cross_entropy(tf.ones_like(X_real), X_real)
-                d_fake_loss = self.cross_entropy(tf.zeros_like(X_fake), X_fake)
+                d_real_loss = self.cross_entropy(tf.ones_like(Y_real), Y_real)
+                d_fake_loss = self.cross_entropy(tf.zeros_like(Y_fake), Y_fake)
 
                 d_real_aux_loss = self.categorical_cross_entropy(y_real_aux, Y_real_aux)
                 d_fake_aux_loss = self.categorical_cross_entropy(y_fake_aux, Y_fake_aux)
