@@ -11,6 +11,8 @@ hparams:
   latent_dim: 128
   aux_loss_weight: 1
   dropout_rate: 0.2
+  gen_lr: 0.0001
+  disc_lr: 0.00001
   n_blocks: 4
   buffer_size: 100
   save_dir: '.'
