@@ -22,19 +22,19 @@ def start(hparams):
     step = tf.Variable(0)
     seed_examples = 5
     pitch_start = 42
-    seed = tf.random.normal([seed_examples, hparams['latent_size']])
-    seed_pitches = tf.range(pitch_start, pitch_start+seed_samples)
-    seed_pitches = tf.one_hot(seed_pitches, self.hparams['pitches'], axis=1)
+    seed = tf.Variable(tf.random.normal([seed_examples, hparams['latent_dim']]))
+    seed_pitches = tf.range(pitch_start, pitch_start+seed_examples)
+    seed_pitches = tf.one_hot(seed_pitches, hparams['pitches'], axis=1)
 
     tsw = init_tensorboard(hparams)
 
     ckpt = tf.train.Checkpoint(
         gan=gan,
+        seed=seed,
         generator_optimizer=gan.generator_optimizer,
         discriminator_optimizer=gan.discriminator_optimizer,
         block=block,
         step=step,
-        seed=seed,
     )
 
     manager = tf.train.CheckpointManager(ckpt,
