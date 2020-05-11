@@ -168,7 +168,7 @@ class GAN(tfk.Model):
         d = tfkl.LeakyReLU(alpha=0.2)(d)
         d = tfkl.Flatten()(d)
 
-        # d = tfkl.Dropout(rate=0.2)(d)
+        d = tfkl.Dropout(rate=self.hparams['dropout_rate'])(d)
         out_fake = tfkl.Dense(1)(d)
         out_aux = tfkl.Dense(self.hparams['pitches'])(d)
 
