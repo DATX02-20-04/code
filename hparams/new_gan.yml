@@ -14,10 +14,10 @@ hparams:
   buffer_size: 100
   save_dir: '.'
   batch_sizes:
-    - 128
-    - 64
-    - 32
-    - 32
+    - 2
+    - 2
+    - 2
+    - 2
   epochs:
     - 6
     - 8

@@ -2,6 +2,7 @@ import tensorflow as tf
 import tensorflow.keras as tfk
 import tensorflow.keras.layers as tfkl
 import models.new_gan.layers as l
+from util import get_plot_image
 
 """
 Based on https://machinelearningmastery.com/how-to-train-a-progressive-growing-gan-in-keras-for-synthesizing-faces/
@@ -45,28 +46,44 @@ class GAN(tfk.Model):
 
         return X_fake, y_fake_aux
 
-    def train_epochs(self, generator, discriminator, dataset, epochs, batch_size, fade=False):
+    def train_epochs(self, generator, discriminator, dataset, epochs, batch_size, block, step, fade=False, tsw=None):
         half_batch = batch_size // 2
         bpe = self.stats['examples'] // half_batch
         steps = bpe * epochs
+        init_step = step.numpy()
 
         dataset = dataset.batch(half_batch, drop_remainder=True)
         dataset = dataset.map(lambda X_real, pitch_real: (X_real, tf.ones([half_batch, 1]), pitch_real))
 
         train_step = self.create_train_step(generator, discriminator, half_batch)
 
-        step = 0
         for e in range(epochs):
             for X_real, y_real, y_real_aux in dataset:
                 alpha = 0.0
                 if fade:
-                    alpha = self.update_fadein([generator, discriminator], step, steps)
+                    alpha = self.update_fadein([generator, discriminator], step.numpy()-init_step, steps)
 
                 d_real_loss, d_fake_loss, d_real_aux_loss, d_fake_aux_loss, d_total_loss, g_aux_loss, g_source_loss, g_total_loss = train_step(X_real, y_real, y_real_aux)
 
-                print(f"e{e}, {step+1}/{steps}, dr={d_real_loss:.3f}, df={d_fake_loss:.3f} draux={d_real_aux_loss:.3f} dfaux={d_fake_aux_loss:.3f} gsrc={g_source_loss:.3f} gaux={g_aux_loss:.3f} a={alpha:.3f}", end='\r')
+                print(f"e{e}, dr={d_real_loss:.3f}, df={d_fake_loss:.3f} draux={d_real_aux_loss:.3f} dfaux={d_fake_aux_loss:.3f} gsrc={g_source_loss:.3f} gaux={g_aux_loss:.3f} a={alpha:.3f}", end='\r')
 
-                step += 1
+                # Save statistics
+                if tsw is not None:
+                    tb_block = block.numpy()
+                    tb_step = step.numpy()
+
+                    with tf.name_scope(f'Block {tb_block}') as scope:
+                        with tsw.as_default():
+                            tf.summary.scalar('Gen. source loss', g_source_loss, step=tb_step)
+                            tf.summary.scalar('Gen. aux loss', g_aux_loss, step=tb_step)
+                            tf.summary.scalar('Gen. total loss', g_total_loss, step=tb_step)
+                            tf.summary.scalar('Disc. fake loss', d_fake_loss, step=tb_step)
+                            tf.summary.scalar('Disc. real loss', d_real_loss, step=tb_step)
+                            tf.summary.scalar('Disc. real aux loss', d_real_aux_loss, step=tb_step)
+                            tf.summary.scalar('Disc. fake aux loss', d_fake_aux_loss, step=tb_step)
+                            tf.summary.scalar('Disc. total loss', d_total_loss, step=tb_step)
+
+                step.assign_add(1)
 
     def create_train_step(self, generator, discriminator, half_batch):
         @tf.function
@@ -225,3 +242,4 @@ class GAN(tfk.Model):
                     layer.alpha = alpha
 
         return alpha
+
