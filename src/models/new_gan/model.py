@@ -11,11 +11,14 @@ class GAN(tfk.Model):
         super(GAN, self).__init__()
         self.hparams = hparams
         self.stats = stats
-        self.optimizer = tfk.optimizers.Adam(lr=0.0001, beta_1=0, beta_2=0.99, epsilon=10e-8)
+        self.generator_optimizer = tfk.optimizers.Adam(lr=0.0001, beta_1=0, beta_2=0.99, epsilon=10e-8)
+        self.discriminator_optimizer = tfk.optimizers.Adam(lr=0.0001, beta_1=0, beta_2=0.99, epsilon=10e-8)
+
+        self.cross_entropy = tfk.losses.BinaryCrossentropy(from_logits=True)
+        self.categorical_cross_entropy = tfk.losses.CategoricalCrossentropy()
 
         self.generators = self.create_generator()
         self.discriminators = self.create_discriminator()
-        self.models = self.create_composite(self.discriminators, self.generators)
 
     def fake_loss(self, y_true, y_pred):
         # return tf.math.reduce_mean(y_true * y_pred)
@@ -25,49 +28,74 @@ class GAN(tfk.Model):
         return tfk.losses.categorical_crossentropy(y_true, y_pred)
 
     def get_initial_models(self):
-        return self.generators[0][0], self.discriminators[0][0], self.models[0][0]
+        return self.generators[0][0], self.discriminators[0][0]
 
+    @tf.function
     def generate_pitch(self, samples):
         fake_pitch_index = tf.random.uniform([samples], 0, self.hparams['pitches'], dtype=tf.int32)
         return tf.one_hot(fake_pitch_index, self.hparams['pitches'], axis=1)
 
 
-    def generate_fake(self, generator, samples):
+    @tf.function
+    def generate_fake(self, generator, samples, training=True):
         z = tf.random.normal([samples, self.hparams['latent_dim']])
-        fake_pitch = self.generate_pitch(samples)
+        y_fake_aux = self.generate_pitch(samples)
 
-        X = generator([z, fake_pitch])
-        y = [tf.zeros([samples, 1]), fake_pitch]
+        X_fake = generator([z, y_fake_aux], training=training)
 
-        return X, y
+        return X_fake, y_fake_aux
 
-    def train_epochs(self, generator, discriminator, model, dataset, epochs, batch_size, fade=False):
+    def train_epochs(self, generator, discriminator, dataset, epochs, batch_size, fade=False):
         half_batch = batch_size // 2
         bpe = self.stats['examples'] // half_batch
         steps = bpe * epochs
 
         dataset = dataset.batch(half_batch, drop_remainder=True)
-        dataset = dataset.map(lambda X_real, pitch_real: (X_real, [tf.ones([half_batch, 1]), pitch_real]))
+        dataset = dataset.map(lambda X_real, pitch_real: (X_real, tf.ones([half_batch, 1]), pitch_real))
+
+        train_step = self.create_train_step(generator, discriminator, half_batch)
 
         step = 0
         for e in range(epochs):
-            for X_real, y_real in dataset:
+            for X_real, y_real, y_real_aux in dataset:
                 alpha = 0.0
                 if fade:
-                    alpha = self.update_fadein([generator, discriminator, model], step, steps)
+                    alpha = self.update_fadein([generator, discriminator], step, steps)
 
-                X_fake, y_fake = self.generate_fake(generator, half_batch)
+                d_real_loss, d_fake_loss, d_real_aux_loss, d_fake_aux_loss, d_total_loss, g_aux_loss, g_source_loss, g_total_loss = train_step(X_real, y_real, y_real_aux)
 
-                d_loss1 = discriminator.train_on_batch(X_real, y_real)
-                d_loss2 = discriminator.train_on_batch(X_fake, y_fake)
-
-                z_input = tf.random.normal([batch_size, self.hparams['latent_dim']])
-                y_real2 = tf.ones([batch_size, 1])
-                g_loss = model.train_on_batch(z_input, y_real2)
-
-                print(f"e{e}, {int((step/steps)*100)}%, {step+1}/{steps}, dr={d_loss1:.3f}, df={d_loss2:.3f} g={g_loss:.3f} a={alpha:.3f}", end='\r')
+                print(f"e{e}, {step+1}/{steps}, dr={d_real_loss:.3f}, df={d_fake_loss:.3f} draux={d_real_aux_loss:.3f} dfaux={d_fake_aux_loss:.3f} gsrc={g_source_loss:.3f} gaux={g_aux_loss:.3f} a={alpha:.3f}", end='\r')
 
                 step += 1
+
+    def create_train_step(self, generator, discriminator, half_batch):
+        @tf.function
+        def apply_grad(X_real, y_real, y_real_aux):
+            with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
+                X_fake, y_fake_aux = self.generate_fake(generator, half_batch)
+
+                Y_real, Y_real_aux = discriminator(X_real, training=True)
+                Y_fake, Y_fake_aux = discriminator(X_fake, training=True)
+
+                d_real_loss = self.cross_entropy(tf.ones_like(Y_real), Y_real)
+                d_fake_loss = self.cross_entropy(tf.zeros_like(Y_fake), Y_fake)
+
+                d_real_aux_loss = self.categorical_cross_entropy(y_real_aux, Y_real_aux)
+                d_fake_aux_loss = self.categorical_cross_entropy(y_fake_aux, Y_fake_aux)
+                d_total_loss = d_real_loss + d_fake_loss + d_real_aux_loss + d_fake_aux_loss
+
+                g_aux_loss = self.categorical_cross_entropy(y_fake_aux, Y_fake_aux)
+                g_source_loss = self.cross_entropy(tf.ones_like(X_fake), X_fake)
+                g_total_loss = g_source_loss + g_aux_loss * self.hparams['aux_loss_weight']
+
+            gradients_of_generator = gen_tape.gradient(g_total_loss, generator.trainable_variables)
+            gradients_of_discriminator = disc_tape.gradient(d_total_loss, discriminator.trainable_variables)
+
+            self.generator_optimizer.apply_gradients(zip(gradients_of_generator, generator.trainable_variables))
+            self.discriminator_optimizer.apply_gradients(zip(gradients_of_discriminator, discriminator.trainable_variables))
+
+            return d_real_loss, d_fake_loss, d_real_aux_loss, d_fake_aux_loss, d_total_loss, g_aux_loss, g_source_loss, g_total_loss
+        return apply_grad
 
 
     def add_dblock(self, old, n_layers=3):
@@ -93,7 +121,6 @@ class GAN(tfk.Model):
         d2 = old.layers[-1](d)
 
         model1 = tfk.Model(in_image, outputs=[d1, d2])
-        model1.compile(loss=[self.fake_loss, self.aux_loss], optimizer=self.optimizer)
         downsample = tfkl.AveragePooling2D(pool_size=(2, 2))(in_image)
         block_old = old.layers[1](downsample)
         block_old = old.layers[2](block_old)
@@ -106,7 +133,6 @@ class GAN(tfk.Model):
         d2 = old.layers[-1](d)
 
         model2 = tfk.Model(in_image, outputs=[d1, d2])
-        model2.compile(loss=[self.fake_loss, self.aux_loss], optimizer=self.optimizer)
 
         return [model1, model2]
 
@@ -129,7 +155,6 @@ class GAN(tfk.Model):
         out_aux = tfkl.Dense(self.hparams['pitches'])(d)
 
         model = tfk.Model(inputs=in_image, outputs=[out_fake, out_aux])
-        model.compile(loss=[self.fake_loss, self.aux_loss], optimizer=self.optimizer)
         model_list.append([model, model])
 
         for i in range(1, self.hparams['n_blocks']):
@@ -189,27 +214,6 @@ class GAN(tfk.Model):
             models = self.add_gblock(old)
             model_list.append(models)
 
-        return model_list
-
-    def create_composite(self, discriminators, generators):
-        model_list = []
-
-        for i in range(len(discriminators)):
-            g_models, d_models = generators[i], discriminators[i]
-
-            d_models[0].trainable = False
-            model1 = tfk.Sequential()
-            model1.add(g_models[0])
-            model1.add(d_models[0])
-            model1.compile(loss=[self.fake_loss, self.aux_loss], optimizer=self.optimizer)
-
-            d_models[1].trainable = False
-            model2 = tfk.Sequential()
-            model2.add(g_models[1])
-            model2.add(d_models[1])
-            model2.compile(loss=[self.fake_loss, self.aux_loss], optimizer=self.optimizer)
-           
-            model_list.append([model1, model2])
         return model_list
 
     def update_fadein(self, models, step, n_steps):

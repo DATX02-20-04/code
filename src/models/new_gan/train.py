@@ -18,7 +18,8 @@ def start(hparams):
 
     ckpt = tf.train.Checkpoint(
         gan=gan,
-        optimizer=gan.optimizer,
+        generator_optimizer=gan.generator_optimizer,
+        discriminator_optimizer=gan.discriminator_optimizer,
         block=block,
     )
 
@@ -34,7 +35,7 @@ def start(hparams):
 
     if block == 1:
         # Get the first models to train
-        g_init, d_init, gan_init = gan.get_initial_models()
+        g_init, d_init = gan.get_initial_models()
 
         # Create the smallest scaled dataset to train the first
         scaled_dataset = pro.pipeline([
@@ -42,9 +43,9 @@ def start(hparams):
             pro.cache(),
         ])(dataset)
 
-        gan.train_epochs(g_init, d_init, gan_init, scaled_dataset, hparams['epochs'][0], hparams['batch_sizes'][0])
-        gen = g_init(tf.random.normal([5, hparams['latent_dim']]), training=False)
-        plot_magphase(hparams, gen, f'generated_magphase_block00')
+        gan.train_epochs(g_init, d_init, scaled_dataset, hparams['epochs'][0], hparams['batch_sizes'][0])
+        gen, gen_pitch = gan.generate_fake(g_init, 5, training=False)
+        plot_magphase(hparams, gen, f'generated_magphase_block00', pitch=gen_pitch)
 
     for i in range(block.numpy(), hparams['n_blocks']):
         down_scale = 2**(hparams['n_blocks']-i-1)
@@ -58,33 +59,31 @@ def start(hparams):
 
         [g_normal, g_fadein] = gan.generators[i]
         [d_normal, d_fadein] = gan.discriminators[i]
-        [gan_normal, gan_fadein] = gan.models[i]
 
         print("\nFading in next...")
-        gan.train_epochs(g_fadein, d_fadein, gan_fadein, scaled_dataset, epochs, batch_size, True)
+        gan.train_epochs(g_fadein, d_fadein, scaled_dataset, epochs, batch_size, True)
 
         print("\nNormal training...")
-        gan.train_epochs(g_normal, d_normal, gan_normal, scaled_dataset, epochs, batch_size)
+        gan.train_epochs(g_normal, d_normal, scaled_dataset, epochs, batch_size)
 
         block.assign_add(1)
         manager.save()
 
-        gen = g_normal(tf.random.normal([5, hparams['latent_dim']]), training=False)
-        plot_magphase(hparams, gen, f'generated_magphase_block{i:02d}')
+        gen, gen_pitch = gan.generate_fake(g_init, 5, training=False)
+        plot_magphase(hparams, gen, f'generated_magphase_block{i:02d}', pitch=gen_pitch)
 
     final_epochs = 100
     batch_size = 16
     last = hparams['n_blocks']-1
     [g_normal, g_fadein] = gan.generators[last]
     [d_normal, d_fadein] = gan.discriminators[last]
-    [gan_normal, gan_fadein] = gan.models[last]
     dataset = pro.pipeline([
         pro.map_transform(lambda magphase, pitch: (resize(magphase, 1), pitch)),
         pro.cache(),
     ])(dataset)
     for i in range(1, final_epochs+1):
         print(f"\nFinal training {i}/{final_epochs}...")
-        gan.train_epochs(g_normal, d_normal, gan_normal, dataset, 1, batch_size)
+        gan.train_epochs(g_normal, d_normal, dataset, 1, batch_size)
 
         manager.save()
        
@@ -96,7 +95,7 @@ def plot_magphase(hparams, magphase, name, pitch=None):
     for i in range(count):
         mag = tf.squeeze(magphase[i])
         if pitch is not None:
-            plt.suptitle(f"Pitch: {tf.argmax(pitch)}")
+            plt.suptitle(f"Pitch: {tf.argmax(pitch[i])}")
         axs[0+i*2].set_title("Mag")
         axs[0+i*2].axes.get_xaxis().set_visible(False)
         axs[0+i*2].axes.get_yaxis().set_visible(False)
