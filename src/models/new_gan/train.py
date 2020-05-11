@@ -20,6 +20,11 @@ def start(hparams):
     gan = GAN(hparams, stats)
     block = tf.Variable(0)
     step = tf.Variable(0)
+    seed_examples = 5
+    pitch_start = 42
+    seed = tf.random.normal([seed_examples, hparams['latent_size']])
+    seed_pitches = tf.range(pitch_start, pitch_start+seed_samples)
+    seed_pitches = tf.one_hot(seed_pitches, self.hparams['pitches'], axis=1)
 
     tsw = init_tensorboard(hparams)
 
@@ -28,12 +33,14 @@ def start(hparams):
         generator_optimizer=gan.generator_optimizer,
         discriminator_optimizer=gan.discriminator_optimizer,
         block=block,
-        step=step
+        step=step,
+        seed=seed,
     )
 
     manager = tf.train.CheckpointManager(ckpt,
                                          os.path.join(hparams['save_dir'], 'ckpts', hparams['name']),
                                          max_to_keep=3)
+
 
     ckpt.restore(manager.latest_checkpoint)
     if manager.latest_checkpoint:
@@ -56,8 +63,8 @@ def start(hparams):
 
         manager.save()
 
-        gen, gen_pitch = gan.generate_fake(g_init, 5, training=False)
-        plot_magphase(hparams, gen, step, block, tsw=tsw, pitch=gen_pitch)
+        X_fake = g_init([seed, seed_pitches], training=False)
+        plot_magphase(hparams, X_fake, step, block, tsw=tsw, pitch=gen_pitch)
 
     for i in range(block.numpy(), hparams['n_blocks']):
         down_scale = 2**(hparams['n_blocks']-i-1)
@@ -82,8 +89,8 @@ def start(hparams):
 
         manager.save()
 
-        gen, gen_pitch = gan.generate_fake(g_normal, 5, training=False)
-        plot_magphase(hparams, gen, step, block, tsw=tsw, pitch=gen_pitch)
+        X_fake = g_normal([seed, seed_pitches], training=False)
+        plot_magphase(hparams, X_fake, step, block, tsw=tsw, pitch=gen_pitch)
 
     final_epochs = 100
     batch_size = 32
@@ -97,8 +104,8 @@ def start(hparams):
         gan.train_epochs(g_normal, d_normal, dataset, 1, batch_size, block, step, tsw=tsw)
 
         manager.save()
-        gen, gen_pitch = gan.generate_fake(g_normal, 5, training=False)
-        plot_magphase(hparams, gen, step, block, tsw=tsw, pitch=gen_pitch)
+        X_fake = g_normal([seed, seed_pitches], training=False)
+        plot_magphase(hparams, X_fake, step, block, tsw=tsw, pitch=gen_pitch)
 
 
 def plot_magphase(hparams, magphase, step, block=None, tsw=None, pitch=None):
