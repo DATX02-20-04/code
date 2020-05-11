@@ -9,8 +9,8 @@ hparams:
   frame_step: 512
   n_mels: 1024
   latent_dim: 128
-  aux_loss_weight: 1
-  dropout_rate: 0.2
+  aux_loss_weight: 10
+  dropout_rate: 0.4
   n_blocks: 4
   buffer_size: 100
   save_dir: '.'
