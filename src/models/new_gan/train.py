@@ -64,7 +64,7 @@ def start(hparams):
         manager.save()
 
         X_fake = g_init([seed, seed_pitches], training=False)
-        plot_magphase(hparams, X_fake, step, block, tsw=tsw, pitch=gen_pitch)
+        plot_magphase(hparams, X_fake, step, block, tsw=tsw, pitch=seed_pitches)
 
     for i in range(block.numpy(), hparams['n_blocks']):
         down_scale = 2**(hparams['n_blocks']-i-1)
@@ -90,7 +90,7 @@ def start(hparams):
         manager.save()
 
         X_fake = g_normal([seed, seed_pitches], training=False)
-        plot_magphase(hparams, X_fake, step, block, tsw=tsw, pitch=gen_pitch)
+        plot_magphase(hparams, X_fake, step, block, tsw=tsw, pitch=seed_pitches)
 
     final_epochs = 100
     batch_size = 32
@@ -105,7 +105,7 @@ def start(hparams):
 
         manager.save()
         X_fake = g_normal([seed, seed_pitches], training=False)
-        plot_magphase(hparams, X_fake, step, block, tsw=tsw, pitch=gen_pitch)
+        plot_magphase(hparams, X_fake, step, block, tsw=tsw, pitch=seed_pitches)
 
 
 def plot_magphase(hparams, magphase, step, block=None, tsw=None, pitch=None):
