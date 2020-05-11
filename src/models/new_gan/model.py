@@ -94,15 +94,15 @@ class GAN(tfk.Model):
                 Y_real, Y_real_aux = discriminator(X_real, training=True)
                 Y_fake, Y_fake_aux = discriminator(X_fake, training=True)
 
-                d_real_loss = tf.keras.losses.mean_squared_error(tf.ones_like(Y_real), Y_real)
-                d_fake_loss = tf.keras.losses.mean_squared_error(tf.zeros_like(Y_fake), Y_fake)
+                d_real_loss = self.cross_entropy(tf.ones_like(X_real), X_real)
+                d_fake_loss = self.cross_entropy(tf.zeros_like(X_fake), X_fake)
 
                 d_real_aux_loss = self.categorical_cross_entropy(y_real_aux, Y_real_aux)
                 d_fake_aux_loss = self.categorical_cross_entropy(y_fake_aux, Y_fake_aux)
                 d_total_loss = d_real_loss + d_fake_loss + (d_fake_aux_loss + d_real_aux_loss) * self.hparams['aux_loss_weight']
 
                 g_aux_loss = d_fake_aux_loss
-                g_source_loss = tf.keras.losses.mean_squared_error(tf.ones_like(X_fake), X_fake)
+                g_source_loss = self.cross_entropy(tf.ones_like(Y_fake), Y_fake)
                 g_total_loss = g_source_loss + d_fake_aux_loss * self.hparams['aux_loss_weight']
 
             gradients_of_generator = gen_tape.gradient(g_total_loss, generator.trainable_variables)
