@@ -99,7 +99,7 @@ class GAN(tfk.Model):
 
                 d_real_aux_loss = self.categorical_cross_entropy(y_real_aux, Y_real_aux)
                 d_fake_aux_loss = self.categorical_cross_entropy(y_fake_aux, Y_fake_aux)
-                d_total_loss = d_real_loss + d_fake_loss + d_real_aux_loss + d_fake_aux_loss
+                d_total_loss = d_real_loss - (d_fake_loss + d_fake_aux_loss) + d_real_aux_loss
 
                 g_aux_loss = self.categorical_cross_entropy(y_fake_aux, Y_fake_aux)
                 g_source_loss = self.cross_entropy(tf.ones_like(X_fake), X_fake)
@@ -168,6 +168,7 @@ class GAN(tfk.Model):
         d = tfkl.LeakyReLU(alpha=0.2)(d)
         d = tfkl.Flatten()(d)
 
+        # d = tfkl.Dropout(rate=0.2)(d)
         out_fake = tfkl.Dense(1)(d)
         out_aux = tfkl.Dense(self.hparams['pitches'])(d)
 
