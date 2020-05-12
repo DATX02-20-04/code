@@ -5,10 +5,9 @@ import data.process as pro
 import matplotlib.pyplot as plt
 from data.nsynth import instrument_families_filter, instrument_sources_filter
 
-def serialize_example(mag, phase, pitch):
+def serialize_example(magphase, pitch):
     feature = {
-        'mag': tf.train.Feature(bytes_list=tf.train.BytesList(value=[tf.io.serialize_tensor(tf.cast(mag, tf.float32)).numpy()])),
-        'phase': tf.train.Feature(bytes_list=tf.train.BytesList(value=[tf.io.serialize_tensor(tf.cast(phase, tf.float32)).numpy()])),
+        'magphase': tf.train.Feature(bytes_list=tf.train.BytesList(value=[tf.io.serialize_tensor(tf.cast(magphase, tf.float32)).numpy()])),
         'pitch': tf.train.Feature(bytes_list=tf.train.BytesList(value=[tf.io.serialize_tensor(tf.cast(pitch, tf.float32)).numpy()]))
     }
 
@@ -56,9 +55,8 @@ def calculate_stats(hparams, dataset, examples):
     mag_maxs = []
     mag_mins = []
     step = 0
-    for mag, _ in dataset:
-        # print(mag.shape)
-        # exit()
+    for magphase, _ in dataset:
+        mag = magphase[:, :, 0]
         mag = mag.numpy()
         mag_means.append(np.mean(mag, axis=1))
         mag_stds.append(np.std(mag, axis=1))
@@ -172,10 +170,10 @@ def load(hparams):
     dataset = tf.data.TFRecordDataset([f"{hparams['dataset']}_dataset.tfrecord"])
     return pro.pipeline([
         pro.parse_tfrecord({
-            'mag': tf.io.FixedLenFeature([], dtype=tf.string),
+            'magphase': tf.io.FixedLenFeature([], dtype=tf.string),
             'pitch': tf.io.FixedLenFeature([], dtype=tf.string),
         }),
-        pro.map_transform(lambda x: (tf.io.parse_tensor(x['mag'], out_type=tf.float32),
+        pro.map_transform(lambda x: (tf.io.parse_tensor(x['magphase'], out_type=tf.float32),
                                      tf.io.parse_tensor(x['pitch'], out_type=tf.float32)))
     ])(dataset), stats
 
