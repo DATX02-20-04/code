@@ -17,6 +17,12 @@ def start(hparams):
 
     gan = GAN(hparams, gan_stats)
     block = tf.Variable(1)
+    seed_examples = 10
+    pitch_start = 24
+    step_size = 2
+    seed = tf.Variable(tf.random.normal([seed_examples, hparams['latent_dim']]))
+    seed_pitches = tf.range(pitch_start, pitch_start+seed_examples*step_size, step_size)
+    seed_pitches = tf.one_hot(seed_pitches, hparams['pitches'], axis=1)
 
     ckpt = tf.train.Checkpoint(
         gan=gan,
@@ -37,7 +43,7 @@ def start(hparams):
 
     [g_normal, g_fadein] = gan.generators[hparams['n_blocks']-1]
 
-    gen = g_normal(tf.random.normal([5, hparams['latent_dim']]), training=False)
+    gen = g_normal([seed, seed_pitches], training=False)
     print(gen.shape)
     plot_magphase(hparams, gen, f'generated_magphase_block_last')
 
