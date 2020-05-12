@@ -9,21 +9,21 @@ hparams:
   frame_step: 512
   n_mels: 1024
   latent_dim: 128
-  aux_loss_weight: 100
+  aux_loss_weight: 2
   dropout_rate: 0.0
   gen_lr: 0.0001
   disc_lr: 0.0001
   n_blocks: 4
-  buffer_size: 100
+  buffer_size: 2048
   save_dir: '.'
   batch_sizes:
-    - 128
+    - 64
     - 64
     - 32
     - 32
   epochs:
+    - 128
     - 32
-    - 16
     - 16
     - 32
 

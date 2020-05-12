@@ -20,11 +20,11 @@ def start(hparams):
     gan = GAN(hparams, stats)
     block = tf.Variable(0)
     step = tf.Variable(0)
-    seed_examples = 10
-    pitch_start = 24
-    step_size = 2
-    seed = tf.Variable(tf.random.normal([seed_examples, hparams['latent_dim']]))
-    seed_pitches = tf.range(pitch_start, pitch_start+seed_examples*step_size, step_size)
+    pitch_start = 0
+    pitch_end = hparams['pitches']
+    step_size = 4
+    seed_pitches = tf.range(pitch_start, pitch_start+pitch_end, step_size)
+    seed = tf.Variable(tf.random.normal([seed_pitches.shape[0], hparams['latent_dim']]))
     seed_pitches = tf.one_hot(seed_pitches, hparams['pitches'], axis=1)
 
     tsw = init_tensorboard(hparams)
@@ -41,6 +41,7 @@ def start(hparams):
     manager = tf.train.CheckpointManager(ckpt,
                                          os.path.join(hparams['save_dir'], 'ckpts', hparams['name']),
                                          max_to_keep=3)
+    dataset = dataset.shuffle(hparams['buffer_size'])
 
 
     ckpt.restore(manager.latest_checkpoint)
@@ -116,7 +117,7 @@ def plot_magphase(hparams, magphase, step, block=None, tsw=None, pitch=None):
     for i in range(count):
         mag = tf.squeeze(magphase[i])
         if pitch is not None:
-            axs[i].set_title(f"Pitch: {tf.argmax(pitch[i])}")
+            axs[i].set_title(f"{tf.argmax(pitch[i])}")
         axs[i].axes.get_xaxis().set_visible(False)
         axs[i].axes.get_yaxis().set_visible(False)
         axs[i].imshow(tf.transpose(mag, [1, 0]), origin='bottom')
