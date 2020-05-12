@@ -99,11 +99,11 @@ class GAN(tfk.Model):
 
                 d_real_aux_loss = self.categorical_cross_entropy(y_real_aux, Y_real_aux)
                 d_fake_aux_loss = self.categorical_cross_entropy(y_fake_aux, Y_fake_aux)
-                d_total_loss = d_real_loss + d_fake_loss + (d_real_aux_loss + d_fake_aux_loss) * self.hparams['aux_loss_weight']
+                d_total_loss = (d_real_loss + d_fake_loss) * self.hparams['src_loss_weight'] + (d_real_aux_loss) * self.hparams['aux_loss_weight']
 
-                g_aux_loss = d_fake_aux_loss
+                g_aux_loss = self.categorical_cross_entropy(y_fake_aux, Y_fake_aux)
                 g_source_loss = self.cross_entropy(tf.ones_like(Y_fake), Y_fake)
-                g_total_loss = g_source_loss + d_fake_aux_loss * self.hparams['aux_loss_weight']
+                g_total_loss = g_source_loss * self.hparams['src_loss_weight'] + d_fake_aux_loss * self.hparams['aux_loss_weight']
 
             gradients_of_generator = gen_tape.gradient(g_total_loss, generator.trainable_variables)
             gradients_of_discriminator = disc_tape.gradient(d_total_loss, discriminator.trainable_variables)
@@ -170,7 +170,7 @@ class GAN(tfk.Model):
 
         d = tfkl.Dropout(rate=self.hparams['dropout_rate'])(d)
         out_fake = tfkl.Dense(1)(d)
-        out_aux = tfkl.Dense(self.hparams['pitches'])(d)
+        out_aux = tfkl.Dense(self.hparams['pitches'], activation='softmax')(d)
 
         model = tfk.Model(inputs=in_image, outputs=[out_fake, out_aux])
         model_list.append([model, model])

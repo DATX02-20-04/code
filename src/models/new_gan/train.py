@@ -22,7 +22,7 @@ def start(hparams):
     step = tf.Variable(0)
     pitch_start = 0
     pitch_end = hparams['pitches']
-    step_size = 4
+    step_size = 1
     seed_pitches = tf.range(pitch_start, pitch_start+pitch_end, step_size)
     seed = tf.Variable(tf.random.normal([seed_pitches.shape[0], hparams['latent_dim']]))
     seed_pitches = tf.one_hot(seed_pitches, hparams['pitches'], axis=1)
@@ -112,15 +112,14 @@ def start(hparams):
 
 def plot_magphase(hparams, magphase, step, block=None, tsw=None, pitch=None):
     assert len(magphase.shape) == 4, "Magphase needs to be in the form (batch, width, height, channels)"
-    count = magphase.shape[0]
-    fig, axs = plt.subplots(1, count)
-    for i in range(count):
-        mag = tf.squeeze(magphase[i])
-        if pitch is not None:
-            axs[i].set_title(f"{tf.argmax(pitch[i])}")
-        axs[i].axes.get_xaxis().set_visible(False)
-        axs[i].axes.get_yaxis().set_visible(False)
-        axs[i].imshow(tf.transpose(mag, [1, 0]), origin='bottom')
+    mag = tf.unstack(magphase, axis=0)
+    mag = tf.concat(mag, axis=0)
+    mag = tf.squeeze(mag)
+    aspect = mag.shape[0]/mag.shape[1]
+    fig = plt.figure(figsize=(aspect*2, 2))
+    plt.gca().axes.get_xaxis().set_visible(False)
+    plt.gca().axes.get_yaxis().set_visible(False)
+    plt.imshow(tf.transpose(mag, [1, 0]), origin='bottom')
 
     plt.tight_layout()
 
