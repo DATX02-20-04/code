@@ -114,14 +114,21 @@ def plot_magphase(hparams, magphase, step, block=None, tsw=None, pitch=None):
     assert len(magphase.shape) == 4, "Magphase needs to be in the form (batch, width, height, channels)"
     mag = tf.unstack(magphase, axis=0)
     mag = [tf.unstack(m, axis=-1) for m in mag]
-    mag = [m for mp in mag for m in mp] # flatten
+    mag = [mp[0] for mp in mag]
+    phase = [mp[1] for mp in mag]
     mag = tf.concat(mag, axis=0)
+    phase = tf.concat(phase, axis=0)
     mag = tf.squeeze(mag)
+    phase = tf.squeeze(phase)
     aspect = mag.shape[0]/mag.shape[1]
     fig = plt.figure(figsize=(aspect*2, 2))
-    plt.gca().axes.get_xaxis().set_visible(False)
-    plt.gca().axes.get_yaxis().set_visible(False)
-    plt.imshow(tf.transpose(mag, [1, 0]), origin='bottom')
+    f, axs = plt.subplots(2, 1)
+    axs[0].axes.get_xaxis().set_visible(False)
+    axs[0].axes.get_yaxis().set_visible(False)
+    axs[0].imshow(tf.transpose(mag, [1, 0]), origin='bottom')
+    axs[1].axes.get_xaxis().set_visible(False)
+    axs[1].axes.get_yaxis().set_visible(False)
+    axs[1].imshow(tf.transpose(phase, [1, 0]), origin='bottom')
 
     plt.tight_layout()
 
