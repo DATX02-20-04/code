@@ -31,7 +31,7 @@ class Upscaler(tfk.Model):
                 step += 1
 
 
-    def create_model(self, in_dim=(32, 256, 1)):
+    def create_model(self, in_dim=(32, 256, 2)):
         # init = tfk.initializers.RandomNormal(stddev=0.02)
         # const = tfk.constraints.max_norm(1.0)
         i = tfkl.Input(shape=in_dim)

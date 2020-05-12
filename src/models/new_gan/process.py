@@ -5,9 +5,10 @@ import data.process as pro
 import matplotlib.pyplot as plt
 from data.nsynth import instrument_families_filter, instrument_sources_filter
 
-def serialize_example(mag, pitch):
+def serialize_example(mag, phase, pitch):
     feature = {
         'mag': tf.train.Feature(bytes_list=tf.train.BytesList(value=[tf.io.serialize_tensor(tf.cast(mag, tf.float32)).numpy()])),
+        'phase': tf.train.Feature(bytes_list=tf.train.BytesList(value=[tf.io.serialize_tensor(tf.cast(phase, tf.float32)).numpy()])),
         'pitch': tf.train.Feature(bytes_list=tf.train.BytesList(value=[tf.io.serialize_tensor(tf.cast(pitch, tf.float32)).numpy()]))
     }
 
@@ -34,16 +35,19 @@ def process(hparams, dataset):
         pro.amp_to_log(),
     ])(spec_dataset)
 
-    # phase_dataset = pro.pipeline([
-    #     pro.map_transform(lambda x: tf.numpy_function(np.angle, [x], tf.float32)),
-    #     pro.map_transform(lambda x: tf.numpy_function(np.unwrap, [x], tf.float64)),
-    #     pro.map_transform(lambda x: tf.cast(x, tf.float32)),
-    #     pro.map_transform(lambda x: x[:, 1:] - x[:, :-1]),
-    #     pro.map_transform(lambda x: tf.concat([x[:, 0:1], x], axis=1)),
-    #     pro.map_transform(lambda x: x / np.pi),
-    # ])(spec_dataset)
+    phase_dataset = pro.pipeline([
+        pro.map_transform(lambda x: tf.numpy_function(np.angle, [x], tf.float32)),
+        pro.map_transform(lambda x: tf.numpy_function(np.unwrap, [x], tf.float64)),
+        pro.map_transform(lambda x: tf.cast(x, tf.float32)),
+        pro.map_transform(lambda x: x[:, 1:] - x[:, :-1]),
+        pro.map_transform(lambda x: tf.concat([x[:, 0:1], x], axis=1)),
+        pro.map_transform(lambda x: x / np.pi),
+    ])(spec_dataset)
 
-    return tf.data.Dataset.zip((mag_dataset, pitch_dataset))
+    magphase_dataset = tf.data.Dataset.zip((mag_dataset, phase_dataset))
+    magphase_dataset = magphase_dataset.map(lambda mag, phase: tf.stack([mag, phase], axis=-1))
+
+    return tf.data.Dataset.zip((magphase_dataset, pitch_dataset))
 
 
 def calculate_stats(hparams, dataset, examples):
@@ -81,15 +85,10 @@ def normalize(hparams, dataset, stats):
         # pro.mels(hparams['sample_rate'], n_fft=hparams['frame_length']//2+1, n_mels=hparams['n_mels']),
     ]))(dataset)
     dataset = pro.index_map(0, pro.pipeline([
-        pro.map_transform(lambda magphase: tf.reshape(magphase, [1, 128, 1024, 1])),
+        pro.map_transform(lambda magphase: tf.reshape(magphase, [1, 128, 1024, 2])),
         pro.map_transform(lambda magphase: tf.image.resize(magphase, [32, 256])),
         pro.map_transform(lambda magphase: tf.squeeze(magphase)),
     ]))(dataset)
-    # dataset = pro.index_map(1, pro.pipeline([
-    #     pro.map_transform(lambda magphase: tf.reshape(magphase, [1, 128, 1024, 1])),
-    #     pro.map_transform(lambda magphase: tf.image.resize(magphase, [32, 256])),
-    #     pro.map_transform(lambda magphase: tf.squeeze(magphase)),
-    # ]))(dataset)
     # dataset = pro.index_map(1, pro.pipeline([
     #     pro.mels(hparams['sample_rate'], n_fft=hparams['frame_length']//2+1, n_mels=hparams['n_mels']),
     # ]))(dataset)

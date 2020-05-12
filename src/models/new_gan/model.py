@@ -153,7 +153,7 @@ class GAN(tfk.Model):
 
         return [model1, model2]
 
-    def create_discriminator(self, input_shape=(4, 32, 1)):
+    def create_discriminator(self, input_shape=(4, 32, 2)):
         init = tfk.initializers.RandomNormal(stddev=0.02)
         const = tfk.constraints.max_norm(1.0)
         model_list = []
@@ -196,7 +196,7 @@ class GAN(tfk.Model):
         g = l.PixelNorm()(g)
         g = tfkl.LeakyReLU(alpha=0.2)(g)
 
-        out_image = tfkl.Conv2D(1, (1,1), padding='same', kernel_initializer=init, kernel_constraint=const)(g)
+        out_image = tfkl.Conv2D(2, (1,1), padding='same', kernel_initializer=init, kernel_constraint=const)(g)
         model1 = tfk.Model(inputs=old.input, outputs=out_image)
         out_old = old.layers[-1]
         out_image2 = out_old(upsampling)
@@ -223,7 +223,7 @@ class GAN(tfk.Model):
         g = l.PixelNorm()(g)
         g = tfkl.LeakyReLU(alpha=0.2)(g)
 
-        out_image = tfkl.Conv2D(1, (1,1), padding='same', kernel_initializer=init, kernel_constraint=const)(g)
+        out_image = tfkl.Conv2D(2, (1,1), padding='same', kernel_initializer=init, kernel_constraint=const)(g)
         model = tfk.Model(inputs=[in_latent, in_pitch], outputs=out_image)
         model_list.append([model, model])
 
