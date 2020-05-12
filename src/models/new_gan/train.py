@@ -113,9 +113,9 @@ def start(hparams):
 def plot_magphase(hparams, magphase, step, block=None, tsw=None, pitch=None):
     assert len(magphase.shape) == 4, "Magphase needs to be in the form (batch, width, height, channels)"
     mag = tf.unstack(magphase, axis=0)
-    mag = [tf.unstack(m, axis=-1) for m in mag]
-    mag = [mp[0] for mp in mag]
-    phase = [mp[1] for mp in mag]
+    magphase = [tf.unstack(m, axis=-1) for m in mag]
+    mag = [mp[0] for mp in magphase]
+    phase = [mp[1] for mp in magphase]
     mag = tf.concat(mag, axis=0)
     phase = tf.concat(phase, axis=0)
     mag = tf.squeeze(mag)
