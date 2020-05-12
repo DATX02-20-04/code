@@ -197,7 +197,24 @@ def mels(sr, n_fft, n_mels=128, fmin=0.0, fmax=None):
         linear_to_mel_weight_matrix = tf.signal.linear_to_mel_weight_matrix(
             n_mels, n_fft, sr, fmin, fmax)
 
-        return tf.tensordot(x, linear_to_mel_weight_matrix, 1)
+        print(x.shape)
+        M = tf.tensordot(x, linear_to_mel_weight_matrix, 1)
+        M.set_shape(x.shape[:-1].concatenate(linear_to_mel_weight_matrix.shape[-1:]))
+        print(M.shape)
+        return M
+    return map_transform(mel)
+
+def imels(sr, n_fft, n_mels=128, fmin=0.0, fmax=None):
+    if fmax is None:
+        fmax = sr / 2.0
+    def mel(x):
+        m = tf.signal.linear_to_mel_weight_matrix(
+            n_mels, n_fft, sr, fmin, fmax)
+        m_t = tf.transpose(m, [1, 0])
+        p = tf.matmul(m, m_t)
+        d = [1.0 / x if tf.math.abs(x) > 1.0e-8 else x for x in tf.math.reduce_sum(p, axis=0)]
+        im = tf.matmul(m_t, tf.linalg.diag(d))
+        return tf.matmul(x, im)
     return map_transform(mel)
 
 def transpose2d():
