@@ -14,10 +14,11 @@ def start(hparams):
     def resize(image, scale):
         return tf.squeeze(tf.image.resize(tf.reshape(image, [1, 128, 1024, 1]), [128//scale, 1024//scale]))
 
-    scale = 16
+    scale = 1
 
-    for mag, phase, pitch in dataset.skip(4).take(1):
-        print(mag.shape, phase.shape)
+    for magphase, pitch in dataset.skip(3).take(1):
+        print(magphase.shape)
+        mag, phase = tf.unstack(magphase, axis=-1)
         mag = resize(mag, scale)
         phase = resize(phase, scale)
         fig, axs = plt.subplots(1, 2)

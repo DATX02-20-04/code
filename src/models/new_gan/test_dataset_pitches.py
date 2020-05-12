@@ -13,19 +13,25 @@ def start(hparams):
     dataset, stats = load(hparams)
 
     def resize(image, scale):
-        return tf.squeeze(tf.image.resize(tf.reshape(image, [1, 32, 256, 1]), [32//scale, 256//scale]))
+        return tf.squeeze(tf.image.resize(tf.reshape(image, [1, 32, 256, 2]), [32//scale, 256//scale]))
 
-    scale = 1
+    scale = 8
 
-    dataset = dataset.map(lambda mag, pitch: (resize(mag, scale), pitch))
+    dataset = dataset.map(lambda magphase, pitch: (resize(magphase, scale), pitch))
+    dataset = dataset.map(lambda magphase, pitch: (tf.unstack(magphase, axis=-1), pitch))
     dataset = list(dataset.as_numpy_iterator())
     dataset = sorted(dataset, key=lambda x: np.argmax(x[1]))
     mags = map(lambda x: x[0], dataset)
     mags = list(mags)
-    mags = np.concatenate(mags, axis=0)
+    mag = [m[0] for m in mags]
+    phase = [m[1] for m in mags]
+    mags = np.concatenate(mag, axis=0)
+    phase = np.concatenate(phase, axis=0)
 
     plt.figure(figsize=(32, 32))
     plt.title("Magnitude")
-    plt.imshow(tf.transpose(mags, [1, 0]), origin='bottom')
+    fig, axs = plt.subplots(2, 1)
+    axs[0].imshow(tf.transpose(mags, [1, 0]), origin='bottom')
+    axs[1].imshow(tf.transpose(phase, [1, 0]), origin='bottom')
     plt.tight_layout()
     plt.savefig('increasing_mags.png', bbox_inches='tight')
