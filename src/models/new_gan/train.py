@@ -15,7 +15,7 @@ def start(hparams):
     dataset, stats = load(hparams)
 
     def resize(image, down_scale):
-        return tf.squeeze(tf.image.resize(tf.reshape(image, [1, 32, 256, 1]), [32//down_scale, 256//down_scale]))
+        return tf.squeeze(tf.image.resize(tf.reshape(image, [1, 32, 256, 2]), [32//down_scale, 256//down_scale]))
 
     gan = GAN(hparams, stats)
     block = tf.Variable(0)
@@ -113,6 +113,8 @@ def start(hparams):
 def plot_magphase(hparams, magphase, step, block=None, tsw=None, pitch=None):
     assert len(magphase.shape) == 4, "Magphase needs to be in the form (batch, width, height, channels)"
     mag = tf.unstack(magphase, axis=0)
+    mag = [tf.unstack(m, axis=-1) for m in mag]
+    mag = [m for mp in mag for m in mp] # flatten
     mag = tf.concat(mag, axis=0)
     mag = tf.squeeze(mag)
     aspect = mag.shape[0]/mag.shape[1]
