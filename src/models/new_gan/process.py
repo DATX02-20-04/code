@@ -1,4 +1,5 @@
 import tensorflow as tf
+import librosa
 import numpy as np
 import tensorflow_datasets as tfds
 import data.process as pro
@@ -24,9 +25,16 @@ def process(hparams, dataset):
 
     spec_dataset = pro.pipeline([
         pro.extract('audio'),
-        pro.map_transform(lambda x: tf.signal.stft(x, frame_length=hparams['frame_length'], frame_step=hparams['frame_step'])),
-        pro.map_transform(lambda x: x[:, :-1]),
-        pro.pad([[0, 6], [0, 0]], 'CONSTANT', constant_values=0)
+        pro.map_transform(lambda x: tf.py_function(lambda z: librosa.feature.melspectrogram(z.numpy(),
+                                                                                  sr=hparams['sample_rate'],
+                                                                                  win_length=hparams['frame_length'],
+                                                                                  hop_length=hparams['frame_step'],
+                                                                                  n_fft=hparams['n_fft'],
+                                                                                  n_mels=hparams['n_mels']),
+                                                   [x], tf.float32)),
+        pro.map_transform(lambda x: tf.transpose(x, [1, 0])),
+        # pro.map_transform(lambda x: x[:, :-1]),
+        pro.pad([[0, 2], [0, 0]], 'CONSTANT', constant_values=0)
     ])(dataset)
 
     mag_dataset = pro.pipeline([
@@ -53,7 +61,7 @@ def calculate_stats(hparams, dataset, examples):
     mag_mins = []
     step = 0
     for mag, _ in dataset:
-        # print(mag.shape)
+        print(mag.shape)
         # exit()
         mag = mag.numpy()
         mag_means.append(np.mean(mag, axis=1))
@@ -80,11 +88,11 @@ def normalize(hparams, dataset, stats):
         pro.normalize(normalization='neg_one_to_one', stats=stats),
         # pro.mels(hparams['sample_rate'], n_fft=hparams['frame_length']//2+1, n_mels=hparams['n_mels']),
     ]))(dataset)
-    dataset = pro.index_map(0, pro.pipeline([
-        pro.map_transform(lambda magphase: tf.reshape(magphase, [1, 128, 1024, 1])),
-        pro.map_transform(lambda magphase: tf.image.resize(magphase, [32, 256])),
-        pro.map_transform(lambda magphase: tf.squeeze(magphase)),
-    ]))(dataset)
+    # dataset = pro.index_map(0, pro.pipeline([
+    #     pro.map_transform(lambda magphase: tf.reshape(magphase, [1, 256, 512, 1])),
+    #     pro.map_transform(lambda magphase: tf.image.resize(magphase, [64, 128])),
+    #     pro.map_transform(lambda magphase: tf.squeeze(magphase)),
+    # ]))(dataset)
     # dataset = pro.index_map(1, pro.pipeline([
     #     pro.map_transform(lambda magphase: tf.reshape(magphase, [1, 128, 1024, 1])),
     #     pro.map_transform(lambda magphase: tf.image.resize(magphase, [32, 256])),
@@ -97,23 +105,24 @@ def normalize(hparams, dataset, stats):
 
 def invert(hparams, stats):
     return pro.pipeline([
-        pro.index_map(0, pro.pipeline([
+        # pro.index_map(0, pro.pipeline([
+        # ])),
+        # pro.index_map(1, pro.pipeline([
+        #     pro.map_transform(lambda x: x * np.pi),
+        #     pro.map_transform(lambda x: tf.math.cumsum(x, axis=0)),
+        #     pro.map_transform(lambda x: (x + np.pi) % (2 * np.pi) - np.pi),
+        #     pro.cast(tf.complex64),
+        # ])),
+        pro.pipeline([
             pro.denormalize(normalization='neg_one_to_one', stats=stats),
             pro.log_to_amp(),
-            pro.cast(tf.complex64),
-        ])),
-        pro.index_map(1, pro.pipeline([
-            pro.map_transform(lambda x: x * np.pi),
-            pro.map_transform(lambda x: tf.math.cumsum(x, axis=0)),
-            pro.map_transform(lambda x: (x + np.pi) % (2 * np.pi) - np.pi),
-            pro.cast(tf.complex64),
-        ])),
-        pro.pipeline([
-            pro.map_transform(lambda mag, phase: mag * tf.math.exp(1.0j * phase)),
-            pro.map_transform(lambda spec: tf.signal.inverse_stft(spec,
-                                                                  frame_length=hparams['frame_length'],
-                                                                  frame_step=hparams['frame_step'],
-                                                                  window_fn=tf.signal.inverse_stft_window_fn(hparams['frame_step']))),
+            pro.map_transform(lambda x: tf.transpose(x, [1, 0])),
+            pro.map_transform(lambda x: tf.py_function(lambda z: librosa.feature.inverse.mel_to_audio(z.numpy(),
+                                                                                            sr=hparams['sample_rate'],
+                                                                                            win_length=hparams['frame_length'],
+                                                                                            hop_length=hparams['frame_step'],
+                                                                                            n_fft=hparams['n_fft']),
+                                                       [x], tf.float32)),
         ])
     ])
 
