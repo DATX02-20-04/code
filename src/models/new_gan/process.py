@@ -31,6 +31,11 @@ def process(hparams, dataset):
 
     mag_dataset = pro.pipeline([
         pro.abs(),
+        pro.map_transform(lambda x: tf.matmul(x, tf.signal.linear_to_mel_weight_matrix(
+            num_mel_bins=hparams['n_mels'], 
+            num_spectrogram_bins=hparams['frame_length'] // 2, 
+            sample_rate=hparams['sample_rate']
+            ))),
         pro.amp_to_log(),
     ])(spec_dataset)
 
@@ -81,8 +86,8 @@ def normalize(hparams, dataset, stats):
         # pro.mels(hparams['sample_rate'], n_fft=hparams['frame_length']//2+1, n_mels=hparams['n_mels']),
     ]))(dataset)
     dataset = pro.index_map(0, pro.pipeline([
-        pro.map_transform(lambda magphase: tf.reshape(magphase, [1, 128, 1024, 1])),
-        pro.map_transform(lambda magphase: tf.image.resize(magphase, [32, 256])),
+        pro.map_transform(lambda magphase: tf.reshape(magphase, [1, 128, 512, 1])),
+        pro.map_transform(lambda magphase: tf.image.resize(magphase, [32, 128])),
         pro.map_transform(lambda magphase: tf.squeeze(magphase)),
     ]))(dataset)
     # dataset = pro.index_map(1, pro.pipeline([
@@ -99,6 +104,11 @@ def invert(hparams, stats):
     return pro.pipeline([
         pro.index_map(0, pro.pipeline([
             pro.denormalize(normalization='neg_one_to_one', stats=stats),
+            pro.map_transform(lambda x: tf.matmul(x, tf.linalg.inv(tf.signal.linear_to_mel_weight_matrix(
+                num_mel_bins=hparams['n_mels'], 
+                num_spectrogram_bins=hparams['frame_length'] // 2, 
+                sample_rate=hparams['sample_rate']
+                )))),
             pro.log_to_amp(),
             pro.cast(tf.complex64),
         ])),

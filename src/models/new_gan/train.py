@@ -15,7 +15,7 @@ def start(hparams):
     dataset, stats = load(hparams)
 
     def resize(image, down_scale):
-        return tf.squeeze(tf.image.resize(tf.reshape(image, [1, 32, 256, 1]), [32//down_scale, 256//down_scale]))
+        return tf.squeeze(tf.image.resize(tf.reshape(image, [1, 32, 128, 1]), [32//down_scale, 128//down_scale]))
 
     gan = GAN(hparams, stats)
     block = tf.Variable(0)

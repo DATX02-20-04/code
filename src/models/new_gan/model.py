@@ -153,7 +153,7 @@ class GAN(tfk.Model):
 
         return [model1, model2]
 
-    def create_discriminator(self, input_shape=(4, 32, 1)):
+    def create_discriminator(self, input_shape=(4, 16, 1)):
         init = tfk.initializers.RandomNormal(stddev=0.02)
         const = tfk.constraints.max_norm(1.0)
         model_list = []
@@ -205,7 +205,7 @@ class GAN(tfk.Model):
 
         return [model1, model2]
 
-    def create_generator(self, in_dim=(4, 32)):
+    def create_generator(self, in_dim=(4, 16)):
         init = tfk.initializers.RandomNormal(stddev=0.02)
         const = tfk.constraints.max_norm(1.0)
         model_list = []
