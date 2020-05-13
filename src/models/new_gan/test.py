@@ -16,13 +16,17 @@ def start(hparams):
 
     scale = 1
 
-    for mag, pitch in dataset.skip(4).take(1):
-        print(mag.shape)
-        mag = resize(mag, scale)
-        fig, axs = plt.subplots(1, 1)
-        plt.suptitle(f"Pitch: {tf.argmax(pitch)}")
-        axs.set_title("Magnitude")
-        axs.imshow(tf.transpose(mag, [1, 0]))
-        plt.savefig('non_inverted_plot.png')
-        audio = invert(hparams, stats)(mag)
-        librosa.output.write_wav('inverted_audio.wav', audio.numpy(), sr=hparams['sample_rate'])
+    for mag, pitch in dataset:
+        p = tf.argmax(pitch)
+        if p == 14:
+            print(mag.shape, )
+            mag = resize(mag, scale)
+            fig, axs = plt.subplots(1, 1)
+            plt.suptitle(f"Pitch: {tf.argmax(pitch)}")
+            axs.set_title("Magnitude")
+            axs.imshow(tf.transpose(mag, [1, 0]))
+            plt.savefig('non_inverted_plot.png')
+            audio = invert(hparams, stats)(mag)
+            librosa.output.write_wav('inverted_audio.wav', audio.numpy(), sr=hparams['sample_rate'])
+            print("PITCH FOUND")
+            exit()

@@ -13,7 +13,7 @@ def start(hparams):
     dataset, stats = load(hparams)
 
     def resize(image, scale):
-        return tf.squeeze(tf.image.resize(tf.reshape(image, [1, 32, 256, 1]), [32//scale, 256//scale]))
+        return tf.squeeze(tf.image.resize(tf.reshape(image, [1, 128, 256, 1]), [128//scale, 256//scale]))
 
     scale = 1
 
@@ -24,7 +24,7 @@ def start(hparams):
     mags = list(mags)
     mags = np.concatenate(mags, axis=0)
 
-    plt.figure(figsize=(32, 32))
+    plt.figure(figsize=(16, 16))
     plt.title("Magnitude")
     plt.imshow(tf.transpose(mags, [1, 0]), origin='bottom')
     plt.tight_layout()
