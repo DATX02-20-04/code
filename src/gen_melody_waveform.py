@@ -12,14 +12,16 @@ import numpy as np
 import librosa
 import scripts.gen_tone
 import models.transformer.generate as transformer
+from models.new_gan.process import load as gan_load
 # import models.gan.generate as gan
 from models.common.training import Trainer
-from models.gan.model import GAN
+from models.new_gan.model import GAN
+from models.new_gan.process import invert
 import data.process as pro
 import data.midi as M
 
 transformer_hparams = util.load_hparams('hparams/transformer.yml')
-gan_hparams = util.load_hparams('hparams/gan.yml')
+gan_hparams = util.load_hparams('hparams/new_gan.yml')
 
 melody = transformer.generate(transformer_hparams)
 midi = pro.decode_midi()(melody)
@@ -36,31 +38,44 @@ sr = 16000
 samples_per_note = 8000
 tone_length = sr
 
+dataset, gan_stats = gan_load(hparams)
+gan = GAN(gan_hparams, gan_stats)
 
-gan_stats = np.load('gan_stats.npz')
-gan = GAN((256, 128), gan_hparams)
-gan_trainer = Trainer(None, gan_hparams)
-gan_ckpt = tf.train.Checkpoint(
-    step=gan_trainer.step,
-    generator=gan.generator,
-    discriminator=gan.discriminator,
-    gen_optimizer=gan.generator_optimizer,
-    disc_optimizer=gan.discriminator_optimizer,
+block = tf.Variable(0)
+step = tf.Variable(0)
+pitch_start = 0
+pitch_end = hparams['pitches']
+step_size = 1
+seed_pitches = tf.range(pitch_start, pitch_start+pitch_end, step_size)
+seed = tf.Variable(tf.random.normal([seed_pitches.shape[0], hparams['latent_dim']]))
+seed_pitches = tf.one_hot(seed_pitches, hparams['pitches'], axis=1)
+
+ckpt = tf.train.Checkpoint(
+    gan=gan,
+    seed=seed,
+    generator_optimizer=gan.generator_optimizer,
+    discriminator_optimizer=gan.discriminator_optimizer,
+    block=block,
+    step=step,
 )
-gan_trainer.init_checkpoint(gan_ckpt)
+
+manager = tf.train.CheckpointManager(ckpt,
+                                        os.path.join(hparams['save_dir'], 'ckpts', hparams['name']),
+                                        max_to_keep=3)
+
+ckpt.restore(manager.latest_checkpoint)
+if manager.latest_checkpoint:
+    print("Restored from {} block {}".format(manager.latest_checkpoint, block.numpy()))
+else:
+    print("Initializing from scratch.")
 
 def generate_tones(pitches):
     seed = tf.random.normal((len(pitches), gan_hparams['latent_size']))
     pitches = tf.one_hot(pitches, gan_hparams['cond_vector_size'], axis=1)
 
     samples = gan.generator([seed, pitches], training=False)
-    samples = tf.reshape(samples, [-1, 256, 128])
-    audio = pro.pipeline([
-        pro.denormalize(normalization='specgan', stats=gan_stats),
-        pro.invert_log_melspec(gan_hparams['sample_rate']),
-        list,     # Stupid workaround becuase invert_log_melspec only does
-        np.array, # one spectrogram at a time
-    ])(samples)
+    samples = tf.reshape(samples, [-1, 128, 256])
+    audio = invert(samples)
     return audio
 
 def generate_all_tones(pitches, amp):
