@@ -17,13 +17,13 @@ class TFImageCallback(tf.keras.callbacks.Callback):
         self.dataset = dataset
 
     def on_epoch_end(self, epoch, logs=None):
-        for X in self.dataset.take(1):
-            Y = self.model.predict(X)
+        for X, Y in self.dataset.take(1):
+            P = self.model.predict(X)
 
-            XY = tf.concat([X, Y], axis=0)
+            XYP = tf.concat([X, Y, P], axis=0)
 
             with self.tbw.as_default():
-                tf.summary.image(f'XY', XY, step=self.step)
+                tf.summary.image(f'XYP', XYP, step=self.step)
 
             self.step += 1
 
