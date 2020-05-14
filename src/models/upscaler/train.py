@@ -6,6 +6,7 @@ import data.process as pro
 import matplotlib.pyplot as plt
 from models.upscaler.process import load, invert
 from models.upscaler.model import Upscaler
+from util import get_plot_image
 
 import datetime
 import time
@@ -21,11 +22,23 @@ class TFImageCallback(tf.keras.callbacks.Callback):
             P = self.model.predict(X)
 
             XYP = tf.concat([tf.squeeze(X), tf.squeeze(Y), tf.squeeze(P)], axis=0)
+            XYP = tf.unstack(XYP)
 
-            XYP = tf.reshape(XYP, [-1, 128, 256, 1])
+            fig, axs = plt.subplots(1, 3)
+            axs[0].axes.get_xaxis().set_visible(False)
+            axs[0].axes.get_yaxis().set_visible(False)
+            axs[0].imshow(tf.transpose(XYP[0], [1, 0]), origin='bottom')
+            axs[1].axes.get_xaxis().set_visible(False)
+            axs[1].axes.get_yaxis().set_visible(False)
+            axs[1].imshow(tf.transpose(XYP[1], [1, 0]), origin='bottom')
+            axs[2].axes.get_xaxis().set_visible(False)
+            axs[2].axes.get_yaxis().set_visible(False)
+            axs[2].imshow(tf.transpose(XYP[2], [1, 0]), origin='bottom')
+            plt.tight_layout()
+            img = get_plot_image()
 
             with self.tbw.as_default():
-                tf.summary.image(f'XYP', XYP, step=self.step)
+                tf.summary.image(f'XYP', img, step=self.step)
 
             self.step += 1
 
