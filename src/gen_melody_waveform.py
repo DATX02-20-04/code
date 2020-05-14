@@ -98,11 +98,11 @@ def generate_tones(pitches):
 
     [g_normal, g_fadein] = gan.generators[-1]
     samples = g_normal([seed, pitches], training=False)
-    phases = upscaler(samples, training=False)
+    # phases = upscaler(samples, training=False)
     samples = tf.reshape(samples, [-1, 128, 256])
     audios = []
     for sample, phase in zip(samples, phases):
-        audio = invert(gan_hparams, gan_stats)(sample, phase)
+        audio = invert(gan_hparams, gan_stats, upscaler)(sample, sample)
         audios.append(audio)
     audio = tf.concat(audios, axis=0)
     return audio

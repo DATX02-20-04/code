@@ -103,7 +103,7 @@ def normalize(hparams, dataset, stats):
     # ]))(dataset)
     return dataset
 
-def invert(hparams, stats):
+def invert(hparams, stats, upscaler):
     return pro.pipeline([
         pro.index_map(0, pro.pipeline([
             pro.denormalize(normalization='neg_one_to_one', stats=stats),
@@ -111,6 +111,9 @@ def invert(hparams, stats):
             pro.cast(tf.complex64),
         ])),
         pro.index_map(1, pro.pipeline([
+            pro.denormalize(normalization='neg_one_to_one', stats=stats),
+            pro.log_to_amp(),
+            pro.map_transform(lambda x: upscaler(x, training=False)),
             # pro.map_transform(lambda x: x * np.pi),
             # pro.map_transform(lambda x: tf.math.cumsum(x, axis=0)),
             # pro.map_transform(lambda x: (x + np.pi) % (2 * np.pi) - np.pi),
