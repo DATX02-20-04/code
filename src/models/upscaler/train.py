@@ -20,7 +20,7 @@ class TFImageCallback(tf.keras.callbacks.Callback):
         for X in self.dataset.take(1):
             Y = self.model.predict(X)
 
-            writer = self.tf_cb.writer
+            writer = self.tf_cb._get_writer(self.tf_cb._train_run_name)
 
             XY = tf.concat([X, Y], axis=0)
 
