@@ -21,19 +21,21 @@ class TFImageCallback(tf.keras.callbacks.Callback):
         for X, Y in self.dataset.take(1):
             P = self.model.predict(X)
 
-            XYP = tf.concat([tf.squeeze(X), tf.squeeze(Y), tf.squeeze(P)], axis=0)
-            XYP = tf.unstack(XYP)
+            X = tf.squeeze(X)
+            Y = tf.squeeze(Y)
+            P = tf.squeeze(P)
 
+            plt.clf()
             fig, axs = plt.subplots(1, 3)
             axs[0].axes.get_xaxis().set_visible(False)
             axs[0].axes.get_yaxis().set_visible(False)
-            axs[0].imshow(tf.transpose(XYP[0], [1, 0]), origin='bottom')
+            axs[0].imshow(tf.transpose(X, [1, 0]), origin='bottom')
             axs[1].axes.get_xaxis().set_visible(False)
             axs[1].axes.get_yaxis().set_visible(False)
-            axs[1].imshow(tf.transpose(XYP[1], [1, 0]), origin='bottom')
+            axs[1].imshow(tf.transpose(Y, [1, 0]), origin='bottom')
             axs[2].axes.get_xaxis().set_visible(False)
             axs[2].axes.get_yaxis().set_visible(False)
-            axs[2].imshow(tf.transpose(XYP[2], [1, 0]), origin='bottom')
+            axs[2].imshow(tf.transpose(P, [1, 0]), origin='bottom')
             plt.tight_layout()
             img = get_plot_image()
 
@@ -54,10 +56,10 @@ def start(hparams):
 
     dataset = dataset.map(lambda x, y: (tf.reshape(x, [128, 256]), tf.reshape(y, [128, 256])))
 
-    dataset = dataset.shuffle(1000)
     valid_dataset = dataset.take(valid)
     valid_dataset = dataset.batch(8, drop_remainder=True)
     dataset = dataset.skip(valid).take(train)
+    dataset = dataset.shuffle(1000)
     dataset = dataset.batch(8, drop_remainder=True)
     #dataset = dataset.repeat()
 
