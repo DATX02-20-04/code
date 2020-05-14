@@ -105,23 +105,25 @@ def normalize(hparams, dataset, stats):
 
 def invert(hparams, stats):
     return pro.pipeline([
-        # pro.index_map(0, pro.pipeline([
-        # ])),
-        # pro.index_map(1, pro.pipeline([
-        #     pro.map_transform(lambda x: x * np.pi),
-        #     pro.map_transform(lambda x: tf.math.cumsum(x, axis=0)),
-        #     pro.map_transform(lambda x: (x + np.pi) % (2 * np.pi) - np.pi),
-        #     pro.cast(tf.complex64),
-        # ])),
-        pro.pipeline([
+        pro.index_map(0, pro.pipeline([
             pro.denormalize(normalization='neg_one_to_one', stats=stats),
             pro.log_to_amp(),
+            pro.cast(tf.complex64),
+        ])),
+        pro.index_map(1, pro.pipeline([
+            # pro.map_transform(lambda x: x * np.pi),
+            # pro.map_transform(lambda x: tf.math.cumsum(x, axis=0)),
+            # pro.map_transform(lambda x: (x + np.pi) % (2 * np.pi) - np.pi),
+            pro.cast(tf.complex64),
+        ])),
+        pro.pipeline([
+            pro.map_transform(lambda mag, phase: mag * tf.math.exp(1j * phase)),
             pro.map_transform(lambda x: tf.transpose(x, [1, 0])),
-            pro.map_transform(lambda x: tf.py_function(lambda z: librosa.feature.inverse.mel_to_audio(z.numpy(),
-                                                                                            sr=hparams['sample_rate'],
-                                                                                            win_length=hparams['frame_length'],
-                                                                                            hop_length=hparams['frame_step'],
-                                                                                            n_fft=hparams['n_fft']),
+            pro.map_transform(lambda x: tf.py_function(lambda z: librosa.core.istft(z.numpy(),
+                                                                                    sr=hparams['sample_rate'],
+                                                                                    win_length=hparams['frame_length'],
+                                                                                    hop_length=hparams['frame_step'],
+                                                                                    n_fft=hparams['n_fft']),
                                                        [x], tf.float32)),
         ])
     ])
