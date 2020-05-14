@@ -1,14 +1,15 @@
 import tensorflow as tf
+import librosa
 import numpy as np
 import tensorflow_datasets as tfds
 import data.process as pro
 import matplotlib.pyplot as plt
 from data.nsynth import instrument_families_filter, instrument_sources_filter
 
-def serialize_example(x_magphase, y_magphase):
+def serialize_example(x, y):
     feature = {
-        'feature0': tf.train.Feature(bytes_list=tf.train.BytesList(value=[tf.io.serialize_tensor(tf.cast(x_magphase, tf.float32)).numpy()])),
-        'feature1': tf.train.Feature(bytes_list=tf.train.BytesList(value=[tf.io.serialize_tensor(tf.cast(y_magphase, tf.float32)).numpy()])),
+        'feature0': tf.train.Feature(bytes_list=tf.train.BytesList(value=[tf.io.serialize_tensor(tf.cast(x, tf.float32)).numpy()])),
+        'feature1': tf.train.Feature(bytes_list=tf.train.BytesList(value=[tf.io.serialize_tensor(tf.cast(y, tf.float32)).numpy()])),
     }
 
     example_proto = tf.train.Example(features=tf.train.Features(feature=feature))
@@ -18,14 +19,18 @@ def serialize_example(x_magphase, y_magphase):
 def process(hparams, dataset):
     spec_dataset = pro.pipeline([
         pro.extract('audio'),
-        pro.map_transform(lambda x: tf.signal.stft(x, frame_length=hparams['frame_length'], frame_step=hparams['frame_step'])),
+        pro.map_transform(lambda x: tf.py_function(lambda y: librosa.core.stft(y=y.numpy(),
+                                                                               win_length=hparams['frame_length'],
+                                                                               hop_length=hparams['frame_step'],
+                                                                               n_fft=hparams['n_fft']),
+                                                   [x], tf.complex64)),
+        pro.map_transform(lambda x: tf.transpose(x, [1, 0])),
         pro.map_transform(lambda x: x[:, :-1]),
-        pro.pad([[0, 6], [0, 0]], 'CONSTANT', constant_values=0)
+        pro.pad([[0, 2], [0, 0]], 'CONSTANT', constant_values=0),
     ])(dataset)
 
     mag_dataset = pro.pipeline([
         pro.abs(),
-        pro.amp_to_log(),
     ])(spec_dataset)
 
     phase_dataset = pro.pipeline([
@@ -75,22 +80,22 @@ def normalize(hparams, dataset, stats):
         # pro.mels(hparams['sample_rate'], n_fft=hparams['frame_length']//2+1, n_mels=hparams['n_mels']),
     ]))(dataset)
 
-    y_dataset = pro.pipeline([
-        pro.map_transform(lambda mag, phase: (tf.stack([mag, phase], axis=-1))),
-    ])(dataset)
+    # y_dataset = pro.pipeline([
+    #     pro.map_transform(lambda mag, phase: (tf.stack([mag, phase], axis=-1))),
+    # ])(dataset)
 
-    x_dataset = pro.pipeline([
-        pro.map_transform(lambda mag, phase: mag),
-        pro.map_transform(lambda magphase: tf.reshape(magphase, [1, 128, 1024, 1])),
-        pro.map_transform(lambda magphase: tf.image.resize(magphase, [128//(2**hparams['n_blocks']),
-                                                                      1024//(2**hparams['n_blocks'])])),
-        pro.map_transform(lambda magphase: tf.squeeze(magphase)),
-    ])(dataset)
+    # x_dataset = pro.pipeline([
+    #     pro.map_transform(lambda mag, phase: mag),
+    #     pro.map_transform(lambda magphase: tf.reshape(magphase, [1, 128, 1024, 1])),
+    #     pro.map_transform(lambda magphase: tf.image.resize(magphase, [128//(2**hparams['n_blocks']),
+    #                                                                   1024//(2**hparams['n_blocks'])])),
+    #     pro.map_transform(lambda magphase: tf.squeeze(magphase)),
+    # ])(dataset)
 
     # dataset = pro.index_map(1, pro.pipeline([
     #     pro.mels(hparams['sample_rate'], n_fft=hparams['frame_length']//2+1, n_mels=hparams['n_mels']),
     # ]))(dataset)
-    return tf.data.Dataset.zip((x_dataset, y_dataset))
+    return dataset
 
 def invert(hparams, stats):
     return pro.pipeline([
