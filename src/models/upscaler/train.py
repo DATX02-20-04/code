@@ -20,7 +20,7 @@ class TFImageCallback(tf.keras.callbacks.Callback):
         for X, Y in self.dataset.take(1):
             P = self.model.predict(X)
 
-            XYP = tf.concat([X, Y, P], axis=0)
+            XYP = tf.concat([tf.squeeze(X), tf.squeeze(Y), tf.squeeze(P)], axis=0)
 
             with self.tbw.as_default():
                 tf.summary.image(f'XYP', XYP, step=self.step)
