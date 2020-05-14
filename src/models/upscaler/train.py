@@ -11,8 +11,8 @@ import datetime
 import time
 
 class TFImageCallback(tf.keras.callbacks.Callback):
-    def __init__(self, tf_cb, dataset):
-        self.tf_cb = tf_cb
+    def __init__(self, tbw, dataset):
+        self.tbw = tbw
         self.step = 0
         self.dataset = dataset
 
@@ -20,11 +20,9 @@ class TFImageCallback(tf.keras.callbacks.Callback):
         for X in self.dataset.take(1):
             Y = self.model.predict(X)
 
-            writer = self.tf_cb._get_writer(self.tf_cb._train_run_name)
-
             XY = tf.concat([X, Y], axis=0)
 
-            with writer.as_default():
+            with self.tbw.as_default():
                 tf.summary.image(f'XY', XY, step=self.step)
 
             self.step += 1
@@ -33,6 +31,8 @@ class TFImageCallback(tf.keras.callbacks.Callback):
 
 def start(hparams):
     dataset, stats = load(hparams)
+
+    tb_writer = init_tensorboard(hparams)
 
     valid = stats['examples']//10
     train = stats['examples']-valid
@@ -57,7 +57,7 @@ def start(hparams):
     log_dir = f"./logs/{hparams['name']}/{current_time}/train/"
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir)
 
-    tf_image_cb = TFImageCallback(tensorboard_callback, dataset)
+    tf_image_cb = TFImageCallback(tb_writer, dataset)
 
     try:
         upscaler.model.load_weights(checkpoint_path)
@@ -99,3 +99,9 @@ def invert_magphase(hparams, stats, magphase, name):
         audio.append(invert(hparams, stats)((mag, phase)))
     audio = tf.concat(audio, axis=0)
     librosa.output.write_wav(f'{name}.wav', audio.numpy(), sr=hparams['sample_rate'])
+
+def init_tensorboard(hparams):
+    # Tensorfboard logging
+    current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    train_log_dir = f"./logs/{hparams['name']}/{current_time}/train/"
+    return tf.summary.create_file_writer(train_log_dir)
