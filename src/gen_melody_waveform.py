@@ -13,6 +13,7 @@ import librosa
 import scripts.gen_tone
 import models.transformer.generate as transformer
 from models.new_gan.process import load as gan_load
+from models.upscaler.process import load as upscaler_load
 # import models.gan.generate as gan
 from models.common.training import Trainer
 from models.new_gan.model import GAN
@@ -22,6 +23,7 @@ import data.midi as M
 
 transformer_hparams = util.load_hparams('hparams/transformer.yml')
 gan_hparams = util.load_hparams('hparams/new_gan.yml')
+upscaler_hparams = util.load_hparams('hparams/upscaler.yml')
 
 melody = transformer.generate(transformer_hparams)
 midi = pro.decode_midi()(melody)
@@ -69,13 +71,25 @@ if manager.latest_checkpoint:
 else:
     print("Initializing from scratch.")
 
+_, upscaler_stats = upscaler_load()
+upscaler = Upscaler(hparams, upscaler_stats)
+
+checkpoint_path = "training_1/cp.ckpt"
+checkpoint_dir = os.path.dirname(checkpoint_path)
+
+try:
+    upscaler.model.load_weights(checkpoint_path)
+except:
+    print("Initializing from scratch.")
+
 def generate_tones(pitches):
     seed = tf.random.normal((len(pitches), gan_hparams['latent_size']))
     pitches = tf.one_hot(pitches, gan_hparams['cond_vector_size'], axis=1)
 
     samples = gan.generator([seed, pitches], training=False)
+    phases = upscaler(samples, training=False)
     samples = tf.reshape(samples, [-1, 128, 256])
-    audio = invert(samples)
+    audio = invert((samples, phases))
     return audio
 
 def generate_all_tones(pitches, amp):
