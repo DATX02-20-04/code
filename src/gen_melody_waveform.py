@@ -11,6 +11,7 @@ import tensorflow as tf
 import numpy as np
 import librosa
 import os
+import time
 import scripts.gen_tone
 import models.transformer.generate as transformer
 from models.new_gan.process import load as gan_load
@@ -30,6 +31,8 @@ from tensorflow.compat.v1 import InteractiveSession
 config = ConfigProto()
 config.gpu_options.allow_growth = True
 session = InteractiveSession(config=config)
+
+start_time = time.time()
 
 transformer_hparams = util.load_hparams('hparams/transformer.yml')
 gan_hparams = util.load_hparams('hparams/new_gan.yml')
@@ -122,4 +125,8 @@ for time, sound in zip(times, generate_all_tones(pitches, amp)):
     sound = sound[:sr]
     out += tf.pad(sound, [(time, len(out)-len(sound)-time)])
 
-librosa.output.write_wav('gen_melody.wav', out.numpy(), sr=sr, norm=True)
+librosa.output.write_wav(f'gen_melody{int(start_time)}.wav', out.numpy(), sr=sr, norm=True)
+
+end_time = time.time()
+
+print("Time elapsed:", end_time - start_time)
