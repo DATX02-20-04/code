@@ -38,7 +38,7 @@ class Upscaler(tfk.Model):
 
         g = i
         for _ in range(self.hparams['n_blocks']):
-            # g = tfkl.UpSampling2D()(g)
+            g = tfkl.UpSampling2D(size=(1, 2))(g)
             g = tfkl.Conv2D(128, (3,3), padding='same')(g)
             # g = l.PixelNorm()(g)
             g = tfkl.LeakyReLU(alpha=0.2)(g)
