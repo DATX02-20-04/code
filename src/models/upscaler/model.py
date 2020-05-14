@@ -31,20 +31,20 @@ class Upscaler(tfk.Model):
                 step += 1
 
 
-    def create_model(self, in_dim=(128, 256, 1)):
+    def create_model(self, in_dim=(128, 1024, 1)):
         # init = tfk.initializers.RandomNormal(stddev=0.02)
         # const = tfk.constraints.max_norm(1.0)
         i = tfkl.Input(shape=in_dim)
 
         g = i
+        g = tfkl.Conv2D(64, (3,3), padding='same')(g)
+        g = tfkl.LeakyReLU(alpha=0.2)(g)
+        g = tfkl.Conv2D(32, (3,3), padding='same')(g)
+        g = tfkl.LeakyReLU(alpha=0.2)(g)
         for _ in range(self.hparams['n_blocks']):
-            g = tfkl.UpSampling2D(size=(1, 2))(g)
-            g = tfkl.Conv2D(128, (3,3), padding='same')(g)
-            # g = l.PixelNorm()(g)
+            g = tfkl.Conv2D(64, (3,3), padding='same')(g)
             g = tfkl.LeakyReLU(alpha=0.2)(g)
-            # g = tfkl.UpSampling2D()(i)
-            g = tfkl.Conv2D(128, (3,3), padding='same')(g)
-            # g = l.PixelNorm()(g)
+            g = tfkl.Conv2D(32, (3,3), padding='same')(g)
             g = tfkl.LeakyReLU(alpha=0.2)(g)
 
         out_image = tfkl.Conv2D(1, (1,1), padding='same')(g)

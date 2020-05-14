@@ -24,26 +24,16 @@ def process(hparams, dataset):
                                                                                hop_length=hparams['frame_step'],
                                                                                n_fft=hparams['n_fft']),
                                                    [x], tf.complex64)),
-    ])(dataset)
-
-    mag_dataset = pro.pipeline([
-        pro.map_transform(lambda x: tf.py_function(lambda S: librosa.feature.melspectrogram(S=S.numpy(),
-                                                                                            win_length=hparams['frame_length'],
-                                                                                            hop_length=hparams['frame_step'],
-                                                                                            n_fft=hparams['n_fft'],
-                                                                                            n_mels=hparams['n_mels']),
-                                                   [x], tf.complex64)),
-        pro.map_transform(lambda x: tf.transpose(x, [1, 0])),
-        # pro.map_transform(lambda x: x[:, :-1]),
-        pro.pad([[0, 2], [0, 0]], 'CONSTANT', constant_values=0),
-        pro.abs(),
-        pro.amp_to_log(),
-    ])(spec_dataset)
-
-    phase_dataset = pro.pipeline([
         pro.map_transform(lambda x: tf.transpose(x, [1, 0])),
         pro.map_transform(lambda x: x[:, :-1]),
         pro.pad([[0, 2], [0, 0]], 'CONSTANT', constant_values=0),
+    ])(dataset)
+
+    mag_dataset = pro.pipeline([
+        pro.abs(),
+    ])(spec_dataset)
+
+    phase_dataset = pro.pipeline([
         pro.map_transform(lambda x: tf.numpy_function(np.angle, [x], tf.float32)),
         pro.map_transform(lambda x: tf.numpy_function(np.unwrap, [x], tf.float64)),
         pro.map_transform(lambda x: tf.cast(x, tf.float32)),
