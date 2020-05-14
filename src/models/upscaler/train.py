@@ -10,6 +10,26 @@ from models.upscaler.model import Upscaler
 import datetime
 import time
 
+class TFImageCallback(tf.keras.callbacks.Callback):
+    def __init__(self, tf_cb, dataset):
+        self.tf_cb = tf_cb
+        self.step = 0
+        self.dataset = dataset
+
+    def on_epoch_end(self, epoch, logs=None):
+        for X in self.dataset.take(1):
+            Y = self.model.predict(X, training=False)
+
+            writer = self.tf_cb.writer
+
+            XY = tf.concat([X, Y], axis=0)
+
+            with writer.as_default():
+                tf.summary.image(f'XY', XY, step=self.step)
+
+            self.step += 1
+
+
 
 def start(hparams):
     dataset, stats = load(hparams)
@@ -37,13 +57,14 @@ def start(hparams):
     log_dir = f"./logs/{hparams['name']}/{current_time}/train/"
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir)
 
+    tf_image_cb = TFImageCallback(tensorboard_callback, dataset)
 
     try:
         upscaler.model.load_weights(checkpoint_path)
     except:
         print("Initializing from scratch.")
 
-    upscaler.model.fit(x=dataset, validation_data=valid_dataset, epochs=100, callbacks=[cp_callback, tensorboard_callback])
+    upscaler.model.fit(x=dataset, validation_data=valid_dataset, epochs=100, callbacks=[cp_callback, tensorboard_callback, tf_image_cb])
 
     # plot_magphase(hparams, gen, f'generated_magphase_block{i:02d}')
     # invert_magphase(hparams, stats, gen, f'generated_magphase_block{i:02d}')
