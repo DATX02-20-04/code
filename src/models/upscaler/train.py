@@ -18,7 +18,7 @@ class TFImageCallback(tf.keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         for X in self.dataset.take(1):
-            Y = self.model.predict(X, training=False)
+            Y = self.model.predict(X)
 
             writer = self.tf_cb.writer
 
