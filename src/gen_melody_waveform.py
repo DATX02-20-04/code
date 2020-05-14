@@ -10,6 +10,7 @@ import util
 import tensorflow as tf
 import numpy as np
 import librosa
+import os
 import scripts.gen_tone
 import models.transformer.generate as transformer
 from models.new_gan.process import load as gan_load
@@ -20,10 +21,19 @@ from models.new_gan.process import invert
 import data.process as pro
 import data.midi as M
 
+# Some compatability options for some graphics cards
+from tensorflow.compat.v1 import ConfigProto
+from tensorflow.compat.v1 import InteractiveSession
+
+config = ConfigProto()
+config.gpu_options.allow_growth = True
+session = InteractiveSession(config=config)
+
 transformer_hparams = util.load_hparams('hparams/transformer.yml')
 gan_hparams = util.load_hparams('hparams/new_gan.yml')
 
-melody = transformer.generate(transformer_hparams)
+melody = transformer.generate(transformer_hparams)[0]
+print(melody)
 midi = pro.decode_midi()(melody)
 # with open("test.midi", "rb") as f:
 # 	midi = M.read_midi(f)
@@ -38,17 +48,17 @@ sr = 16000
 samples_per_note = 8000
 tone_length = sr
 
-dataset, gan_stats = gan_load(hparams)
+dataset, gan_stats = gan_load(gan_hparams)
 gan = GAN(gan_hparams, gan_stats)
 
 block = tf.Variable(0)
 step = tf.Variable(0)
 pitch_start = 0
-pitch_end = hparams['pitches']
+pitch_end = gan_hparams['pitches']
 step_size = 1
 seed_pitches = tf.range(pitch_start, pitch_start+pitch_end, step_size)
-seed = tf.Variable(tf.random.normal([seed_pitches.shape[0], hparams['latent_dim']]))
-seed_pitches = tf.one_hot(seed_pitches, hparams['pitches'], axis=1)
+seed = tf.Variable(tf.random.normal([seed_pitches.shape[0], gan_hparams['latent_dim']]))
+seed_pitches = tf.one_hot(seed_pitches, gan_hparams['pitches'], axis=1)
 
 ckpt = tf.train.Checkpoint(
     gan=gan,
@@ -60,7 +70,7 @@ ckpt = tf.train.Checkpoint(
 )
 
 manager = tf.train.CheckpointManager(ckpt,
-                                        os.path.join(hparams['save_dir'], 'ckpts', hparams['name']),
+                                        os.path.join(gan_hparams['save_dir'], 'ckpts', gan_hparams['name']),
                                         max_to_keep=3)
 
 ckpt.restore(manager.latest_checkpoint)
@@ -70,12 +80,17 @@ else:
     print("Initializing from scratch.")
 
 def generate_tones(pitches):
-    seed = tf.random.normal((len(pitches), gan_hparams['latent_size']))
-    pitches = tf.one_hot(pitches, gan_hparams['cond_vector_size'], axis=1)
+    seed = tf.random.normal((len(pitches), gan_hparams['latent_dim']))
+    pitches = tf.one_hot(pitches, gan_hparams['pitches'], axis=1)
 
-    samples = gan.generator([seed, pitches], training=False)
+    [g_normal, g_fadein] = gan.generators[-1]
+    samples = g_normal([seed, pitches], training=False)
     samples = tf.reshape(samples, [-1, 128, 256])
-    audio = invert(samples)
+    audios = []
+    for sample in samples:
+        audio = invert(gan_hparams, gan_stats)(sample)
+        audios.append(audio)
+    audio = tf.concat(audios, axis=0)
     return audio
 
 def generate_all_tones(pitches, amp):
