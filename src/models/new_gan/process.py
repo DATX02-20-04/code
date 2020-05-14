@@ -104,32 +104,42 @@ def normalize(hparams, dataset, stats):
     return dataset
 
 def invert(hparams, stats, upscaler):
-    return pro.pipeline([
-        pro.index_map(0, pro.pipeline([
+    def inv(dataset):
+        mag_dataset = pro.pipeline([
             pro.denormalize(normalization='neg_one_to_one', stats=stats),
             pro.log_to_amp(),
-            pro.cast(tf.complex64),
-        ])),
-        pro.index_map(1, pro.pipeline([
-            pro.denormalize(normalization='neg_one_to_one', stats=stats),
-            pro.log_to_amp(),
-            pro.map_transform(lambda x: upscaler(x, training=False)),
+            pro.map_transform(lambda x: tf.transpose(x, [1, 0])),
+            pro.map_transform(lambda x: tf.py_function(lambda z: librosa.feature.inverse.mel_to_stft(z.numpy(), sr=hparams['sample_rate'], n_fft=hparams['n_fft']), [x], tf.float32)),
+            pro.map_transform(lambda x: tf.transpose(x, [1, 0])),
+            #pro.map_transform(lambda x: x[:, :-1]),
+            ])(dataset)
+        dataset = pro.index_map(1, pro.pipeline([
+            pro.map_transform(lambda x: tf.reshape(x, [-1, 128, 1025, 1])),
+            pro.map_transform(lambda x: x[:, :, :-1, :]),
+            pro.map_transform(lambda x: upscaler.model(x, training=False)),
+            pro.map_transform(lambda x: tf.pad(x, [[0, 0], [0, 0], [0, 1], [0, 0]])),
+            pro.map_transform(lambda x: tf.squeeze(x)),
             # pro.map_transform(lambda x: x * np.pi),
             # pro.map_transform(lambda x: tf.math.cumsum(x, axis=0)),
             # pro.map_transform(lambda x: (x + np.pi) % (2 * np.pi) - np.pi),
             pro.cast(tf.complex64),
-        ])),
-        pro.pipeline([
-            pro.map_transform(lambda mag, phase: mag * tf.math.exp(1j * phase)),
+            ]))((mag_dataset, mag_dataset))
+        dataset = pro.index_map(0, pro.pipeline([
+            pro.cast(tf.complex64),
+            ]))(dataset)
+        dataset = pro.map_transform(lambda mag, phase: mag * tf.math.exp(1j * phase))(dataset)
+        dataset = pro.pipeline([
             pro.map_transform(lambda x: tf.transpose(x, [1, 0])),
             pro.map_transform(lambda x: tf.py_function(lambda z: librosa.core.istft(z.numpy(),
-                                                                                    sr=hparams['sample_rate'],
+                                                                                    #sr=hparams['sample_rate'],
                                                                                     win_length=hparams['frame_length'],
                                                                                     hop_length=hparams['frame_step'],
-                                                                                    n_fft=hparams['n_fft']),
+                                                                                    #n_fft=hparams['n_fft']
+                                                                                    ),
                                                        [x], tf.float32)),
-        ])
-    ])
+        ])(dataset)
+        return dataset
+    return inv
 
 def start(hparams):
     dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=False)

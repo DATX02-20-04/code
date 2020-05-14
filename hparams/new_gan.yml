@@ -4,7 +4,6 @@ hparams:
   instrument:
     family: 'keyboard'
   pitches: 61
-  max_examples: 100
   sample_rate: 16000
   frame_length: 2048
   frame_step: 512
@@ -16,17 +15,19 @@ hparams:
   dropout_rate: 0.0
   gen_lr: 0.0001
   disc_lr: 0.0001
-  n_blocks: 4
+  n_blocks: 5
   buffer_size: 2048
   save_dir: '.'
   batch_sizes:
-    - 64
+    - 128
     - 64
     - 32
     - 32
+    - 16
   epochs:
-    - 32
-    - 32
-    - 32
+    - 128
+    - 64
+    - 64
+    - 64
     - 64
 

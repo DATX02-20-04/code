@@ -4,18 +4,15 @@ import os
 import data.process as pro
 import matplotlib.pyplot as plt
 from models.new_gan.process import load as gan_load
-from models.upscaler.process import load as upscale_load
 from models.new_gan.model import GAN
 from models.new_gan.train import plot_magphase
-from models.upscaler.model import Upscaler
-from models.upscaler.process import invert as upscale_invert
+from models.new_gan.process import invert
 from util import load_hparams
 
 def start(hparams):
-    dataset, gan_stats = gan_load(hparams)
-    dataset, upscale_stats = upscale_load(hparams)
+    dataset, stats = gan_load(hparams)
 
-    gan = GAN(hparams, gan_stats)
+    gan = GAN(hparams, stats)
     block = tf.Variable(0)
     step = tf.Variable(0)
     pitch_start = 0
@@ -44,44 +41,38 @@ def start(hparams):
     else:
         print("Initializing from scratch.")
 
-
-    [g_normal, g_fadein] = gan.generators[hparams['n_blocks']-1]
-
-    gen = g_normal([seed, seed_pitches], training=False)
-    print("GEN SHAPE", gen.shape)
-    plot_magphase(hparams, gen, f'generated_magphase_block_last')
-
-    upscale_hparams = load_hparams('hparams/upscaler.yml')
-    upscaler = Upscaler(upscale_hparams, upscale_stats)
+    _, upscaler_stats = upscaler_load(upscaler_hparams)
+    upscaler = Upscaler(upscaler_hparams, upscaler_stats)
 
     checkpoint_path = "training_1/cp.ckpt"
     checkpoint_dir = os.path.dirname(checkpoint_path)
-    upscaler.model.load_weights(checkpoint_path)
 
-    gens = tf.split(gen, num_or_size_splits=[30, 30, 1])
-    gens = gens[:-1]
-    upscaleds = [upscaler.model(gen, training=False) for gen in gens]
+    try:
+        upscaler.model.load_weights(checkpoint_path)
+    except:
+        print("Initializing from scratch.")
+
+    [g_normal, g_fadein] = gan.generators[-1]
+
+    gen = g_normal([seed, seed_pitches], training=False)
+    print("GEN SHAPE", gen.shape)
+
+    gen = tf.concat(tf.unstack(gen), axis=0)
 
     pitch = 0
-    for upscaled in upscaleds:
-        for i in range(upscaled.shape[0]):
-            u_m, u_p = tf.unstack(upscaled[i], axis=-1)
-            print(pitch)
-            x_m = tf.squeeze(gen[i])
-            fig, axs = plt.subplots(1, 4)
+    x_m = tf.squeeze(gen)
+    fig, axs = plt.subplots(1, 1)
 
-            axs[0].set_title("Gen Mag")
-            axs[0].imshow(tf.transpose(x_m, [1, 0]))
+    axs.set_title("Gen Mag")
+    axs.imshow(tf.transpose(x_m, [1, 0]))
 
-            axs[2].set_title("Ups Mag")
-            axs[2].imshow(tf.transpose(u_m, [1, 0]))
-            axs[3].set_title("Ups Pha")
-            axs[3].imshow(tf.transpose(u_p, [1, 0]))
+    plt.savefig(f'generated_final_plot{pitch}.png')
 
-            plt.savefig(f'generated_upscale_plot{pitch}.png')
-
-            audio = upscale_invert(upscale_hparams, upscale_stats)((u_m, u_p))
-            librosa.output.write_wav(f'inverted_upscale_audio{pitch}.wav', audio.numpy(), sr=upscale_hparams['sample_rate'], norm=True)
-            pitch += 1
-           
+    audios = []
+    for sample in samples:
+        print(sample.shape)
+        audio = invert(gan_hparams, gan_stats, upscaler)(sample)
+        audios.append(audio)
+    librosa.output.write_wav(f'inverted_final_audio{pitch}.wav', audio.numpy(), sr=hparams['sample_rate'], norm=True)
+       
 

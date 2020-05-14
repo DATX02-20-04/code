@@ -7,7 +7,7 @@ class Upscaler(tfk.Model):
         super(Upscaler, self).__init__()
         self.hparams = hparams
         self.stats = stats
-        self.optimizer = tfk.optimizers.Adam(lr=0.001)
+        self.optimizer = tfk.optimizers.Adam(lr=0.0001)
 
         self.model = self.create_model()
 
@@ -37,10 +37,6 @@ class Upscaler(tfk.Model):
         i = tfkl.Input(shape=in_dim)
 
         g = i
-        g = tfkl.Conv2D(64, (3,3), padding='same')(g)
-        g = tfkl.LeakyReLU(alpha=0.2)(g)
-        g = tfkl.Conv2D(32, (3,3), padding='same')(g)
-        g = tfkl.LeakyReLU(alpha=0.2)(g)
         for _ in range(self.hparams['n_blocks']):
             g = tfkl.Conv2D(64, (3,3), padding='same')(g)
             g = tfkl.LeakyReLU(alpha=0.2)(g)

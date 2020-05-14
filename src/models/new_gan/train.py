@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 import librosa
 import os
 import io
@@ -38,10 +39,19 @@ def start(hparams):
         step=step,
     )
 
+    pitch_start = 0
+    pitch_end = hparams['pitches']
+    step_size = 4
+    seed_pitches = tf.range(pitch_start, pitch_start+pitch_end, step_size)
+    seed = tf.Variable(tf.random.normal([seed_pitches.shape[0], hparams['latent_dim']]))
+    seed_pitches = tf.one_hot(seed_pitches, hparams['pitches'], axis=1)
+
     manager = tf.train.CheckpointManager(ckpt,
                                          os.path.join(hparams['save_dir'], 'ckpts', hparams['name']),
                                          max_to_keep=3)
     dataset = dataset.shuffle(hparams['buffer_size'])
+
+
 
 
     ckpt.restore(manager.latest_checkpoint)
@@ -95,10 +105,12 @@ def start(hparams):
         plot_magphase(hparams, X_fake, step, block, tsw=tsw, pitch=seed_pitches)
 
     final_epochs = 100
-    batch_size = 32
+    batch_size = 16
     last = hparams['n_blocks']-1
     [g_normal, g_fadein] = gan.generators[last]
     [d_normal, d_fadein] = gan.discriminators[last]
+    X_fake = g_normal([seed, seed_pitches], training=False)
+    plot_magphase(hparams, X_fake, step, block, tsw=tsw, pitch=seed_pitches)
 
     block.assign_add(1)
     for i in range(1, final_epochs+1):

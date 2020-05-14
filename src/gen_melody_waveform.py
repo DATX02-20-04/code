@@ -18,6 +18,7 @@ from models.upscaler.process import load as upscaler_load
 # import models.gan.generate as gan
 from models.common.training import Trainer
 from models.new_gan.model import GAN
+from models.upscaler.model import Upscaler
 from models.new_gan.process import invert
 import data.process as pro
 import data.midi as M
@@ -37,14 +38,16 @@ upscaler_hparams = util.load_hparams('hparams/upscaler.yml')
 melody = transformer.generate(transformer_hparams)[0]
 print(melody)
 midi = pro.decode_midi()(melody)
-# with open("test.midi", "rb") as f:
-# 	midi = M.read_midi(f)
+#with open("test.midi", "rb") as f:
+#    midi = M.read_midi(f)
 midi = midi.flatten()
 print(midi)
 
 pitches = tf.cast([a.pitch-24 for a in midi if isinstance(a, M.Midi.NoteEvent)], tf.int32)
 amp     = tf.cast([a.velocity / 127 for a in midi if isinstance(a, M.Midi.NoteEvent)], tf.float32)
 vel     = tf.ones_like(pitches)*2
+
+print(pitches)
 
 sr = 16000
 samples_per_note = 8000
@@ -81,8 +84,8 @@ if manager.latest_checkpoint:
 else:
     print("Initializing from scratch.")
 
-_, upscaler_stats = upscaler_load()
-upscaler = Upscaler(hparams, upscaler_stats)
+_, upscaler_stats = upscaler_load(upscaler_hparams)
+upscaler = Upscaler(upscaler_hparams, upscaler_stats)
 
 checkpoint_path = "training_1/cp.ckpt"
 checkpoint_dir = os.path.dirname(checkpoint_path)
@@ -95,17 +98,18 @@ except:
 def generate_tones(pitches):
     seed = tf.random.normal((len(pitches), gan_hparams['latent_dim']))
     pitches = tf.one_hot(pitches, gan_hparams['pitches'], axis=1)
+    print(pitches)
 
     [g_normal, g_fadein] = gan.generators[-1]
     samples = g_normal([seed, pitches], training=False)
     # phases = upscaler(samples, training=False)
-    samples = tf.reshape(samples, [-1, 128, 256])
+    samples = tf.unstack(tf.reshape(samples, [-1, 128, 256]))
     audios = []
-    for sample, phase in zip(samples, phases):
-        audio = invert(gan_hparams, gan_stats, upscaler)(sample, sample)
+    for sample in samples:
+        print(sample.shape)
+        audio = invert(gan_hparams, gan_stats, upscaler)(sample)
         audios.append(audio)
-    audio = tf.concat(audios, axis=0)
-    return audio
+    return audios
 
 def generate_all_tones(pitches, amp):
     for a in range(0, len(pitches), 32):
