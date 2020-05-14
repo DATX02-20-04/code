@@ -1,4 +1,5 @@
 import tensorflow as tf
+import librosa
 import numpy as np
 import tensorflow_datasets as tfds
 import data.process as pro
@@ -18,9 +19,20 @@ def serialize_example(x_magphase, y_magphase):
 def process(hparams, dataset):
     spec_dataset = pro.pipeline([
         pro.extract('audio'),
-        pro.map_transform(lambda x: tf.signal.stft(x, frame_length=hparams['frame_length'], frame_step=hparams['frame_step'])),
-        pro.map_transform(lambda x: x[:, :-1]),
-        pro.pad([[0, 6], [0, 0]], 'CONSTANT', constant_values=0)
+        pro.map_transform(lambda x: tf.py_function(lambda y: librosa.core.stft(y=y.numpy(),
+                                                                               win_length=hparams['frame_length'],
+                                                                               hop_length=hparams['frame_step'],
+                                                                               n_fft=hparams['n_fft']),
+                                                   [x], tf.complex64)),
+        pro.map_transform(lambda x: tf.py_function(lambda S: librosa.feature.melspectrogram(S=S.numpy(),
+                                                                                            win_length=hparams['frame_length'],
+                                                                                            hop_length=hparams['frame_step'],
+                                                                                            n_fft=hparams['n_fft'],
+                                                                                            n_mels=hparams['n_mels']),
+                                                   [x], tf.complex64)),
+        pro.map_transform(lambda x: tf.transpose(x, [1, 0])),
+        # pro.map_transform(lambda x: x[:, :-1]),
+        pro.pad([[0, 2], [0, 0]], 'CONSTANT', constant_values=0)
     ])(dataset)
 
     mag_dataset = pro.pipeline([
@@ -75,22 +87,22 @@ def normalize(hparams, dataset, stats):
         # pro.mels(hparams['sample_rate'], n_fft=hparams['frame_length']//2+1, n_mels=hparams['n_mels']),
     ]))(dataset)
 
-    y_dataset = pro.pipeline([
-        pro.map_transform(lambda mag, phase: (tf.stack([mag, phase], axis=-1))),
-    ])(dataset)
+    # y_dataset = pro.pipeline([
+    #     pro.map_transform(lambda mag, phase: (tf.stack([mag, phase], axis=-1))),
+    # ])(dataset)
 
-    x_dataset = pro.pipeline([
-        pro.map_transform(lambda mag, phase: mag),
-        pro.map_transform(lambda magphase: tf.reshape(magphase, [1, 128, 1024, 1])),
-        pro.map_transform(lambda magphase: tf.image.resize(magphase, [128//(2**hparams['n_blocks']),
-                                                                      1024//(2**hparams['n_blocks'])])),
-        pro.map_transform(lambda magphase: tf.squeeze(magphase)),
-    ])(dataset)
+    # x_dataset = pro.pipeline([
+    #     pro.map_transform(lambda mag, phase: mag),
+    #     pro.map_transform(lambda magphase: tf.reshape(magphase, [1, 128, 1024, 1])),
+    #     pro.map_transform(lambda magphase: tf.image.resize(magphase, [128//(2**hparams['n_blocks']),
+    #                                                                   1024//(2**hparams['n_blocks'])])),
+    #     pro.map_transform(lambda magphase: tf.squeeze(magphase)),
+    # ])(dataset)
 
     # dataset = pro.index_map(1, pro.pipeline([
     #     pro.mels(hparams['sample_rate'], n_fft=hparams['frame_length']//2+1, n_mels=hparams['n_mels']),
     # ]))(dataset)
-    return tf.data.Dataset.zip((x_dataset, y_dataset))
+    return dataset
 
 def invert(hparams, stats):
     return pro.pipeline([

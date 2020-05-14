@@ -17,7 +17,7 @@ def start(hparams):
     valid = stats['examples']//10
     train = stats['examples']-valid
 
-    dataset = dataset.map(lambda x, y: (tf.reshape(x, [32, 256]), y))
+    dataset = dataset.map(lambda x, y: (tf.reshape(x, [128, 256]), y))
 
     dataset = dataset.shuffle(1000)
     valid_dataset = dataset.take(valid)
