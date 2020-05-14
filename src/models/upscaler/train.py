@@ -21,9 +21,9 @@ class TFImageCallback(tf.keras.callbacks.Callback):
         for X, Y in self.dataset.take(1):
             P = self.model.predict(X)
 
-            X = tf.squeeze(X)
-            Y = tf.squeeze(Y)
-            P = tf.squeeze(P)
+            X = tf.squeeze(X[0])
+            Y = tf.squeeze(Y[0])
+            P = tf.squeeze(P[0])
 
             plt.clf()
             fig, axs = plt.subplots(1, 3)
