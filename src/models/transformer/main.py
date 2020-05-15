@@ -50,3 +50,5 @@ def create_run(hparams, logger, span, **kwargs):
         prior = tf.concat(prior, 0)
 
         return encoded
+
+    return run

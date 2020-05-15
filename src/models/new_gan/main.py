@@ -83,3 +83,5 @@ def create_run(hparams, logger, span, **kwargs):
         span('end', 'spec_to_wave')
 
         return tf.concat(notes, axis=0)
+
+    return run
