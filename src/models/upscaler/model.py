@@ -47,7 +47,6 @@ class Upscaler(tfk.Model):
 
         model = tfk.Model(i, out_image)
         model.compile(loss=self.loss, optimizer=self.optimizer)
-        model.summary()
 
         return model
 

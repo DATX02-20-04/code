@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import yaml
 import argparse
 import io
+import time
 
 def load_hparams(path):
     with open(path, 'r') as stream:
@@ -36,3 +37,29 @@ def get_plot_image():
     image = tf.expand_dims(image, 0)
 
     return image
+
+def create_span(logger):
+    spans = {}
+    def span(cmd, name):
+        if cmd == 'start':
+            if name not in spans:
+                t = time.time()
+                logger(f"Starting {name} at {t:.2f}...")
+                spans[name] = {
+                    'start': t
+                }
+                return t
+        elif cmd == 'end':
+            if name in spans:
+                t = time.time()
+                spans[name]['end'] = t
+                elapsed = spans[name]['end'] - spans[name]['start']
+                logger(f"Completed {name} in {elapsed:.3f}s...")
+                return spans[name]
+
+    return span
+
+def create_logger(module):
+    def logger(msg, level='info'):
+        print(f"[{level.upper()}] {int(time.time()*1000)} {module}: {msg}")
+    return logger

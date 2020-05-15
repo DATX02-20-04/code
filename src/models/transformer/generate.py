@@ -9,17 +9,17 @@ import matplotlib.pyplot as plt
 import tensorflow_datasets as tfds
 
 
-def generate(hparams):
+def generate(hparams, prior_index, gen_iters=None):
     input_vocab_size  = 128+128+128+128
     target_vocab_size = 128+128+128+128
 
-    dataset = tf.data.Dataset.list_files('/home/big/datasets/maestro-v2.0.0/**/*.midi')
+    dataset = tf.data.Dataset.list_files(f"{hparams['dataset_root']}/maestro-v2.0.0/**/*.midi")
 
     dataset_single = pro.pipeline([
         pro.midi(),
         pro.frame(hparams['frame_size'], hparams['frame_hop_len'], True),
         pro.unbatch(),
-    ])(dataset).skip(38).as_numpy_iterator()
+    ])(dataset).skip(prior_index).as_numpy_iterator()
 
     transformer = Transformer(input_vocab_size=input_vocab_size,
                               target_vocab_size=target_vocab_size,
@@ -37,12 +37,13 @@ def generate(hparams):
 
     trainer.init_checkpoint(ckpt)
 
-    return generate_from_model(hparams, transformer, dataset_single)
+    return generate_from_model(hparams, transformer, dataset_single, gen_iters)
 
-def generate_from_model(hparams, transformer, priors):
+def generate_from_model(hparams, transformer, priors, gen_iters=None):
+    if gen_iters is None:
+        gen_iters = hparams['gen_iters'] if 'gen_iters' in hparams else 1
     outputs = []
     prior_buf = []
-    gen_iters = hparams['gen_iters'] if 'gen_iters' in hparams else 1
     prior = np.array(next(priors))
     output = prior
     for i in range(gen_iters):
