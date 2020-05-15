@@ -27,7 +27,7 @@ def create_get_prior(hparams, melody):
     ])(dataset).repeat()
 
     def get_prior():
-        return next(dataset_single.skip(random.randint(melody['max_prior'])).as_numpy_iterator())
+        return next(dataset_single.skip(random.randint(0, melody['max_prior'])).as_numpy_iterator())
 
     return get_prior
 
