@@ -141,6 +141,21 @@ def invert(hparams, stats, upscaler):
         return dataset
     return inv
 
+def invert_griffin(hparams, stats):
+    return pro.pipeline([
+        pro.pipeline([
+            pro.denormalize(normalization='neg_one_to_one', stats=stats),
+            pro.log_to_amp(),
+            pro.map_transform(lambda x: tf.transpose(x, [1, 0])),
+            pro.map_transform(lambda x: tf.py_function(lambda z: librosa.feature.inverse.mel_to_audio(z.numpy(),
+                                                                                            sr=hparams['sample_rate'],
+                                                                                            win_length=hparams['frame_length'],
+                                                                                            hop_length=hparams['frame_step'],
+                                                                                            n_fft=hparams['n_fft']),
+                                                       [x], tf.float32)),
+        ])
+    ])
+
 def start(hparams):
     dataset = tfds.load('nsynth/gansynth_subset', split='train', shuffle_files=False)
 
