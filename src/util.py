@@ -55,7 +55,7 @@ def create_span(logger):
                 t = get_t()
                 spans[name]['end'] = t
                 elapsed = spans[name]['end'] - spans[name]['start']
-                logger(f"Completed {name} in {elapsed:.3f}s...")
+                logger(f"Completed {name} in {elapsed:.3f}ms...")
                 return spans[name]
 
     return span
