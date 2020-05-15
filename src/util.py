@@ -40,10 +40,11 @@ def get_plot_image():
 
 def create_span(logger):
     spans = {}
+    get_t = lambda: int(time.time*1000)
     def span(cmd, name):
         if cmd == 'start':
             if name not in spans:
-                t = time.time()
+                t = get_t()
                 logger(f"Starting {name} at {t:.2f}...")
                 spans[name] = {
                     'start': t
@@ -51,7 +52,7 @@ def create_span(logger):
                 return t
         elif cmd == 'end':
             if name in spans:
-                t = time.time()
+                t = get_t()
                 spans[name]['end'] = t
                 elapsed = spans[name]['end'] - spans[name]['start']
                 logger(f"Completed {name} in {elapsed:.3f}s...")
