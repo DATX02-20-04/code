@@ -44,11 +44,11 @@ def render(notes, times):
 
 def start(hparams):
     models   = hparams['models']
-    melody   = hparams['melody']
-    note     = hparams['note']
+    hmelody   = hparams['melody']
+    hnote     = hparams['note']
     sr       = hparams['sample_rate']
-    spn      = note['samples_per_note']
-    tone_len = note['tone_length']
+    spn      = hnote['samples_per_note']
+    tone_len = hnote['tone_length']
 
     # Model run function
     mrun = {}
@@ -67,7 +67,7 @@ def start(hparams):
         mrun[part] = main.create_run(hp, logger, span, **hparams[part])
 
     # Create prior function
-    get_prior = create_get_prior(mhparams['melody'], melody)
+    get_prior = create_get_prior(mhparams['melody'], hmelody)
 
     logger = util.create_logger('renderer')
 
@@ -75,7 +75,7 @@ def start(hparams):
     span = util.create_span(logger)
     start_time = span('start', 'render_system')
 
-    if melody['generate']:
+    if hmelody['generate']:
         # Ger random prior
         prior = get_prior()
 
@@ -87,18 +87,16 @@ def start(hparams):
     else:
         logger(f"Loading melody from midi file: {melody['midi_file']}")
         prior = None
-        with open(melody['midi_file'], 'rb') as f:
+        with open(hmelody['midi_file'], 'rb') as f:
             midi = M.read_midi(f)
 
     # Flatten midi to a list of events
     midi = midi.flatten()
 
     # Create tensors of the pitch, amplitude and velocity in the format for the note generator
-    pitches = tf.cast([a.pitch - melody['note_offset']
-                       for a in midi if isinstance(a, M.Midi.NoteEvent)], tf.int32)
-    amps     = tf.cast([a.velocity / 127
-                       for a in midi if isinstance(a, M.Midi.NoteEvent)], tf.float32)
-    vels     = tf.ones_like(pitches) * melody['velocity']
+    pitches = tf.cast([a.pitch - hmelody['note_offset'] for a in midi if isinstance(a, M.Midi.NoteEvent)], tf.int32)
+    amps     = tf.cast([a.velocity / 127 for a in midi if isinstance(a, M.Midi.NoteEvent)], tf.float32)
+    vels     = tf.ones_like(pitches) * hmelody['velocity']
 
     # Create the noise for the note generator
     noise = tf.random.normal((len(pitches), mhparams['note']['latent_dim']))

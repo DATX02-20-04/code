@@ -45,7 +45,7 @@ def create_span(logger):
         if cmd == 'start':
             if name not in spans:
                 t = get_t()
-                logger(f"Starting {name} at {t:.2f}...")
+                logger(f"Starting {name} at {t}...")
                 spans[name] = {
                     'start': t
                 }

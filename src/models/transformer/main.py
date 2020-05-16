@@ -38,7 +38,7 @@ def create_run(hparams, logger, span, **kwargs):
 
         span('start', 'melody_gen')
         for i in range(gen_iters):
-            s = f"gen_{i+1}/{gen_iters}"
+            s = f"melody_gen_{i+1}/{gen_iters}"
             span('start', s)
             output, _ = transformer.evaluate(output)
             outputs.append(output)
