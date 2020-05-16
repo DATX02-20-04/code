@@ -66,6 +66,8 @@ def create_run(hparams, logger, span, **kwargs):
     def run(noise, pitch):
         span('start', 'note_spec_gen')
 
+        pitch = tf.one_hot(pitch, hparams['pitches'])
+
         n_p = len(pitch)
         batches = n_p // batch_size
         last_batch = int((n_p/batch_size - batches)*batch_size)
