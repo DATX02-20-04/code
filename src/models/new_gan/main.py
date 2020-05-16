@@ -88,7 +88,7 @@ def create_run(hparams, logger, span, **kwargs):
 
         logger(f"spectrograms={spectrograms.shape}", level='debug')
 
-        assert len(spectrograms) == len(pitches), "Didn't generate same amount of spectrograms as pitches."
+        assert len(spectrograms) == len(pitch), "Didn't generate same amount of spectrograms as pitches."
 
         span('end', 'note_spec_gen')
 
@@ -108,7 +108,7 @@ def create_run(hparams, logger, span, **kwargs):
 
         notes = np.concatenate(notes, axis=0)
 
-        assert len(notes) == len(pitches), "Didn't invert same amount of notes as pitches."
+        assert len(notes) == len(pitch), "Didn't invert same amount of notes as pitches."
 
         return notes
 
