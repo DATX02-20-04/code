@@ -40,7 +40,7 @@ def get_plot_image():
 
 def create_span(logger):
     spans = {}
-    get_t = lambda: int(time.time*1000)
+    get_t = lambda: int(time.time()*1000)
     def span(cmd, name):
         if cmd == 'start':
             if name not in spans:
