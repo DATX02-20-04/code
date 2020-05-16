@@ -69,8 +69,8 @@ def create_run(hparams, logger, span, **kwargs):
         with lock:
             logger(f"Producer {pid} started with {len(spectrograms)}.", level='debug')
 
-        for spectrogram in spectrograms:
-            s = f'pid_{pid}_{inv_method}_spec_to_wave{i+1}/{n}'
+        for i, spectrogram in spectrograms:
+            s = f'pid_{pid}_{inv_method}_spec_to_wave{i+1}'
             with lock:
                 logger(f"spectrogram={spectrogram.shape}", level='debug')
                 span('start', s)
@@ -80,7 +80,7 @@ def create_run(hparams, logger, span, **kwargs):
                 note = invert_griffin(hparams, gan_stats)(spectrogram)
             with lock:
                 span('end', s)
-            queue.put(note)
+            queue.put((i, note))
 
     def run(noise, pitch):
         span('start', 'note_spec_gen')
@@ -104,7 +104,7 @@ def create_run(hparams, logger, span, **kwargs):
             spectrograms.append(spectrogram)
 
         spectrograms = np.concatenate(spectrograms, axis=0)
-        spectrograms = list(map(tf.squeeze, spectrograms))
+        spectrograms = list(enumerate(map(tf.squeeze, spectrograms)))
 
         assert len(spectrograms) == len(pitch), "Didn't generate same amount of spectrograms as pitches."
 
@@ -139,6 +139,7 @@ def create_run(hparams, logger, span, **kwargs):
         for p in producers:
             p.join()
 
+        notes = list(map(lambda x: x[1], sorted(notes)))
         notes = np.concatenate(notes, axis=0)
 
         assert len(notes) == len(pitch), "Didn't invert same amount of notes as pitches."
