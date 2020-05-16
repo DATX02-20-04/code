@@ -75,9 +75,13 @@ def create_run(hparams, logger, span, **kwargs):
             spectrogram = generator([seed[i:i+batch_size], pitch[i:i+batch_size]], training=False)
             spectrograms.append(spectrogram)
 
-        spectrogram = generator([seed[-last_batch:], pitch[-last_batch:]], training=False)
-        spectrograms.append(spectrogram)
+        if last_batch > 0:
+            spectrogram = generator([seed[-last_batch:], pitch[-last_batch:]], training=False)
+            spectrograms.append(spectrogram)
+
         spectrograms = np.concatenate(spectrograms, axis=0)
+
+        assert len(spectrograms) == len(pitches), "Didn't generate same amount of spectrograms as pitches."
 
         span('end', 'note_spec_gen')
 
@@ -95,6 +99,10 @@ def create_run(hparams, logger, span, **kwargs):
             notes.append(note)
         span('end', f'{inv_method}_spec_to_wave')
 
-        return np.concatenate(notes, axis=0)
+        notes = np.concatenate(notes, axis=0)
+
+        assert len(notes) == len(pitches), "Didn't invert same amount of notes as pitches."
+
+        return notes
 
     return run
