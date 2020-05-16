@@ -3,7 +3,7 @@ import numpy as np
 import librosa
 import util
 import os
-from multiprocessing import Queue, Lock, Process
+from multiprocessing import Pool
 import data.process as pro
 import matplotlib.pyplot as plt
 from models.new_gan.process import load as gan_load
@@ -65,22 +65,10 @@ def create_run(hparams, logger, span, **kwargs):
     inv_method = kwargs['inversion_method']
     n_producers = 4
 
-    def producer(pid, queue, lock, logger, spectrograms):
-        with lock:
-            logger(f"Producer {pid} started with {len(spectrograms)}.", level='debug')
-
-        for i, spectrogram in spectrograms:
-            s = f'pid_{pid}_{inv_method}_spec_to_wave{i+1}'
-            with lock:
-                logger(f"spectrogram={spectrogram.shape}", level='debug')
-                span('start', s)
-            if kwargs['inversion_method'] == 'phase_gen':
-                note = invert(hparams, gan_stats, upscaler)(spectrogram)
-            elif kwargs['inversion_method'] == 'griffin':
-                note = invert_griffin(hparams, gan_stats)(spectrogram)
-            with lock:
-                span('end', s)
-            queue.put((i, note))
+    if kwargs['inversion_method'] == 'phase_gen':
+        inverter = invert(hparams, gan_stats, upscaler)
+    elif kwargs['inversion_method'] == 'griffin':
+        inverter = invert_griffin(hparams, gan_stats)
 
     def run(noise, pitch):
         span('start', 'note_spec_gen')
@@ -104,7 +92,7 @@ def create_run(hparams, logger, span, **kwargs):
             spectrograms.append(spectrogram)
 
         spectrograms = np.concatenate(spectrograms, axis=0)
-        spectrograms = list(enumerate(map(tf.squeeze, spectrograms)))
+        spectrograms = list(map(tf.squeeze, spectrograms))
 
         assert len(spectrograms) == len(pitch), "Didn't generate same amount of spectrograms as pitches."
 
@@ -112,34 +100,13 @@ def create_run(hparams, logger, span, **kwargs):
 
         queue = Queue()
         lock = Lock()
-        producers = []
-        specs_per_producer = len(spectrograms) // n_producers
-
-        for i in range(n_producers-1):
-            p = Process(target=producer, args=(i, queue, lock, logger, spectrograms[i*specs_per_producer:i*specs_per_producer+specs_per_producer]))
-            p.daemon = True
-            producers.append(p)
-
-        p = Process(target=producer, args=(i, queue, lock, logger, spectrograms[(n_producers-1)*specs_per_producer:]))
-        p.daemon = True
-        producers.append(p)
-
-        for p in producers:
-            p.start()
 
         n = len(spectrograms)
-        notes = []
         span('start', f'{inv_method}_spec_to_wave')
-        while len(notes) < len(spectrograms):
-            spectrogram = tf.squeeze(spectrogram)
-            note = queue.get()
-            notes.append(note)
+        with Pool(n_producers) as pool:
+            notes = pool.map(inverter, spectrograms)
         span('end', f'{inv_method}_spec_to_wave')
 
-        for p in producers:
-            p.join()
-
-        notes = list(map(lambda x: x[1], sorted(notes)))
         notes = np.concatenate(notes, axis=0)
 
         assert len(notes) == len(pitch), "Didn't invert same amount of notes as pitches."
