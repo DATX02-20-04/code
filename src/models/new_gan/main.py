@@ -70,6 +70,9 @@ def create_run(hparams, logger, span, **kwargs):
         batches = n_p // batch_size
         last_batch = int((n_p/batch_size - batches)*batch_size)
 
+        logger(f"pitch={pitch.shape}, batches={batches}, last_batch={last_batch}", level='debug')
+        logger(f"noise={noise.shape}", level='debug')
+
         spectrograms = []
         for i in range(0, batches*batch_size, batch_size):
             spectrogram = generator([noise[i:i+batch_size], pitch[i:i+batch_size]], training=False)
@@ -80,6 +83,8 @@ def create_run(hparams, logger, span, **kwargs):
             spectrograms.append(spectrogram)
 
         spectrograms = np.concatenate(spectrograms, axis=0)
+
+        logger(f"spectrograms={spectrograms.shape}", level='debug')
 
         assert len(spectrograms) == len(pitches), "Didn't generate same amount of spectrograms as pitches."
 
