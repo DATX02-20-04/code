@@ -72,11 +72,11 @@ def create_run(hparams, logger, span, **kwargs):
 
         spectrograms = []
         for i in range(0, batches*batch_size, batch_size):
-            spectrogram = generator([seed[i:i+batch_size], pitch[i:i+batch_size]], training=False)
+            spectrogram = generator([noise[i:i+batch_size], pitch[i:i+batch_size]], training=False)
             spectrograms.append(spectrogram)
 
         if last_batch > 0:
-            spectrogram = generator([seed[-last_batch:], pitch[-last_batch:]], training=False)
+            spectrogram = generator([noise[-last_batch:], pitch[-last_batch:]], training=False)
             spectrograms.append(spectrogram)
 
         spectrograms = np.concatenate(spectrograms, axis=0)
