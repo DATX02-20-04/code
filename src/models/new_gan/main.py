@@ -98,9 +98,6 @@ def create_run(hparams, logger, span, **kwargs):
 
         span('end', 'note_spec_gen')
 
-        queue = Queue()
-        lock = Lock()
-
         n = len(spectrograms)
         span('start', f'{inv_method}_spec_to_wave')
         with Pool(n_producers) as pool:
