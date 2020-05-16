@@ -144,7 +144,7 @@ def create_run(hparams, logger, span, **kwargs):
             spectrograms.append(spectrogram)
 
         spectrograms = np.concatenate(spectrograms, axis=0)
-        spectrograms = list(map(tf.squeeze, spectrograms))
+        spectrograms = list(map(np.squeeze, spectrograms))
 
         assert len(spectrograms) == len(pitch), "Didn't generate same amount of spectrograms as pitches."
 
