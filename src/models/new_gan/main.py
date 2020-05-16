@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 import librosa
 import util
 import os
@@ -64,10 +65,22 @@ def create_run(hparams, logger, span, **kwargs):
 
     def run(noise, pitch):
         span('start', 'note_spec_gen')
-        spectrograms = generator([seed, pitch], training=False)
+
+        n_p = len(pitch)
+        batches = n_p // batch_size
+        last_batch = (np/batch_size - batches)*batch_size
+
+        spectrograms = []
+        for i in range(0, batches*batch_size, batch_size):
+            spectrogram = generator([seed[i:i+batch_size], pitch[i:i+batch_size]], training=False)
+            spectrograms.append(spectrogram)
+
+        spectrogram = generator([seed[-last_batch:], pitch[-last_batch:]], training=False)
+        spectrograms.append(spectrogram)
+        spectrograms = np.concatenate(spectrograms, axis=0)
+
         span('end', 'note_spec_gen')
 
-        spectrograms = tf.unstack(tf.reshape(spectrograms, [-1, 128, 256]))
         n = len(spectrograms)
         notes = []
         span('start', f'{inv_method}_spec_to_wave')
@@ -80,8 +93,8 @@ def create_run(hparams, logger, span, **kwargs):
                 note = invert_griffin(hparams, gan_stats)(spectrogram)
             span('end', s)
             notes.append(note)
-        span('end', 'spec_to_wave')
+        span('end', f'{inv_method}_spec_to_wave')
 
-        return tf.concat(notes, axis=0)
+        return np.concatenate(notes, axis=0)
 
     return run
