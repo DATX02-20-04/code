@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+from functools import partial
 import librosa
 import util
 import os
@@ -10,10 +11,61 @@ from models.new_gan.process import load as gan_load
 from models.upscaler.process import load as upscaler_load
 from models.new_gan.model import GAN
 from models.new_gan.train import plot_magphase
-from models.new_gan.process import invert, invert_griffin
+# from models.new_gan.process import invert, invert_griffin
 from util import load_hparams
 from models.new_gan.process import load as gan_load
 from models.upscaler.model import Upscaler
+
+def invert(hparams, stats, upscaler, dataset):
+    mag_dataset = pro.pipeline([
+        pro.denormalize(normalization='neg_one_to_one', stats=stats),
+        pro.log_to_amp(),
+        pro.map_transform(lambda x: tf.transpose(x, [1, 0])),
+        pro.map_transform(lambda x: tf.py_function(lambda z: librosa.feature.inverse.mel_to_stft(z.numpy(), sr=hparams['sample_rate'], n_fft=hparams['n_fft']), [x], tf.float32)),
+        pro.map_transform(lambda x: tf.transpose(x, [1, 0])),
+        #pro.map_transform(lambda x: x[:, :-1]),
+        ])(dataset)
+    dataset = pro.index_map(1, pro.pipeline([
+        pro.map_transform(lambda x: tf.reshape(x, [-1, 128, 1025, 1])),
+        pro.map_transform(lambda x: x[:, :, :-1, :]),
+        pro.map_transform(lambda x: upscaler.model(x, training=False)),
+        pro.map_transform(lambda x: tf.pad(x, [[0, 0], [0, 0], [0, 1], [0, 0]])),
+        pro.map_transform(lambda x: tf.squeeze(x)),
+        # pro.map_transform(lambda x: x * np.pi),
+        # pro.map_transform(lambda x: tf.math.cumsum(x, axis=0)),
+        # pro.map_transform(lambda x: (x + np.pi) % (2 * np.pi) - np.pi),
+        pro.cast(tf.complex64),
+        ]))((mag_dataset, mag_dataset))
+    dataset = pro.index_map(0, pro.pipeline([
+        pro.cast(tf.complex64),
+        ]))(dataset)
+    dataset = pro.map_transform(lambda mag, phase: mag * tf.math.exp(1j * phase))(dataset)
+    dataset = pro.pipeline([
+        pro.map_transform(lambda x: tf.transpose(x, [1, 0])),
+        pro.map_transform(lambda x: tf.py_function(lambda z: librosa.core.istft(z.numpy(),
+                                                                                #sr=hparams['sample_rate'],
+                                                                                win_length=hparams['frame_length'],
+                                                                                hop_length=hparams['frame_step'],
+                                                                                #n_fft=hparams['n_fft']
+                                                                                ),
+                                                    [x], tf.float32)),
+    ])(dataset)
+    return dataset
+
+def invert_griffin(hparams, stats, dataset):
+    return pro.pipeline([
+        pro.pipeline([
+            pro.denormalize(normalization='neg_one_to_one', stats=stats),
+            pro.log_to_amp(),
+            pro.map_transform(lambda x: tf.transpose(x, [1, 0])),
+            pro.map_transform(lambda x: tf.py_function(lambda z: librosa.feature.inverse.mel_to_audio(z.numpy(),
+                                                                                            sr=hparams['sample_rate'],
+                                                                                            win_length=hparams['frame_length'],
+                                                                                            hop_length=hparams['frame_step'],
+                                                                                            n_fft=hparams['n_fft']),
+                                                       [x], tf.float32)),
+        ])
+    ])(dataset)
 
 def create_run(hparams, logger, span, **kwargs):
     upscaler_hparams = util.load_hparams('hparams/upscaler.yml')
@@ -66,9 +118,9 @@ def create_run(hparams, logger, span, **kwargs):
     n_producers = 4
 
     if kwargs['inversion_method'] == 'phase_gen':
-        inverter = invert(hparams, gan_stats, upscaler)
+        inverter = partial(invert, hparams, gan_stats, upscaler)
     elif kwargs['inversion_method'] == 'griffin':
-        inverter = invert_griffin(hparams, gan_stats)
+        inverter = partial(invert_griffin, hparams, gan_stats)
 
     def run(noise, pitch):
         span('start', 'note_spec_gen')
