@@ -96,6 +96,8 @@ def create_run(hparams, logger, span, **kwargs):
         notes = []
         span('start', f'{inv_method}_spec_to_wave')
         for i, spectrogram in enumerate(spectrograms):
+            spectrogram = tf.squeeze(spectrogram)
+            logger(f"spectrogram={spectrogram.shape}", level='debug')
             s = f'{inv_method}_spec_to_wave{i+1}/{n}'
             span('start', s)
             if kwargs['inversion_method'] == 'phase_gen':
