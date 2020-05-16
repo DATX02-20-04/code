@@ -68,7 +68,7 @@ def create_run(hparams, logger, span, **kwargs):
 
         n_p = len(pitch)
         batches = n_p // batch_size
-        last_batch = (np/batch_size - batches)*batch_size
+        last_batch = (n_p/batch_size - batches)*batch_size
 
         spectrograms = []
         for i in range(0, batches*batch_size, batch_size):
