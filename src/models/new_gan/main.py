@@ -65,7 +65,12 @@ def create_run(hparams, logger, span, **kwargs):
     inv_method = kwargs['inversion_method']
     n_producers = 4
 
-    def producer(pid, queue, lock, logger, spectrograms):
+    if inv_method == 'phase_gen':
+        inverter = invert(hparams, gan_stats, upscaler)
+    elif inv_method == 'griffin':
+        inverter = invert_griffin(hparams, gan_stats)
+
+    def producer(pid, queue, lock, logger, spectrograms, inverter):
         with lock:
             logger(f"Producer {pid} started with {len(spectrograms)}.", level='debug')
 
@@ -74,10 +79,7 @@ def create_run(hparams, logger, span, **kwargs):
             with lock:
                 logger(f"spectrogram={spectrogram.shape}", level='debug')
                 span('start', s)
-            if kwargs['inversion_method'] == 'phase_gen':
-                note = invert(hparams, gan_stats, upscaler)(spectrogram)
-            elif kwargs['inversion_method'] == 'griffin':
-                note = invert_griffin(hparams, gan_stats)(spectrogram)
+            note = inverter(spectrogram)
             with lock:
                 span('end', s)
             queue.put((i, note))
@@ -116,7 +118,7 @@ def create_run(hparams, logger, span, **kwargs):
         specs_per_producer = len(spectrograms) // n_producers
 
         for i in range(n_producers-1):
-            p = Process(target=producer, args=(i, queue, lock, logger, spectrograms[i*specs_per_producer:i*specs_per_producer+specs_per_producer]))
+            p = Process(target=producer, args=(i, queue, lock, logger, spectrograms[i*specs_per_producer:i*specs_per_producer+specs_per_producer], inverter))
             p.daemon = True
             producers.append(p)
 
