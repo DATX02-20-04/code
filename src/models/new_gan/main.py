@@ -122,7 +122,7 @@ def create_run(hparams, logger, span, **kwargs):
             p.daemon = True
             producers.append(p)
 
-        p = Process(target=producer, args=(i, queue, lock, logger, spectrograms[(n_producers-1)*specs_per_producer:]))
+        p = Process(target=producer, args=(i, queue, lock, logger, spectrograms[(n_producers-1)*specs_per_producer:], inverter))
         p.daemon = True
         producers.append(p)
 
