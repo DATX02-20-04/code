@@ -60,7 +60,9 @@ def create_span(logger):
 
     return span
 
-def create_logger(module):
+def create_logger(module, log_level='info'):
+    levels = ['trace', 'debug', 'info', 'warning', 'error', 'critical']
     def logger(msg, level='info'):
-        print(f"[{level.upper()}] {int(time.time()*1000)} {module}: {msg}")
+        if levels.index(level) >= levels.index(log_level):
+            print(f"[{level.upper()}] {int(time.time()*1000)} {module}: {msg}")
     return logger

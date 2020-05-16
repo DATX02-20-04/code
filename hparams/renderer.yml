@@ -1,5 +1,6 @@
 hparams:
   name: renderer
+  log_level: debug
   sample_rate: 16000
   melody:
     max_prior: 1024

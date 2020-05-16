@@ -43,6 +43,7 @@ def render(notes, times):
     return waveform
 
 def start(hparams):
+    log_level   = hparams['log_level']
     models   = hparams['models']
     hmelody   = hparams['melody']
     hnote     = hparams['note']
@@ -62,14 +63,14 @@ def start(hparams):
         mhparams[part] = hp
 
         main = importlib.import_module(f'models.{model}.main')
-        logger = util.create_logger(part)
+        logger = util.create_logger(part, log_level=log_level)
         span = util.create_span(logger)
         mrun[part] = main.create_run(hp, logger, span, **hparams[part])
 
     # Create prior function
     get_prior = create_get_prior(mhparams['melody'], hmelody)
 
-    logger = util.create_logger('renderer')
+    logger = util.create_logger('renderer', log_level=log_level)
 
     # Record starting time of rendering
     span = util.create_span(logger)
