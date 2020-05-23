@@ -28,6 +28,47 @@
   A time log can be found at Google Sheets: https://bit.ly/2PRKRl8
 
   The time log has exact tasks worked on each entry, for each
+* Week 16 and 17
+There's not a lot to write about these weeks. Most of the work is working on the
+deliverables of the exhibition, presentation and opposition.
+
+** Report and opposition
+We spent week 16 and 17 mostly finalizing the report, and have now sent it for
+opposition. We have also each reviewed the report we are opponents for, and have
+sent those written oppositions as well.
+
+The oral opposition that takes place after that groups presentation will be held
+by Elias and Cao. This part will be based on the entire groups combined
+thoughts, not just theirs.
+
+** Exhibition
+The exhibition video is also sent after some minor adjustments. We got advice to
+change it more, but had no time for larger changes. We will however take that
+advice into consideration for the presentation.
+
+** Presentation
+Most of the time right now is spent towards preparing the presentation. It will
+be held by Carl, Christoffer, Eric and Lovisa since they did not present the
+half time presentation. As of right now, we have split it into parts of four;
+one for each presenter.
+
+The advice we got from the exhibition was to hold it backwards. This means we
+first show results, and then explain how it works. This should help prevent the
+presentation from feeling like a lecture and as a result, capture the audience
+better.
+
+** Project
+We are not actively working on the project anymore, but we should mention that
+we improved the audio quality significantly by implementing a Progressive
+Growing GAN. This was mostly done by Eric. Details of this implementation is
+written about in the report.
+
+** Next few weeks
+We will finish working on the presentation and hold it on the 27th of May. Elias
+and Cao will hold the opposition, which the group also will work on.
+Finally, we expect to change the report based on the critique we will receive
+from the opposition on our report.
+
 * Week 14 and 15
 We felt it appropriate to spend more time on the report and demo parts of the
 project rather than documenting this log. Most of the past two weeks have been
