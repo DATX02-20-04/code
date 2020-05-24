@@ -31,14 +31,14 @@ def create_get_prior(hparams, melody):
 
     return get_prior
 
-def render(notes, times, tone_len):
+def render(notes, times, tone_len, sr):
     # Create output tensor for the waveform
     waveform = tf.zeros(max(times) + tone_len)
 
     # Add each note to the output waveform
     for time, note in zip(times, notes):
         note = note[:sr]
-        waveform += tf.pad(sound, [(time, len(out)-len(sound)-time)])
+        waveform += tf.pad(note, [(time, len(waveform)-len(note)-time)])
 
     return waveform
 
@@ -107,14 +107,14 @@ def start(hparams):
     noise = tf.random.normal((len(pitches), mhparams['note']['latent_dim']))
 
     # Generate the notes
-    notes = mrun['note'](noise, pitches) * amps
+    notes = mrun['note'](noise, pitches) * tf.reshape(amps, [-1, 1])
 
     # Calculate the times each note should be placed
     times = [int(a.time * spn) for a in midi if isinstance(a, M.Midi.NoteEvent)]
 
     span('start', 'waveform_render')
     # Render the notes at the times specified
-    waveform = render(notes, times, tone_len)
+    waveform = render(notes, times, tone_len, sr)
     span('end', 'waveform_render')
 
     # Save redered output
