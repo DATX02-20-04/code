@@ -84,7 +84,7 @@ def create_run(hparams, logger, span, **kwargs):
             spectrogram = generator([noise[-last_batch:], pitch[-last_batch:]], training=False)
             spectrograms.extend(tf.unstack(spectrogram))
 
-        logger(f"spectrograms={spectrograms.shape}", level='debug')
+        logger(f"spectrograms={len(spectrograms)}", level='debug')
 
         assert len(spectrograms) == len(pitch), "Didn't generate same amount of spectrograms as pitches."
 
