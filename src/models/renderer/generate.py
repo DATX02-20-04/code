@@ -86,13 +86,17 @@ def start(hparams):
         # Decode midi tokens to midi
         midi = pro.decode_midi()(melody)
     else:
-        logger(f"Loading melody from midi file: {melody['midi_file']}")
+        logger(f"Loading melody from midi file: {hmelody['midi_file']}")
         prior = None
         with open(hmelody['midi_file'], 'rb') as f:
             midi = M.read_midi(f)
 
     # Flatten midi to a list of events
     midi = midi.flatten()
+
+    if 'max_events' in hmelody and hmelody['max_events'] > 0:
+        logger(f"Limiting midi events to maximum {hmelody['max_events']}")
+        midi = midi[:hmelody['max_events']]
 
     # Create tensors of the pitch, amplitude and velocity in the format for the note generator
     pitches = tf.cast([a.pitch - hmelody['note_offset'] for a in midi if isinstance(a, M.Midi.NoteEvent)], tf.int32)
