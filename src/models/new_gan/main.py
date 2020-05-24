@@ -78,13 +78,11 @@ def create_run(hparams, logger, span, **kwargs):
         spectrograms = []
         for i in range(0, batches*batch_size, batch_size):
             spectrogram = generator([noise[i:i+batch_size], pitch[i:i+batch_size]], training=False)
-            spectrograms.append(spectrogram)
+            spectrograms.extend(tf.unstack(spectrogram))
 
         if last_batch > 0:
             spectrogram = generator([noise[-last_batch:], pitch[-last_batch:]], training=False)
-            spectrograms.append(spectrogram)
-
-        spectrograms = np.concatenate(spectrograms, axis=0)
+            spectrograms.extend(tf.unstack(spectrogram))
 
         logger(f"spectrograms={spectrograms.shape}", level='debug')
 
@@ -108,8 +106,9 @@ def create_run(hparams, logger, span, **kwargs):
             notes.append(note)
         span('end', f'{inv_method}_spec_to_wave')
 
-        notes = np.concatenate(notes, axis=0)
+        notes = np.stack(notes, axis=0)
 
+        logger(f"notes={notes.shape}", level='debug')
         assert len(notes) == len(pitch), "Didn't invert same amount of notes as pitches."
 
         return notes
