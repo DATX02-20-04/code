@@ -4,14 +4,15 @@ hparams:
   sample_rate: 16000
   melody:
     max_prior: 1024
+    max_events: 0
     generate: True
-    midi_file: test.midi
+    midi_file: notes.mid
     note_offset: 24
     velocity: 2
   note:
     inversion_method: phase_gen
     samples_per_note: 8000
-    tone_length: 16000
+    tone_length: 64000
     batch_size: 32
   models:
     note: new_gan

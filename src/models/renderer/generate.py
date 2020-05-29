@@ -37,7 +37,7 @@ def render(notes, times, tone_len, sr):
 
     # Add each note to the output waveform
     for time, note in zip(times, notes):
-        note = note[:sr]
+        note = note[:tone_len]
         waveform += tf.pad(note, [(time, len(waveform)-len(note)-time)])
 
     return waveform
