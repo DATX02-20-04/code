@@ -3,25 +3,15 @@ import tensorflow.keras as tfk
 import numpy as np
 from models.common.training import Trainer
 import data.process as pro
+import data.midi as M
 from models.transformer.model import Transformer
+import matplotlib.pyplot as plt
 import tensorflow_datasets as tfds
 
 
-def generate(transformer, epoch, seed):
-    output = seed
-    print(output)
-    outputs = []
-    for i in range(1):
-        output, _ = transformer.evaluate(output)
-        outputs.append(output)
-        print(output)
-    decoded = next(pro.decode_midi()(iter([tf.concat(outputs, 0)])))
-    decoded.save('gen_e{}.midi'.format(epoch))
-
-
-def start(hparams):
-    input_vocab_size  = 128+128+100+100
-    target_vocab_size = 128+128+100+100
+def generate(hparams):
+    input_vocab_size  = 128+128+128+128
+    target_vocab_size = 128+128+128+128
 
     dataset = tf.data.Dataset.list_files('/home/big/datasets/maestro-v2.0.0/**/*.midi')
 
@@ -29,7 +19,7 @@ def start(hparams):
         pro.midi(),
         pro.frame(hparams['frame_size'], hparams['frame_size'], True),
         pro.unbatch(),
-    ])(dataset).as_numpy_iterator()
+    ])(dataset).skip(16000).as_numpy_iterator()
 
     transformer = Transformer(input_vocab_size=input_vocab_size,
                               target_vocab_size=target_vocab_size,
@@ -37,10 +27,6 @@ def start(hparams):
                               pe_target=target_vocab_size,
                               hparams=hparams)
 
-
-
-    seed = next(dataset_single)
-    seed = np.array(seed)
 
     trainer = Trainer(dataset, hparams)
     ckpt = tf.train.Checkpoint(
@@ -51,5 +37,32 @@ def start(hparams):
 
     trainer.init_checkpoint(ckpt)
 
-    generate(transformer, 5, seed)
+    return generate_from_model(hparams, transformer, dataset_single)
+
+def generate_from_model(hparams, transformer, priors):
+    outputs = []
+    prior_buf = []
+    gen_iters = hparams['gen_iters'] if 'gen_iters' in hparams else 1
+    prior = np.array(next(priors))
+    output = prior
+    for i in range(gen_iters):
+        print(f"Generating {i+1}/{gen_iters} sample...")
+        output, _ = transformer.evaluate(output)
+        outputs.append(output)
+        output = output + tf.random.uniform(output.shape, -4, 4, dtype=tf.int32)
+
+    encoded = tf.concat(outputs, 0)
+    prior = tf.concat(prior, 0)
+    return encoded, prior
+
+def start(hparams):
+    i = 1
+    encoded, prior = generate(hparams)
+    decoded = pro.decode_midi()(encoded)
+    with open('gen_transformer_{}.midi'.format(i), 'wb') as f:
+        M.write_midi(f, decoded)
+
+    M.display_midi(decoded)
+    plt.savefig('gen_transformer_{}.png'.format(i))
+
     print('Generated sample')
