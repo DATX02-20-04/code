@@ -10,21 +10,39 @@ import util
 import tensorflow as tf
 import numpy as np
 import librosa
+import os
+import time
 import scripts.gen_tone
 import models.transformer.generate as transformer
+from models.new_gan.process import load as gan_load
+from models.upscaler.process import load as upscaler_load
 # import models.gan.generate as gan
 from models.common.training import Trainer
-from models.gan.model import GAN
+from models.new_gan.model import GAN
+from models.upscaler.model import Upscaler
+from models.new_gan.process import invert
 import data.process as pro
 import data.midi as M
 
-transformer_hparams = util.load_hparams('hparams/transformer.yml')
-gan_hparams = util.load_hparams('hparams/gan.yml')
+# Some compatability options for some graphics cards
+from tensorflow.compat.v1 import ConfigProto
+from tensorflow.compat.v1 import InteractiveSession
 
-melody = transformer.generate(transformer_hparams)
+config = ConfigProto()
+config.gpu_options.allow_growth = True
+session = InteractiveSession(config=config)
+
+start_time = time.time()
+
+transformer_hparams = util.load_hparams('hparams/transformer.yml')
+gan_hparams = util.load_hparams('hparams/new_gan.yml')
+upscaler_hparams = util.load_hparams('hparams/upscaler.yml')
+
+melody = transformer.generate(transformer_hparams)[0]
+print(melody)
 midi = pro.decode_midi()(melody)
-# with open("test.midi", "rb") as f:
-# 	midi = M.read_midi(f)
+#with open("test.midi", "rb") as f:
+#    midi = M.read_midi(f)
 midi = midi.flatten()
 print(midi)
 
@@ -32,36 +50,69 @@ pitches = tf.cast([a.pitch-24 for a in midi if isinstance(a, M.Midi.NoteEvent)],
 amp     = tf.cast([a.velocity / 127 for a in midi if isinstance(a, M.Midi.NoteEvent)], tf.float32)
 vel     = tf.ones_like(pitches)*2
 
+print(pitches)
+
 sr = 16000
 samples_per_note = 8000
 tone_length = sr
 
+dataset, gan_stats = gan_load(gan_hparams)
+gan = GAN(gan_hparams, gan_stats)
 
-gan_stats = np.load('gan_stats.npz')
-gan = GAN((256, 128), gan_hparams)
-gan_trainer = Trainer(None, gan_hparams)
-gan_ckpt = tf.train.Checkpoint(
-    step=gan_trainer.step,
-    generator=gan.generator,
-    discriminator=gan.discriminator,
-    gen_optimizer=gan.generator_optimizer,
-    disc_optimizer=gan.discriminator_optimizer,
+block = tf.Variable(0)
+step = tf.Variable(0)
+pitch_start = 0
+pitch_end = gan_hparams['pitches']
+step_size = 1
+seed_pitches = tf.range(pitch_start, pitch_start+pitch_end, step_size)
+seed = tf.Variable(tf.random.normal([seed_pitches.shape[0], gan_hparams['latent_dim']]))
+seed_pitches = tf.one_hot(seed_pitches, gan_hparams['pitches'], axis=1)
+
+ckpt = tf.train.Checkpoint(
+    gan=gan,
+    seed=seed,
+    generator_optimizer=gan.generator_optimizer,
+    discriminator_optimizer=gan.discriminator_optimizer,
+    block=block,
+    step=step,
 )
-gan_trainer.init_checkpoint(gan_ckpt)
+
+manager = tf.train.CheckpointManager(ckpt,
+                                        os.path.join(gan_hparams['save_dir'], 'ckpts', gan_hparams['name']),
+                                        max_to_keep=3)
+
+ckpt.restore(manager.latest_checkpoint)
+if manager.latest_checkpoint:
+    print("Restored from {} block {}".format(manager.latest_checkpoint, block.numpy()))
+else:
+    print("Initializing from scratch.")
+
+_, upscaler_stats = upscaler_load(upscaler_hparams)
+upscaler = Upscaler(upscaler_hparams, upscaler_stats)
+
+checkpoint_path = "training_1/cp.ckpt"
+checkpoint_dir = os.path.dirname(checkpoint_path)
+
+try:
+    upscaler.model.load_weights(checkpoint_path)
+except:
+    print("Initializing from scratch.")
 
 def generate_tones(pitches):
-    seed = tf.random.normal((len(pitches), gan_hparams['latent_size']))
-    pitches = tf.one_hot(pitches, gan_hparams['cond_vector_size'], axis=1)
+    seed = tf.random.normal((len(pitches), gan_hparams['latent_dim']))
+    pitches = tf.one_hot(pitches, gan_hparams['pitches'], axis=1)
+    print(pitches)
 
-    samples = gan.generator([seed, pitches], training=False)
-    samples = tf.reshape(samples, [-1, 256, 128])
-    audio = pro.pipeline([
-        pro.denormalize(normalization='specgan', stats=gan_stats),
-        pro.invert_log_melspec(gan_hparams['sample_rate']),
-        list,     # Stupid workaround becuase invert_log_melspec only does
-        np.array, # one spectrogram at a time
-    ])(samples)
-    return audio
+    [g_normal, g_fadein] = gan.generators[-1]
+    samples = g_normal([seed, pitches], training=False)
+    # phases = upscaler(samples, training=False)
+    samples = tf.unstack(tf.reshape(samples, [-1, 128, 256]))
+    audios = []
+    for sample in samples:
+        print(sample.shape)
+        audio = invert(gan_hparams, gan_stats, upscaler)(sample)
+        audios.append(audio)
+    return audios
 
 def generate_all_tones(pitches, amp):
     for a in range(0, len(pitches), 32):
@@ -74,4 +125,8 @@ for time, sound in zip(times, generate_all_tones(pitches, amp)):
     sound = sound[:sr]
     out += tf.pad(sound, [(time, len(out)-len(sound)-time)])
 
-librosa.output.write_wav('gen_melody.wav', out.numpy(), sr=sr, norm=True)
+librosa.output.write_wav(f'gen_melody{int(start_time)}.wav', out.numpy(), sr=sr, norm=True)
+
+end_time = time.time()
+
+print("Time elapsed:", end_time - start_time)

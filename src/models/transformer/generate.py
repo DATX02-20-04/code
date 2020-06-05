@@ -17,9 +17,9 @@ def generate(hparams):
 
     dataset_single = pro.pipeline([
         pro.midi(),
-        pro.frame(hparams['frame_size'], hparams['frame_size'], True),
+        pro.frame(hparams['frame_size'], hparams['frame_hop_len'], True),
         pro.unbatch(),
-    ])(dataset).skip(16000).as_numpy_iterator()
+    ])(dataset).skip(38).as_numpy_iterator()
 
     transformer = Transformer(input_vocab_size=input_vocab_size,
                               target_vocab_size=target_vocab_size,

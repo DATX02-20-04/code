@@ -3,11 +3,17 @@ import librosa
 from fractions import Fraction
 import data.midi
 
-def index_map(index, f):
+def key_map(index, f):
     # Carl: I don't think this parallelizes very well, but I'm not sure
     def imap(x):
         x[index] = f(x[index])
         return x
+    return map_transform(imap)
+
+def index_map(index, f):
+    # Carl: I don't think this parallelizes very well, but I'm not sure
+    def imap(*x):
+        return x[:index] + (f(x[index]),) + x[index+1:]
     return map_transform(imap)
 
 def pipeline(transforms):
@@ -21,6 +27,8 @@ def map_transform(fn):
     def transform(dataset):
         if isinstance(dataset, tf.data.Dataset):
             return dataset.map(fn, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+        elif type(dataset) == tuple:
+            return fn(*dataset)
         elif not isinstance(dataset, tf.Tensor):
             return map(fn, dataset)
         else:
@@ -151,21 +159,23 @@ def istft(frame_length, frame_step, fft_length=None):
 def abs():
     return map_transform(lambda x: tf.abs(x))
 
+def cast(dtype):
+    return map_transform(lambda x: tf.cast(x, dtype))
+
 def dupe():
     return map_transform(lambda x: (x, x))
 
 def _normalize(normalization='neg_one_to_one', **kwargs):
+    stats = kwargs['stats']
     def _n(x):
-        _max = tf.math.reduce_max(x)
-        _min = tf.math.reduce_min(x)
         if normalization == 'neg_one_to_one':
-            return ((x - _min) / (_max - _min)) * 2 - 1
+            return ((x - stats['mag_min']) / (stats['mag_max'] - stats['mag_min'])) * 2 - 1
         elif normalization == 'zero_to_one':
             return ((x - _min) / (_max - _min))
+            return ((x - stats['mag_min']) / (stats['mag_max'] - stats['mag_min']))
         elif normalization == 'specgan':
-            stats = kwargs['stats']
-            std = tf.math.sqrt(stats['variance'])
-            norm = (x - stats['mean']) / (3*std)
+            std = stats['mag_std']
+            norm = (x - stats['mag_mean']) / (3*std)
             clipped = tf.math.minimum(tf.math.maximum(norm, -1), 1)
             return clipped
     return _n
@@ -173,10 +183,10 @@ def _normalize(normalization='neg_one_to_one', **kwargs):
 def normalize(normalization='neg_one_to_one', **kwargs):
     return map_transform(_normalize(normalization, **kwargs))
 
-def amp_to_log(amin=1e-5):
+def amp_to_log(amin=1e-9):
     return map_transform(lambda x: tf.math.log(x + amin))
 
-def log_to_amp(amin=1e-5):
+def log_to_amp(amin=1e-9):
     return map_transform(lambda x: tf.math.exp(x) - amin)
 
 def mels(sr, n_fft, n_mels=128, fmin=0.0, fmax=None):
@@ -213,14 +223,14 @@ def melspec(sr, n_fft=1024, hop_length=512, win_length=None, **kwargs):
     ])
 
 def denormalize(normalization='neg_one_to_one', **kwargs):
+    stats = kwargs['stats']
     if normalization == 'neg_one_to_one':
-        return map_transform(lambda x: (((x+1)*0.5)*(kwargs['denorm_amax']-kwargs['denorm_amin'])+kwargs['denorm_amin']))
+        return map_transform(lambda x: (((x+1)*0.5)*(stats['mag_max']-stats['mag_min'])+stats['mag_min']))
     elif normalization == 'zero_to_one':
-        return map_transform(lambda x: (x*(kwargs['denorm_amax']-kwargs['denorm_amin'])+kwargs['denorm_amin']))
+        return map_transform(lambda x: (x*(stats['mag_max']-stats['mag_min'])+stats['mag_min']))
     elif normalization == 'specgan':
-        stats = kwargs['stats']
-        std = tf.math.sqrt(stats['variance'])
-        return map_transform(lambda x: (x * (3.0 * std)) + stats['mean'])
+        std = stats['mag_std']
+        return map_transform(lambda x: (x * (3.0 * std)) + stats['mag_mean'])
     else:
         raise Exception(f"No normalization type named '{normalization}'.")
 

@@ -1,0 +1,33 @@
+hparams:
+  name: new_gan
+  dataset: magphase
+  instrument:
+    family: 'keyboard'
+  pitches: 61
+  sample_rate: 16000
+  frame_length: 2048
+  frame_step: 512
+  n_mels: 256
+  n_fft: 2048
+  latent_dim: 128
+  aux_loss_weight: 10
+  src_loss_weight: 1
+  dropout_rate: 0.0
+  gen_lr: 0.0001
+  disc_lr: 0.0001
+  n_blocks: 5
+  buffer_size: 2048
+  save_dir: '.'
+  batch_sizes:
+    - 128
+    - 64
+    - 32
+    - 32
+    - 16
+  epochs:
+    - 128
+    - 64
+    - 64
+    - 64
+    - 64
+
